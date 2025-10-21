@@ -11,7 +11,7 @@ import { FormsModule } from '@angular/forms';
 })
 export class FocoShopComponent {
   categorias = [
-    { nombre: 'TECNOLOGÍA', imagen: 'assets/img/tecnologia.jpg' },
+    { nombre: 'TECNOLOGÍA', imagen: 'app/assets/img/tecnologia.jpeg' },
     { nombre: 'VESTIMENTA', imagen: 'assets/img/vestimenta.jpg' },
     { nombre: 'CALZADO', imagen: 'assets/img/calzado.jpg' },
     { nombre: 'VIDEOJUEGOS', imagen: 'assets/img/videojuegos.jpg' }

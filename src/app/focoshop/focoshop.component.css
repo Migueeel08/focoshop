@@ -1,111 +1,281 @@
-.container {
-  padding: 1rem;
+/* ======= ESTILO GENERAL ======= */
+* {
+  box-sizing: border-box;
+  scroll-behavior: smooth;
 }
 
-/* Botones de categoría */
-.btn-categoria {
-  background-color: #4a48f5;
+body {
+  margin: 0;
+  background: #f5f3fa;
+  font-family: 'Poppins', 'Segoe UI', sans-serif;
+  color: #333;
+}
+
+.container {
+  padding: 120px 2rem 2rem; /* Espacio superior por el header fijo */
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+/* ======= HEADER ======= */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 80px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #000000 60%, #6b44ff);
+  padding: 0 2rem;
+  border-radius: 0;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-text {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #a68efc;
+  letter-spacing: 2px;
+}
+
+.header i {
   color: white;
-  padding: 10px 16px;
-  border-radius: 8px;
+  font-size: 1.5rem;
+}
+
+.search-box {
+  position: relative;
+  width: 350px;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 10px 40px 10px 15px;
+  border-radius: 25px;
   border: none;
-  font-weight: 500;
+  outline: none;
+  font-size: 14px;
+  background: #1b1b1b;
+  color: white;
+}
+
+.search-box input::placeholder {
+  color: #aaa;
+}
+
+.search-box i {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #a68efc;
+}
+
+.profile img {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: 2px solid #a68efc;
   cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.profile img:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(166, 142, 252, 0.7);
+}
+
+/* ======= CATEGORÍAS ======= */
+.categorias {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.categoria-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 1rem;
+}
+
+/* Botón principal */
+.btn-categoria {
+  background: linear-gradient(135deg, #7d5fff, #6b44ff);
+  color: white;
+  padding: 12px 30px;
+  border-radius: 30px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 15px;
+  letter-spacing: 1px;
+  box-shadow: 0 5px 15px rgba(123, 87, 255, 0.4);
+  transition: all 0.3s ease;
+}
+
+.btn-categoria:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(123, 87, 255, 0.6);
 }
 
 /* Flechas */
 .arrow-btn {
   border: none;
-  background: #4a48f5;
+  background: #6b44ff;
   color: white;
   border-radius: 50%;
-  width: 35px;
-  height: 35px;
+  width: 45px;
+  height: 45px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  font-size: 18px;
+  transition: background 0.3s ease, transform 0.2s ease;
 }
 
-/* Grid de categorías */
+.arrow-btn:hover {
+  background: #5a36e3;
+  transform: scale(1.1);
+}
+
+.categorias h2 {
+  color: #4b0082;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-top: 1rem;
+}
+
+/* Tarjetas de categorías */
 .categoria-grid {
   display: flex;
   justify-content: center;
-  gap: 20px;
-  margin-top: 15px;
-}
-
-/* Tarjeta de categoría */
-.categoria-card {
-  width: 140px;
-  border: 2px solid transparent;
-  border-radius: 10px;
-  text-align: center;
-  padding: 10px;
-  cursor: pointer;
-  transition: 0.3s ease;
-}
-
-.categoria-card.active {
-  border-color: #4a48f5;
-}
-
-/* Imagen de categoría */
-.categoria-card img {
-  width: 100%;
-  border-radius: 8px;
-  background: #f3f3f3;
-}
-
-/* Nombre de categoría */
-.categoria-card p {
-  margin-top: 8px;
-  font-weight: 600; /* corregido */
-  font-size: 14px;
-}
-
-/* Grid de productos */
-.producto-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 20px;
+  flex-wrap: wrap;
+  gap: 25px;
   margin-top: 20px;
 }
 
-/* Tarjeta de producto */
-.producto-card {
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  overflow: hidden;
-  transition: 0.3s ease;
+.categoria-card {
+  width: 160px;
+  background: white;
+  border-radius: 15px;
+  text-align: center;
+  padding: 15px;
   cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+}
+
+.categoria-card img {
+  width: 100%;
+  border-radius: 12px;
+  height: 120px;
+  object-fit: cover;
+}
+
+.categoria-card p {
+  margin-top: 10px;
+  font-weight: 600;
+  font-size: 15px;
+  color: #4b0082;
+}
+
+.categoria-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(123, 87, 255, 0.25);
+}
+
+.categoria-card.active {
+  border: 2px solid #7d5fff;
+  background: #f2efff;
+}
+
+/* ======= PRODUCTOS ======= */
+.productos {
+  margin-top: 3rem;
+}
+
+.productos h2 {
+  text-align: center;
+  color: #4b0082;
+  font-size: 1.7rem;
+  margin-bottom: 1.5rem;
+}
+
+.producto-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 25px;
+}
+
+.producto-card {
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .producto-card:hover {
-  transform: scale(1.03);
+  transform: translateY(-6px);
+  box-shadow: 0 10px 25px rgba(107, 68, 255, 0.3);
 }
 
 .producto-card img {
   width: 100%;
-  height: 150px;
+  height: 180px;
   object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.producto-card:hover img {
+  transform: scale(1.05);
 }
 
 .producto-card .info {
-  padding: 10px;
-}
-
-.producto-card .rating {
-  color: gold;
-  font-size: 12px;
+  padding: 15px;
 }
 
 .producto-card .nombre {
-  font-weight: 500;
-  margin: 5px 0;
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: #333;
 }
 
 .producto-card .precio {
-  color: #4a48f5;
-  font-weight: 600;
+  color: #6b44ff;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.producto-card .rating {
+  color: #ffc107;
+  font-size: 13px;
+  margin-top: 5px;
+}
+
+/* ======= SCROLL PERSONALIZADO ======= */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #7d5fff;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: #eee;
 }

@@ -1,75 +1,67 @@
 <div class="container">
-<!-- Header -->
-<header class="header">
-<div class="logo">
-<span class="logo-text">FOCOSHOP</span>
-<i class="fa fa-shopping-cart"></i>
-</div>
+  <!-- HEADER PRINCIPAL -->
+  <header class="header">
+    <div class="logo">
+      <span class="logo-text">FOCOSHOP</span>
+      <i class="fa fa-shopping-cart"></i>
+    </div>
 
+    <div class="search-box">
+      <input type="text" placeholder="Buscar productos..." [(ngModel)]="busqueda" />
+      <i class="fa fa-search"></i>
+    </div>
 
-<div class="search-box">
-<input type="text" placeholder="Buscar" [(ngModel)]="busqueda" />
-<i class="fa fa-search"></i>
-</div>
+    <div class="profile">
+      <img src="assets/img/profile.jpg" alt="Perfil" />
+    </div>
+  </header>
 
+  <!-- BOTÓN DE CATEGORÍAS + FLECHAS -->
+  <div class="categoria-header">
+    <button (click)="anterior()" class="arrow-btn left">
+      <i class="fa fa-chevron-left"></i>
+    </button>
 
-<div class="profile">
-<img src="assets/img/profile.jpg" alt="Perfil" />
-</div>
-</header>
+    <button class="btn-categoria">
+      CATEGORÍAS <i class="fa fa-chevron-down"></i>
+    </button>
 
+    <button (click)="siguiente()" class="arrow-btn right">
+      <i class="fa fa-chevron-right"></i>
+    </button>
+  </div>
 
-<!-- Categorías -->
-<section class="categorias">
-<div class="categoria-header">
-<button (click)="anterior()" class="arrow-btn">
-<i class="fa fa-chevron-left"></i>
-</button>
+  <!-- SECCIÓN DE CATEGORÍAS -->
+  <section class="categorias">
+    <h2>COMPRAR POR CATEGORÍAS</h2>
+    <div class="categoria-grid">
+      <div
+        class="categoria-card"
+        *ngFor="let cat of categorias; let i = index"
+        [class.active]="i === categoriaSeleccionada"
+        (click)="seleccionarCategoria(i)"
+      >
+        <img [src]="cat.imagen" [alt]="cat.nombre" />
+        <p>{{ cat.nombre }}</p>
+      </div>
+    </div>
+  </section>
 
-
-<button class="btn-categoria">
-CATEGORÍAS <i class="fa fa-chevron-down"></i>
-</button>
-
-
-<button (click)="siguiente()" class="arrow-btn">
-<i class="fa fa-chevron-right"></i>
-</button>
-</div>
-
-
-<h2>COMPRAR POR CATEGORÍAS</h2>
-
-
-<div class="categoria-grid">
-<div
-class="categoria-card"
-*ngFor="let cat of categorias; let i = index"
-[class.active]="i === categoriaSeleccionada"
-(click)="seleccionarCategoria(i)"
->
-<img [src]="cat.imagen" [alt]="cat.nombre" />
-<p>{{ cat.nombre }}</p>
-</div>
-</div>
-</section>
-
-
-<!-- Productos -->
-<section class="productos">
-<h2>{{ categorias[categoriaSeleccionada].nombre }}</h2>
-<div class="producto-grid">
-<div class="producto-card" *ngFor="let prod of productosFiltrados">
-<img [src]="prod.imagen" [alt]="prod.nombre" />
-<div class="info">
-<div class="rating">
-<i class="fa fa-star" *ngFor="let r of [].constructor(5)"></i>
-<span>({{ prod.reviews }})</span>
-</div>
-<p class="nombre">{{ prod.nombre }}</p>
-<p class="precio">\${{ prod.precio }}</p>
-</div>
-</div>
-</div>
-</section>
+  <!-- SECCIÓN DE PRODUCTOS -->
+  <section class="productos">
+    <h2>{{ categorias[categoriaSeleccionada].nombre }}</h2>
+    <div class="producto-grid">
+      <div class="producto-card" *ngFor="let prod of productosFiltrados">
+        <img [src]="prod.imagen" [alt]="prod.nombre" />
+        <div class="info">
+          <div class="rating">
+            <i class="fa fa-star" *ngFor="let r of [].constructor(5)"></i>
+            <span>({{ prod.reviews }})</span>
+          </div>
+          <p class="nombre">{{ prod.nombre }}</p>
+          <p class="precio">\${{ prod.precio }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>

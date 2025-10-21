@@ -8,24 +8,8 @@ import { FocoShopComponent } from './focoshop/focoshop.component';
   standalone: true,
   imports: [CommonModule, FormsModule, FocoShopComponent],
   template: `
-    <header class="app-header">
-      <h1>FOCOSHOP</h1>
-    </header>
-
-    <main>
-      <foco-shop></foco-shop>
-    </main>
+    <foco-shop></foco-shop>
   `,
-  styles: [`
-    .app-header {
-      background-color: #0d6efd;
-      color: white;
-      padding: 1rem;
-      text-align: center;
-    }
-    main {
-      padding: 1rem;
-    }
-  `]
+  styles: [``]
 })
 export class AppComponent {}
