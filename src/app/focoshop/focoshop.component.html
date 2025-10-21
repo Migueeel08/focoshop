@@ -12,29 +12,34 @@
     </div>
 
     <div class="profile">
-      <img src="assets/img/profile.jpg" alt="Perfil" />
+      <img src="assets/img/profile.jpeg" alt="Perfil" />
     </div>
   </header>
 
-  <!-- BOTÓN DE CATEGORÍAS + FLECHAS -->
-  <div class="categoria-header">
+  <!-- BOTÓN DE MENÚ LATERAL DE CATEGORÍAS -->
+  <button class="btn-menu-categorias" (click)="toggleMenu()">
+    <i class="fa fa-bars"></i> CATEGORÍAS
+  </button>
+
+  <!-- MENÚ LATERAL -->
+  <aside class="menu-categorias" [class.open]="menuAbierto">
+    <ul>
+      <li *ngFor="let cat of categorias; let i = index" (click)="seleccionarCategoria(i)">
+        {{ cat.nombre }}
+        <ul class="subcategorias" *ngIf="cat.subcategorias">
+          <li *ngFor="let sub of cat.subcategorias">{{ sub }}</li>
+        </ul>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- CARRUSEL DE CATEGORÍAS -->
+  <div class="carrusel-container">
     <button (click)="anterior()" class="arrow-btn left">
       <i class="fa fa-chevron-left"></i>
     </button>
 
-    <button class="btn-categoria">
-      CATEGORÍAS <i class="fa fa-chevron-down"></i>
-    </button>
-
-    <button (click)="siguiente()" class="arrow-btn right">
-      <i class="fa fa-chevron-right"></i>
-    </button>
-  </div>
-
-  <!-- SECCIÓN DE CATEGORÍAS -->
-  <section class="categorias">
-    <h2>COMPRAR POR CATEGORÍAS</h2>
-    <div class="categoria-grid">
+    <div class="categoria-grid" #categoriaGrid>
       <div
         class="categoria-card"
         *ngFor="let cat of categorias; let i = index"
@@ -45,11 +50,15 @@
         <p>{{ cat.nombre }}</p>
       </div>
     </div>
-  </section>
+
+    <button (click)="siguiente()" class="arrow-btn right">
+      <i class="fa fa-chevron-right"></i>
+    </button>
+  </div>
 
   <!-- SECCIÓN DE PRODUCTOS -->
   <section class="productos">
-    <h2>{{ categorias[categoriaSeleccionada].nombre }}</h2>
+    <h2>{{ categorias[categoriaSeleccionada]?.nombre }}</h2>
     <div class="producto-grid">
       <div class="producto-card" *ngFor="let prod of productosFiltrados">
         <img [src]="prod.imagen" [alt]="prod.nombre" />
