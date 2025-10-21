@@ -1,0 +1,31 @@
+<header>
+  <h1>FOCOSHOP </h1>
+  <input type="text" placeholder="Buscar..." />
+  <img
+    src="assets/profile.png"
+    alt="perfil"
+    width="40"
+    height="40"
+    style="border-radius: 50%"
+  />
+</header>
+
+<div class="container">
+  <h2>COMPRAR POR CATEGORÍAS</h2>
+  <div class="categories">
+    <div *ngFor="let cat of categorias" class="category-card">
+      <img [src]="cat.imagen" alt="{{ cat.nombre }}" width="100%" height="100" />
+      <h3>{{ cat.nombre }}</h3>
+    </div>
+  </div>
+
+  <h2>TECNOLOGÍA</h2>
+  <div class="products">
+    <div *ngFor="let prod of productos" class="product-card">
+      <img src="assets/product.png" alt="{{ prod.nombre }}" width="100%" height="120" />
+      <h3>{{ prod.nombre }}</h3>
+      <p>⭐ {{ prod.rating }}</p>
+      <h4>${{ prod.precio }}</h4>
+    </div>
+  </div>
+</div>
