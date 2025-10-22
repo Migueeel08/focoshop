@@ -13,18 +13,27 @@ import { Router } from '@angular/router';
 export class LoginComponent {
   email = '';
   password = '';
+  nombre = '';
+  isLogin = true; // Alterna entre login y registro
 
   constructor(private router: Router) {}
 
+  toggleMode() {
+    this.isLogin = !this.isLogin;
+  }
+
   login() {
-    console.log('Intentando iniciar sesión con:', this.email);
-    // Simulación de login correcto
+    console.log('Iniciar sesión con:', this.email);
+    this.router.navigate(['/']);
+  }
+
+  register() {
+    console.log('Registrando usuario:', this.nombre, this.email);
     this.router.navigate(['/']);
   }
 
   loginWithGoogle() {
     console.log('Iniciar sesión con Google');
-    // Aquí va tu lógica de autenticación con Google (Firebase u otro método)
   }
 
   goHome() {

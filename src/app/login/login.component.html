@@ -1,8 +1,12 @@
 <div class="login-container">
   <div class="login-card">
-    <h2>Bienvenido a FocoShop</h2>
+    <h2>{{ isLogin ? 'Iniciar Sesión' : 'Registrarse' }}</h2>
 
-    <form (ngSubmit)="login()">
+    <form (ngSubmit)="isLogin ? login() : register()">
+      <div class="input-group" *ngIf="!isLogin">
+        <input type="text" placeholder="Nombre completo" [(ngModel)]="nombre" name="nombre" required />
+      </div>
+
       <div class="input-group">
         <input type="email" placeholder="Correo electrónico" [(ngModel)]="email" name="email" required />
       </div>
@@ -11,7 +15,7 @@
         <input type="password" placeholder="Contraseña" [(ngModel)]="password" name="password" required />
       </div>
 
-      <button type="submit" class="btn-login">Iniciar sesión</button>
+      <button type="submit" class="btn-login">{{ isLogin ? 'Iniciar Sesión' : 'Registrarse' }}</button>
     </form>
 
     <div class="divider">O</div>
@@ -20,8 +24,11 @@
       <img src="assets/img/google-logo.png" alt="Google" /> Continuar con Google
     </button>
 
-    <button class="btn-back" (click)="goHome()">
-      ← Volver al inicio
-    </button>
+    <div class="toggle-mode">
+      <span>{{ isLogin ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?' }}</span>
+      <button (click)="toggleMode()">{{ isLogin ? 'Registrarse' : 'Iniciar Sesión' }}</button>
+    </div>
+
+    <button class="btn-back" (click)="goHome()">← Volver al inicio</button>
   </div>
 </div>
