@@ -1,15 +1,11 @@
 import { Component } from '@angular/core';
+import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { FocoShopComponent } from './focoshop/focoshop.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, FormsModule, FocoShopComponent],
-  template: `
-    <foco-shop></foco-shop>
-  `,
-  styles: [``]
+  imports: [CommonModule, RouterModule],
+  template: `<router-outlet></router-outlet>`,
 })
 export class AppComponent {}

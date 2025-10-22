@@ -1,11 +1,12 @@
 import { Component, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'foco-shop',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './focoshop.component.html',
   styleUrls: ['./focoshop.component.css']
 })
@@ -28,7 +29,6 @@ export class FocoShopComponent implements AfterViewInit {
     { categoria: 'JUGUETES', nombre: 'Lego Star Wars Set', precio: 120, reviews: 300, imagen: 'assets/img/lego.jpg' },
     { categoria: 'HOGAR', nombre: 'Aspiradora Robot', precio: 250, reviews: 150, imagen: 'assets/img/aspiradora.jpg' },
     { categoria: 'DEPORTE', nombre: 'Bicicleta Mountain Bike', precio: 450, reviews: 210, imagen: 'assets/img/bicicleta.jpg' }
-    // Agrega más productos según necesites
   ];
 
   categoriaSeleccionada = 0;
@@ -36,6 +36,8 @@ export class FocoShopComponent implements AfterViewInit {
   menuAbierto = false;
 
   @ViewChild('categoriaGrid') categoriaGrid!: ElementRef;
+
+  constructor(private router: Router) {}
 
   ngAfterViewInit() {
     this.scrollCategoriaCentrada(this.categoriaSeleccionada);
@@ -75,5 +77,13 @@ export class FocoShopComponent implements AfterViewInit {
 
   toggleMenu() {
     this.menuAbierto = !this.menuAbierto;
+  }
+
+  irALogin() {
+    this.router.navigate(['/login']);
+  }
+
+  irARegistro() {
+    this.router.navigate(['/register']);
   }
 }
