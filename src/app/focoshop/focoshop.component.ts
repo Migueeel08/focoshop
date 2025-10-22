@@ -42,7 +42,14 @@ export class FocoShopComponent implements AfterViewInit {
   userName = '';
   userImage = 'assets/img/user-icon.png'; // icono por defecto
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) {
+    // 🔄 Escucha cambios del localStorage (por ejemplo, login desde otra ruta)
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'user') {
+        this.cargarUsuario();
+      }
+    });
+  }
 
   ngAfterViewInit() {
     this.scrollCategoriaCentrada(this.categoriaSeleccionada);
@@ -97,12 +104,19 @@ export class FocoShopComponent implements AfterViewInit {
 
   // ===== Manejo de usuario =====
   cargarUsuario() {
-    const user = localStorage.getItem('user');
-    if (user) {
-      const parsed = JSON.parse(user);
-      this.isLoggedIn = true;
-      this.userName = parsed.nombre;
-      this.userImage = parsed.imagen || this.userImage;
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      try {
+        const parsed = JSON.parse(userData);
+        this.isLoggedIn = true;
+        this.userName = parsed.nombre || 'Usuario';
+        this.userImage = parsed.imagen || 'assets/img/user-icon.png';
+      } catch (error) {
+        console.error('Error al cargar usuario:', error);
+        this.logout();
+      }
+    } else {
+      this.isLoggedIn = false;
     }
   }
 
