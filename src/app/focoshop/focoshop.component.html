@@ -1,22 +1,30 @@
 <div class="container">
-  <!-- HEADER PRINCIPAL -->
-  <header class="header">
-    <div class="logo">
-      <span class="logo-text">FOCOSHOP</span>
-      <i class="fa fa-shopping-cart"></i>
-    </div>
+<!-- HEADER PRINCIPAL -->
+<header class="header">
+  <div class="logo">
+    <span class="logo-text">FOCOSHOP</span>
+    <i class="fa fa-shopping-cart"></i>
+  </div>
 
-    <div class="search-box">
-      <input type="text" placeholder="Buscar productos..." [(ngModel)]="busqueda" />
-      <i class="fa fa-search"></i>
-    </div>
+  <div class="search-box">
+    <input type="text" placeholder="Buscar productos..." [(ngModel)]="busqueda" />
+    <i class="fa fa-search"></i>
+  </div>
 
-    <!-- LINKS DE AUTENTICACIÓN -->
-   <!-- LINKS DE AUTENTICACIÓN -->
-<div class="auth-links">
-  <a [routerLink]="['/login']" routerLinkActive="active" class="auth-link">Iniciar Sesion</a>
-</div>
-  </header>
+  <!-- LINKS DE AUTENTICACIÓN -->
+  <div class="auth-links">
+    <ng-container *ngIf="isLoggedIn; else notLoggedIn">
+      <img [src]="userImage" alt="Perfil" class="user-icon" />
+      <span class="user-name">{{ userName }}</span>
+      <button class="logout-btn" (click)="logout()" title="Cerrar sesión">
+        <i class="fa-solid fa-door-open"></i>
+      </button>
+    </ng-container>
+    <ng-template #notLoggedIn>
+      <a [routerLink]="['/login']" class="auth-link">Iniciar Sesión</a>
+    </ng-template>
+  </div>
+</header>
 
   <!-- BOTÓN DE MENÚ LATERAL DE CATEGORÍAS -->
   <button class="btn-menu-categorias" (click)="toggleMenu()">

@@ -2,41 +2,74 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HttpClientModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
-  email = '';
-  password = '';
+  isRegisterMode = false;
   nombre = '';
-  isLogin = true; // Alterna entre login y registro
+  apellido = '';
+  email = '';
+  contrasena = '';
 
-  constructor(private router: Router) {}
+  constructor(public router: Router, private http: HttpClient) {}
 
   toggleMode() {
-    this.isLogin = !this.isLogin;
+    this.isRegisterMode = !this.isRegisterMode;
   }
 
-  login() {
-    console.log('Iniciar sesión con:', this.email);
-    this.router.navigate(['/']);
+  onSubmit() {
+    if (this.isRegisterMode) {
+      this.register();
+    } else {
+      this.login();
+    }
   }
 
   register() {
-    console.log('Registrando usuario:', this.nombre, this.email);
-    this.router.navigate(['/']);
+    const user = {
+      nombre: this.nombre,
+      apellido: this.apellido,
+      email: this.email,
+      contrasena: this.contrasena
+    };
+
+    this.http.post('http://localhost:8000/register', user).subscribe({
+      next: (res) => {
+        console.log('Usuario registrado:', res);
+        alert('Registro exitoso');
+        this.toggleMode();
+      },
+      error: (err) => {
+        console.error('Error al registrar:', err);
+        alert('Error al registrarte');
+      }
+    });
   }
 
-  loginWithGoogle() {
-    console.log('Iniciar sesión con Google');
-  }
+  login() {
+    const body = new URLSearchParams();
+    body.set('username', this.email);
+    body.set('password', this.contrasena);
 
-  goHome() {
-    this.router.navigate(['/']);
+    this.http.post('http://localhost:8000/token', body.toString(), {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    }).subscribe({
+      next: (res: any) => {
+        console.log('Login exitoso:', res);
+        alert('Inicio de sesión correcto');
+        this.router.navigate(['/']);
+      },
+      error: (err) => {
+        console.error('Error al iniciar sesión:', err);
+        alert('Credenciales incorrectas');
+      }
+    });
   }
 }

@@ -37,12 +37,19 @@ export class FocoShopComponent implements AfterViewInit {
 
   @ViewChild('categoriaGrid') categoriaGrid!: ElementRef;
 
+  // ===== Usuario =====
+  isLoggedIn = false;
+  userName = '';
+  userImage = 'assets/img/user-icon.png'; // icono por defecto
+
   constructor(private router: Router) {}
 
   ngAfterViewInit() {
     this.scrollCategoriaCentrada(this.categoriaSeleccionada);
+    this.cargarUsuario();
   }
 
+  // ===== Productos filtrados por categoría y búsqueda =====
   get productosFiltrados() {
     return this.productos.filter(
       p =>
@@ -51,10 +58,11 @@ export class FocoShopComponent implements AfterViewInit {
     );
   }
 
+  // ===== Manejo de categorías =====
   seleccionarCategoria(index: number) {
     this.categoriaSeleccionada = index;
     this.scrollCategoriaCentrada(index);
-    this.menuAbierto = false; // Cierra el menú lateral al seleccionar
+    this.menuAbierto = false; // cierra menú lateral
   }
 
   anterior() {
@@ -85,5 +93,24 @@ export class FocoShopComponent implements AfterViewInit {
 
   irARegistro() {
     this.router.navigate(['/register']);
+  }
+
+  // ===== Manejo de usuario =====
+  cargarUsuario() {
+    const user = localStorage.getItem('user');
+    if (user) {
+      const parsed = JSON.parse(user);
+      this.isLoggedIn = true;
+      this.userName = parsed.nombre;
+      this.userImage = parsed.imagen || this.userImage;
+    }
+  }
+
+  logout() {
+    localStorage.removeItem('user');
+    this.isLoggedIn = false;
+    this.userName = '';
+    this.userImage = 'assets/img/user-icon.png';
+    this.router.navigate(['/']);
   }
 }
