@@ -1,30 +1,48 @@
 <div class="container">
-<!-- HEADER PRINCIPAL -->
-<header class="header">
-  <div class="logo">
-    <span class="logo-text">FOCOSHOP</span>
-    <i class="fa fa-shopping-cart"></i>
-  </div>
+  <!-- HEADER PRINCIPAL -->
+  <header class="header">
+    <div class="logo">
+      <span class="logo-text">FOCOSHOP</span>
+      <i class="fa fa-shopping-cart"></i>
+    </div>
 
-  <div class="search-box">
-    <input type="text" placeholder="Buscar productos..." [(ngModel)]="busqueda" />
-    <i class="fa fa-search"></i>
-  </div>
+    <div class="search-box">
+      <input
+        type="text"
+        placeholder="Buscar productos..."
+        [(ngModel)]="busqueda"
+      />
+      <i class="fa fa-search"></i>
+    </div>
 
-  <!-- LINKS DE AUTENTICACIÓN -->
-  <div class="auth-links">
-    <ng-container *ngIf="isLoggedIn; else notLoggedIn">
-      <img [src]="userImage" alt="Perfil" class="user-icon" />
-      <span class="user-name">{{ userName }}</span>
-      <button class="logout-btn" (click)="logout()" title="Cerrar sesión">
-        <i class="fa-solid fa-door-open"></i>
-      </button>
-    </ng-container>
-    <ng-template #notLoggedIn>
-      <a [routerLink]="['/login']" class="auth-link">Iniciar Sesión</a>
-    </ng-template>
-  </div>
-</header>
+    <!-- LINKS DE AUTENTICACIÓN -->
+    <div class="auth-links">
+      <ng-container *ngIf="isLoggedIn; else notLoggedIn">
+        <div class="user-info" (click)="toggleUserMenu()">
+          <img [src]="userImage" alt="Perfil" class="user-icon" />
+          <span class="user-name">{{ userName }}</span>
+
+          <!-- MENÚ DESPLEGABLE MODERNO -->
+          <div class="user-menu" [class.open]="userMenuOpen">
+            <button>
+              <i class="fa fa-user"></i> Mi perfil
+            </button>
+            <button>
+              <i class="fa fa-cog"></i> Configuración
+            </button>
+            <div class="divider"></div>
+            <button class="logout-btn" (click)="logout()">
+              <i class="fa fa-sign-out-alt"></i> Cerrar sesión
+            </button>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-template #notLoggedIn>
+        <a [routerLink]="['/login']" class="auth-link">Iniciar Sesión</a>
+      </ng-template>
+    </div>
+  </header>
 
   <!-- BOTÓN DE MENÚ LATERAL DE CATEGORÍAS -->
   <button class="btn-menu-categorias" (click)="toggleMenu()">
@@ -34,9 +52,12 @@
   <!-- MENÚ LATERAL -->
   <aside class="menu-categorias" [class.open]="menuAbierto">
     <ul>
-      <li *ngFor="let cat of categorias; let i = index" (click)="seleccionarCategoria(i)">
+      <li
+        *ngFor="let cat of categorias; let i = index"
+        (click)="seleccionarCategoria(i)"
+      >
         {{ cat.nombre }}
-        <ul class="subcategorias" *ngIf="cat.subcategorias">
+        <ul class="subcategorias" *ngIf="cat.subcategorias?.length">
           <li *ngFor="let sub of cat.subcategorias">{{ sub }}</li>
         </ul>
       </li>
@@ -68,7 +89,8 @@
 
   <!-- SECCIÓN DE PRODUCTOS -->
   <section class="productos">
-    <h2>{{ categorias[categoriaSeleccionada]?.nombre }}</h2>
+    <h2>{{ categorias[categoriaSeleccionada]?.nombre || 'Productos' }}</h2>
+
     <div class="producto-grid">
       <div class="producto-card" *ngFor="let prod of productosFiltrados">
         <img [src]="prod.imagen" [alt]="prod.nombre" />

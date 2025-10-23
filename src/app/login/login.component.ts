@@ -64,6 +64,21 @@ export class LoginComponent {
       next: (res: any) => {
         console.log('Login exitoso:', res);
         alert('Inicio de sesión correcto');
+
+        // 🔹 Crear datos de usuario (ajústalo según tu backend)
+        const userData = {
+          nombre: this.nombre || 'Usuario',
+          email: this.email,
+          imagen: 'assets/img/profile.jpeg' // Puedes cambiarlo si tu backend devuelve una imagen
+        };
+
+        // 🔹 Guardar usuario en localStorage
+        localStorage.setItem('user', JSON.stringify(userData));
+
+        // 🔹 Forzar evento para actualizar otros componentes
+        window.dispatchEvent(new Event('storage'));
+
+        // 🔹 Redirigir a inicio
         this.router.navigate(['/']);
       },
       error: (err) => {

@@ -1,16 +1,18 @@
-import { Component, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewInit, OnInit, OnDestroy, HostListener, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+
 
 @Component({
   selector: 'foco-shop',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './focoshop.component.html',
-  styleUrls: ['./focoshop.component.css']
+  styleUrls: ['./focoshop.component.css'],
+  encapsulation: ViewEncapsulation.None  // <-- AÑADIDO
 })
-export class FocoShopComponent implements AfterViewInit {
+export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
   categorias = [
     { nombre: 'TECNOLOGÍA', imagen: 'assets/img/tecnologia.jpeg', subcategorias: ['Celulares', 'Computadoras', 'Accesorios'] },
     { nombre: 'VESTIMENTA', imagen: 'assets/img/emma.jpg', subcategorias: ['Hombres', 'Mujeres', 'Niños'] },
@@ -41,19 +43,28 @@ export class FocoShopComponent implements AfterViewInit {
   isLoggedIn = false;
   userName = '';
   userImage = 'assets/img/user-icon.png'; // icono por defecto
+  userMenuOpen = false; // menú desplegable del usuario
 
-  constructor(private router: Router) {
-    // 🔄 Escucha cambios del localStorage (por ejemplo, login desde otra ruta)
-    window.addEventListener('storage', (event) => {
-      if (event.key === 'user') {
-        this.cargarUsuario();
-      }
-    });
+  // 🔹 Escucha el evento de cambios en localStorage
+  private storageListener = (event: StorageEvent) => {
+    if (event.key === 'user' || event.key === null) {
+      this.cargarUsuario();
+    }
+  };
+
+  constructor(private router: Router) {}
+
+  ngOnInit() {
+    this.cargarUsuario();
+    window.addEventListener('storage', this.storageListener);
+  }
+
+  ngOnDestroy() {
+    window.removeEventListener('storage', this.storageListener);
   }
 
   ngAfterViewInit() {
     this.scrollCategoriaCentrada(this.categoriaSeleccionada);
-    this.cargarUsuario();
   }
 
   // ===== Productos filtrados por categoría y búsqueda =====
@@ -110,7 +121,7 @@ export class FocoShopComponent implements AfterViewInit {
         const parsed = JSON.parse(userData);
         this.isLoggedIn = true;
         this.userName = parsed.nombre || 'Usuario';
-        this.userImage = parsed.imagen || 'assets/img/user-icon.png';
+        this.userImage = parsed.imagen && parsed.imagen.trim() !== '' ? parsed.imagen : 'assets/img/profile.jpeg';
       } catch (error) {
         console.error('Error al cargar usuario:', error);
         this.logout();
@@ -122,9 +133,25 @@ export class FocoShopComponent implements AfterViewInit {
 
   logout() {
     localStorage.removeItem('user');
+    window.dispatchEvent(new Event('storage'));
     this.isLoggedIn = false;
     this.userName = '';
-    this.userImage = 'assets/img/user-icon.png';
+    this.userImage = 'assets/img/profile.jpeg';
+    this.userMenuOpen = false;
     this.router.navigate(['/']);
+  }
+
+  // ===== Menú desplegable del usuario =====
+  toggleUserMenu() {
+    this.userMenuOpen = !this.userMenuOpen;
+  }
+
+  @HostListener('document:click', ['$event'])
+  clickFuera(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    const clickedInsideUserInfo = target.closest('.user-info');
+    if (!clickedInsideUserInfo && this.userMenuOpen) {
+      this.userMenuOpen = false;
+    }
   }
 }

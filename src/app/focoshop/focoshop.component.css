@@ -1,14 +1,17 @@
 /* ======= ESTILO GENERAL ======= */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Montserrat:wght@600;700&display=swap');
+
 * {
   box-sizing: border-box;
   scroll-behavior: smooth;
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 body {
   margin: 0;
   background: #f5f3fa;
-  font-family: 'Poppins', 'Segoe UI', sans-serif;
   color: #333;
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 /* ======= HEADER ======= */
@@ -34,6 +37,7 @@ body {
 }
 
 .logo-text {
+  font-family: 'Montserrat', sans-serif;
   font-size: 1.8rem;
   font-weight: 800;
   color: #ffffff;
@@ -41,7 +45,7 @@ body {
 }
 
 .header i {
-  color: white;
+  color: rgb(255, 255, 255);
   font-size: 1.5rem;
 }
 
@@ -59,6 +63,7 @@ body {
   font-size: 14px;
   background: #1b1b1b;
   color: white;
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 .search-box input::placeholder {
@@ -78,9 +83,11 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  position: relative; /* para el menú desplegable */
 }
 
 .auth-link {
+  font-family: 'Montserrat', sans-serif;
   color: white;
   text-decoration: none;
   font-weight: 600;
@@ -118,6 +125,7 @@ body {
   border-radius: 25px;
   padding: 12px 20px;
   font-weight: 600;
+  font-family: 'Montserrat', sans-serif;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -133,29 +141,31 @@ body {
 }
 
 /* ======= MENÚ LATERAL DE CATEGORÍAS ======= */
-/* MENÚ LATERAL DE CATEGORÍAS */
 .menu-categorias {
   position: fixed;
-  top: 80px; /* empieza justo debajo del header */
-  left: -260px; /* oculto al inicio */
+  top: 80px;
+  left: -260px;
   width: 250px;
   height: calc(100vh - 80px);
-  background: #1b1b1b; /* negro */
+  background: #1b1b1b;
   color: white;
-  padding: 60px 20px 20px 20px; /* espacio extra arriba para no tapar */
+  padding: 60px 20px 20px 20px;
   transition: left 0.3s ease;
   overflow-y: auto;
   z-index: 998;
-  border-radius: 0; /* ✅ ahora totalmente cuadrado */
-  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.4); /* sombra ligera */
+  border-radius: 0;
+  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.4);
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 .menu-categorias.open {
   left: 0;
 }
+
 .menu-categorias ul li:first-child {
-  margin-top: 20px; /* separa la primera categoría del borde */
+  margin-top: 20px;
 }
+
 .menu-categorias li {
   padding: 10px 0;
   cursor: pointer;
@@ -200,6 +210,7 @@ body {
   font-size: 18px;
   transition: background 0.3s ease, transform 0.2s ease;
   z-index: 2;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .arrow-btn:hover {
@@ -239,6 +250,7 @@ body {
   cursor: pointer;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   box-shadow: 0 3px 15px rgba(39, 1, 233, 0.08);
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 .categoria-card img {
@@ -253,6 +265,7 @@ body {
   font-weight: 600;
   font-size: 15px;
   color: #4b0082;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .categoria-card:hover {
@@ -268,6 +281,7 @@ body {
 /* ======= PRODUCTOS ======= */
 .productos {
   margin-top: 3rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 .productos h2 {
@@ -275,6 +289,7 @@ body {
   color: #4b0082;
   font-size: 1.7rem;
   margin-bottom: 1.5rem;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .producto-grid {
@@ -289,6 +304,7 @@ body {
   overflow: hidden;
   box-shadow: 0 3px 15px rgba(0,0,0,0.08);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 .producto-card:hover {
@@ -345,28 +361,175 @@ body {
   background: #eee;
 }
 
-.auth-links {
+/* ======= FOTO DE PERFIL DEL USUARIO ======= */
+.user-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #7d5fff;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.user-icon:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(123, 87, 255, 0.6);
+}
+
+/* ======= MENÚ DESPLEGABLE DE USUARIO MEJORADO ======= */
+.user-menu {
+  position: absolute;
+  top: 55px; /* justo debajo del icono */
+  right: 0;
+  background: #1f1f1f;
+  border-radius: 15px;
+  overflow: hidden;
+  min-width: 220px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+  display: none;
+  flex-direction: column;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  z-index: 1001;
+  transform: translateY(-20px);
+  opacity: 0;
+  transition: transform 0.35s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.35s ease;
+}
+
+/* Abrir menú */
+.user-menu.open {
+  display: flex;
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* ======== MENÚ DESPLEGABLE NEÓN MODERNO ======== */
+.user-menu {
+  position: absolute;
+  top: 55px;
+  right: 0;
+  background: #1b1b1b;
+  border-radius: 15px;
+  overflow: hidden;
+  min-width: 220px;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+  display: none;
+  flex-direction: column;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  z-index: 1001;
+  transform: translateY(-20px);
+  opacity: 0;
+  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.4s ease;
+}
+
+/* Abrir menú */
+.user-menu.open {
+  display: flex;
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Botones estilo neón */
+.user-menu button {
+  position: relative;
+  background: #2c2c2c;
+  border: none;
+  color: #fff;
+  padding: 15px 20px;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
+  margin: 5px 0;
+  border-radius: 12px;
+  overflow: hidden;
+  z-index: 1;
+  transition: transform 0.3s ease, box-shadow 0.4s ease;
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
-.auth-link {
-  color: white;
-  font-weight: 600;
-  text-decoration: none;
-  padding: 8px 14px;
-  border-radius: 25px;
-  background: linear-gradient(135deg, #7d5fff, #6b44ff);
-  transition: all 0.3s ease;
+/* Pseudo-elemento para relleno animado */
+.user-menu button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  background: linear-gradient(120deg, rgba(165,103,255,0.3), rgba(125,95,255,0.5), rgba(165,103,255,0.3));
+  z-index: 0;
+  transform: skewX(-20deg);
+  transition: all 0.5s ease;
 }
 
-.auth-link:hover {
-  background: linear-gradient(135deg, #6b44ff, #5a36e3);
-  box-shadow: 0 4px 12px rgba(123, 87, 255, 0.4);
-  transform: translateY(-2px);
+/* Texto e iconos encima */
+.user-menu button span,
+.user-menu button i {
+  position: relative;
+  z-index: 2;
 }
 
-.auth-link.active {
-  border: 2px solid #fff;
+/* Hover morado animado */
+.user-menu button:not(.logout-btn):hover::before {
+  left: 0;
+}
+
+.user-menu button:not(.logout-btn):hover {
+  color: #fff;
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 0 15px rgba(125, 95, 255, 0.6), 0 3px 10px rgba(0,0,0,0.2);
+}
+
+/* Hover rojo animado para cerrar sesión */
+.user-menu button.logout-btn::before {
+  background: linear-gradient(120deg, rgba(255,107,107,0.3), rgba(255,75,75,0.5), rgba(255,107,107,0.3));
+  left: -100%;
+  transform: skewX(-20deg);
+}
+
+.user-menu button.logout-btn:hover::before {
+  left: 0;
+}
+
+.user-menu button.logout-btn:hover {
+  color: #fff;
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 0 15px rgba(255,75,75,0.6), 0 3px 10px rgba(0,0,0,0.2);
+}
+
+/* Iconos */
+.user-menu button i {
+  font-size: 1.3rem;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* Separador opcional */
+.user-menu .divider {
+  height: 1px;
+  background: rgba(255,255,255,0.1);
+  margin: 8px 0;
+}
+
+/* Animación de entrada en cascada */
+.user-menu button,
+.user-menu .divider {
+  opacity: 0;
+  transform: translateY(15px);
+  animation: fadeInUp 0.5s forwards;
+}
+
+.user-menu.open button:nth-child(1) { animation-delay: 0.05s; }
+.user-menu.open button:nth-child(2) { animation-delay: 0.10s; }
+.user-menu.open button:nth-child(3) { animation-delay: 0.15s; }
+
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(15px); }
+  60% { opacity: 0.7; transform: translateY(-3px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
