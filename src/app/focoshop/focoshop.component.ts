@@ -114,14 +114,32 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     this.router.navigate(['/configuracion']);
   }
 
+  // ✅ NUEVA FUNCIÓN: Ir a la pantalla "Mi perfil"
+  irPerfil() {
+    this.userMenuOpen = false;
+    this.router.navigate(['/perfil']);
+  }
+
+  // ✅ Cargar datos del usuario desde localStorage
   cargarUsuario() {
     const userData = localStorage.getItem('user');
     if (userData) {
       try {
         const parsed = JSON.parse(userData);
         this.isLoggedIn = true;
-        this.userName = parsed.nombre || parsed.firstName || parsed.username || 'Usuario';
-        this.userImage = parsed.imagen && parsed.imagen.trim() !== '' ? parsed.imagen : 'assets/img/profile.jpeg';
+
+        // 🔹 Mostrar nombre real si existe, si no, usar parte del correo
+        this.userName =
+          parsed.nombre ||
+          parsed.firstName ||
+          parsed.username ||
+          (parsed.email ? parsed.email.split('@')[0] : 'Usuario');
+
+        // 🔹 Imagen del perfil (si no hay, usar la predeterminada)
+        this.userImage =
+          parsed.imagen && parsed.imagen.trim() !== ''
+            ? parsed.imagen
+            : 'assets/img/profile.jpeg';
       } catch (error) {
         console.error('Error al cargar usuario:', error);
         this.logout();

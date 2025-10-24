@@ -20,20 +20,23 @@
       <ng-container *ngIf="isLoggedIn; else notLoggedIn">
         <div class="user-info" (click)="toggleUserMenu()">
           <img [src]="userImage" alt="Perfil" class="user-icon" />
-          
 
           <!-- MENÚ DESPLEGABLE MODERNO -->
           <div class="user-menu" [class.open]="userMenuOpen">
             <!-- NOMBRE DEL USUARIO ENCIMA DE LOS BOTONES -->
             <div class="user-name-header">{{ userName }}</div>
 
-            <button>
+            <!-- 🔹 NUEVA FUNCIÓN: IR A PERFIL -->
+            <button (click)="irPerfil()">
               <i class="fa fa-user"></i> Mi perfil
             </button>
+
             <button (click)="irConfiguracion()">
               <i class="fa fa-cog"></i> Configuración
             </button>
+
             <div class="divider"></div>
+
             <button class="logout-btn" (click)="logout()">
               <i class="fa fa-sign-out-alt"></i> Cerrar sesión
             </button>

@@ -1,0 +1,51 @@
+<div class="perfil-dashboard">
+
+  <!-- HEADER NEGRO RECTANGULAR -->
+  <div class="perfil-header-dashboard">
+    <button class="volver-btn" (click)="volverInicio()">← Volver</button>
+
+    <div class="perfil-info">
+      <img [src]="user.imagen" alt="Foto perfil" class="perfil-foto-dashboard"/>
+      <div class="perfil-texto">
+        <h2>{{ user.nombre }}</h2>
+        <p>{{ user.email }}</p>
+        <button class="editar-btn" (click)="editarPerfil()">Editar perfil</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs-perfil">
+    <button 
+      [class.active]="tabSeleccionado==='vendiendo'" 
+      (click)="seleccionarTab('vendiendo')">
+       En venta
+    </button>
+    <button 
+      [class.active]="tabSeleccionado==='vendidos'" 
+      (click)="seleccionarTab('vendidos')">
+       Vendidos
+    </button>
+    <button 
+      [class.active]="tabSeleccionado==='compras'" 
+      (click)="seleccionarTab('compras')">
+       Compras
+    </button>
+  </div>
+
+  <!-- PRODUCTOS / SECCIÓN BLANCA -->
+  <div class="productos-seccion">
+    <div class="productos-scroll">
+      <div class="producto-card" *ngFor="let p of obtenerProductosActivos()">
+        <img [src]="p.imagen" alt="{{ p.nombre }}" />
+        <div class="producto-detalles">
+          <h4>{{ p.nombre }}</h4>
+          <p>${{ p.precio }}</p>
+        </div>
+      </div>
+      <p *ngIf="obtenerProductosActivos().length===0" class="vacio">
+        No hay productos en esta sección
+      </p>
+    </div>
+  </div>
+</div>
