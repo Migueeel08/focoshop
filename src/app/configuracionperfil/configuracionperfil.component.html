@@ -1,0 +1,63 @@
+@if (!cargando && usuario) {
+  <div class="perfil-container">
+    <header class="perfil-header">
+      <div class="logo">
+        <span class="logo-text">FOCOSHOP</span>
+        <i class="fa fa-shopping-cart"></i>
+      </div>
+
+      <div class="menu">
+        
+      </div>
+    </header>
+
+    <main class="perfil-content">
+      <div class="perfil-grid">
+        <!-- PERFIL -->
+        <div class="perfil-card">
+          <h3>CONFIGURACIÓN DE PERFIL</h3>
+          <div class="perfil-info">
+            <!-- 🔹 Mostrar la imagen de user si existe, sino avatar por defecto -->
+            <img [src]="usuario.imagen || 'assets/img/avatar.png'" alt="avatar" class="avatar" />
+            <p class="nombre">{{usuario.nombre}} {{usuario.apellido}}</p>
+            <p>Email: {{usuario.email}}</p>
+            <p>Teléfono: {{usuario.telefono || 'No especificado'}}</p>
+          </div>
+          <button (click)="editarCuenta()" class="btn-accion">EDITAR CUENTA</button>
+        </div>
+
+        <!-- DIRECCIÓN -->
+        <div class="perfil-card">
+          <h3>DIRECCIÓN DE ENVÍO</h3>
+          <div class="perfil-info">
+            <p><strong>{{usuario.nombre}} {{usuario.apellido}}</strong></p>
+            <p>{{usuario.direccion || 'Sin dirección registrada'}}</p>
+            <p>Phone Number: {{usuario.telefono || 'No disponible'}}</p>
+            <p>Email: {{usuario.email}}</p>
+          </div>
+          <button (click)="editarDireccion()" class="btn-accion">EDITAR DIRECCIÓN</button>
+        </div>
+
+        <!-- MÉTODO DE PAGO -->
+        <div class="perfil-card">
+          <h3>MÉTODO DE PAGO</h3>
+          <div class="tarjeta">
+            <p class="numero">NUMERO<br>{{usuario.tarjeta || '**** **** **** 0000'}}</p>
+            <div class="tarjeta-footer">
+              <span class="tipo">{{usuario.tipo_tarjeta || 'VISA'}}</span>
+              <span class="titular">{{usuario.nombre}} {{usuario.apellido}}</span>
+            </div>
+          </div>
+          <button (click)="editarPago()" class="btn-accion">EDITAR MÉTODO DE PAGO</button>
+        </div>
+      </div>
+
+      <button (click)="volver()" class="btn-volver">VOLVER</button>
+    </main>
+  </div>
+} @else {
+  <div class="loading">
+    <div class="spinner"></div>
+    <p>Cargando perfil...</p>
+  </div>
+}

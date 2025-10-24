@@ -533,3 +533,22 @@ body {
   60% { opacity: 0.7; transform: translateY(-3px); }
   100% { opacity: 1; transform: translateY(0); }
 }
+/* Nombre de usuario dentro del menú */
+.user-menu .user-name-header {
+  display: none; /* por defecto oculto */
+  font-weight: 700;
+  font-size: 1rem;
+  color: #fff;
+  padding: 10px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Cuando el menú se abre, mostramos el nombre y desplazamos los botones */
+.user-menu.open .user-name-header {
+  display: block;
+}
+
+/* Ajuste de los botones cuando aparece el nombre */
+.user-menu.open button {
+  margin-top: 5px; /* separa un poco los botones del nombre */
+}

@@ -65,21 +65,42 @@ export class LoginComponent {
         console.log('Login exitoso:', res);
         alert('Inicio de sesión correcto');
 
-        // 🔹 Crear datos de usuario (ajústalo según tu backend)
-        const userData = {
-          nombre: this.nombre || 'Usuario',
-          email: this.email,
-          imagen: 'assets/img/profile.jpeg' // Puedes cambiarlo si tu backend devuelve una imagen
-        };
+        // 🔹 Obtener datos completos del usuario desde el backend
+        this.http.get<any>(`http://localhost:8000/api/usuario?email=${encodeURIComponent(this.email)}`)
+          .subscribe(
+            userRes => {
+              const userData = {
+                nombre: userRes.nombre || 'Usuario',
+                apellido: userRes.apellido || '',
+                email: this.email,
+                imagen: userRes.imagen || 'assets/img/profile.jpeg'
+              };
 
-        // 🔹 Guardar usuario en localStorage
-        localStorage.setItem('user', JSON.stringify(userData));
+              // 🔹 Guardamos en localStorage para ConfiguracionComponent
+              localStorage.setItem('user', JSON.stringify(userData));
+              localStorage.setItem('email', this.email); // por compatibilidad
+              window.dispatchEvent(new Event('storage'));
 
-        // 🔹 Forzar evento para actualizar otros componentes
-        window.dispatchEvent(new Event('storage'));
+              this.router.navigate(['/']); // navega al inicio
+            },
+            err => {
+              console.error('Error al obtener usuario desde backend:', err);
 
-        // 🔹 Redirigir a inicio
-        this.router.navigate(['/']);
+              // En caso de error, usar valores por defecto
+              const userData = {
+                nombre: 'Usuario',
+                apellido: '',
+                email: this.email,
+                imagen: 'assets/img/profile.jpeg'
+              };
+
+              localStorage.setItem('user', JSON.stringify(userData));
+              localStorage.setItem('email', this.email); // por compatibilidad
+              window.dispatchEvent(new Event('storage'));
+
+              this.router.navigate(['/']);
+            }
+          );
       },
       error: (err) => {
         console.error('Error al iniciar sesión:', err);

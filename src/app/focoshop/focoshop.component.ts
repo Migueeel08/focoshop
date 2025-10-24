@@ -3,16 +3,17 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 
-
 @Component({
   selector: 'foco-shop',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './focoshop.component.html',
   styleUrls: ['./focoshop.component.css'],
-  encapsulation: ViewEncapsulation.None  // <-- AÑADIDO
+  encapsulation: ViewEncapsulation.None
 })
 export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
+
+  // ===== CATEGORÍAS =====
   categorias = [
     { nombre: 'TECNOLOGÍA', imagen: 'assets/img/tecnologia.jpeg', subcategorias: ['Celulares', 'Computadoras', 'Accesorios'] },
     { nombre: 'VESTIMENTA', imagen: 'assets/img/emma.jpg', subcategorias: ['Hombres', 'Mujeres', 'Niños'] },
@@ -23,15 +24,8 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     { nombre: 'DEPORTE', imagen: 'assets/img/deporte.jpg', subcategorias: ['Fitness', 'Bicicletas', 'Balones'] }
   ];
 
-  productos = [
-    { categoria: 'TECNOLOGÍA', nombre: 'Amazon Basics HDMI Cable', precio: 360, reviews: 894, imagen: 'assets/img/hdmi.jpg' },
-    { categoria: 'TECNOLOGÍA', nombre: 'Portable Washing Machine', precio: 80, reviews: 728, imagen: 'assets/img/audifonos2.jpg' },
-    { categoria: 'TECNOLOGÍA', nombre: 'TOZO T6 True Wireless Earbuds', precio: 70, reviews: 600, imagen: 'assets/img/teclado.jpg' },
-    { categoria: 'TECNOLOGÍA', nombre: 'Dell Optiplex 7000x7480', precio: 250, reviews: 482, imagen: 'assets/img/monitor.jpg' },
-    { categoria: 'JUGUETES', nombre: 'Lego Star Wars Set', precio: 120, reviews: 300, imagen: 'assets/img/lego.jpg' },
-    { categoria: 'HOGAR', nombre: 'Aspiradora Robot', precio: 250, reviews: 150, imagen: 'assets/img/aspiradora.jpg' },
-    { categoria: 'DEPORTE', nombre: 'Bicicleta Mountain Bike', precio: 450, reviews: 210, imagen: 'assets/img/bicicleta.jpg' }
-  ];
+  // ===== PRODUCTOS (serán cargados desde la base de datos) =====
+  productos: any[] = [];
 
   categoriaSeleccionada = 0;
   busqueda = '';
@@ -45,7 +39,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
   userImage = 'assets/img/user-icon.png'; // icono por defecto
   userMenuOpen = false; // menú desplegable del usuario
 
-  // 🔹 Escucha el evento de cambios en localStorage
   private storageListener = (event: StorageEvent) => {
     if (event.key === 'user' || event.key === null) {
       this.cargarUsuario();
@@ -57,6 +50,10 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
   ngOnInit() {
     this.cargarUsuario();
     window.addEventListener('storage', this.storageListener);
+
+    // 🔹 Aquí más adelante se pueden cargar los productos desde la BD
+    // Ejemplo:
+    // this.productService.getProductos().subscribe(data => this.productos = data);
   }
 
   ngOnDestroy() {
@@ -67,7 +64,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     this.scrollCategoriaCentrada(this.categoriaSeleccionada);
   }
 
-  // ===== Productos filtrados por categoría y búsqueda =====
   get productosFiltrados() {
     return this.productos.filter(
       p =>
@@ -76,11 +72,10 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     );
   }
 
-  // ===== Manejo de categorías =====
   seleccionarCategoria(index: number) {
     this.categoriaSeleccionada = index;
     this.scrollCategoriaCentrada(index);
-    this.menuAbierto = false; // cierra menú lateral
+    this.menuAbierto = false;
   }
 
   anterior() {
@@ -96,7 +91,7 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
 
   scrollCategoriaCentrada(index: number) {
     if (!this.categoriaGrid) return;
-    const cardWidth = 160 + 25; // ancho tarjeta + gap
+    const cardWidth = 160 + 25;
     const scrollPosition = cardWidth * index - (this.categoriaGrid.nativeElement.offsetWidth / 2 - cardWidth / 2);
     this.categoriaGrid.nativeElement.scrollTo({ left: scrollPosition, behavior: 'smooth' });
   }
@@ -113,14 +108,19 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     this.router.navigate(['/register']);
   }
 
-  // ===== Manejo de usuario =====
+  // ✅ Ir a la pantalla de configuración del usuario
+  irConfiguracion() {
+    this.userMenuOpen = false;
+    this.router.navigate(['/configuracion']);
+  }
+
   cargarUsuario() {
     const userData = localStorage.getItem('user');
     if (userData) {
       try {
         const parsed = JSON.parse(userData);
         this.isLoggedIn = true;
-        this.userName = parsed.nombre || 'Usuario';
+        this.userName = parsed.nombre || parsed.firstName || parsed.username || 'Usuario';
         this.userImage = parsed.imagen && parsed.imagen.trim() !== '' ? parsed.imagen : 'assets/img/profile.jpeg';
       } catch (error) {
         console.error('Error al cargar usuario:', error);
@@ -141,7 +141,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     this.router.navigate(['/']);
   }
 
-  // ===== Menú desplegable del usuario =====
   toggleUserMenu() {
     this.userMenuOpen = !this.userMenuOpen;
   }
