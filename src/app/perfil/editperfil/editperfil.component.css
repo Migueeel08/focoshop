@@ -1,0 +1,151 @@
+/* ====== CONTENEDOR GENERAL ====== */
+.perfil-container {
+  min-height: 100vh;
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* ====== HEADER ====== */
+.header {
+  width: 100%;
+  background: #000;
+  color: white;
+  padding: 15px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-text {
+  font-weight: 800;
+  font-size: 1.5rem;
+  letter-spacing: 1px;
+}
+
+.btn-volver {
+  background: #7d5fff;
+  border: none;
+  color: white;
+  padding: 10px 25px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.btn-volver:hover {
+  background: #5b3edc;
+  transform: translateY(-2px);
+}
+
+/* ====== TARJETA DE PERFIL ====== */
+.perfil-card {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  margin-top: 40px;
+  width: 90%;
+  max-width: 600px;
+  text-align: center;
+}
+
+.perfil-card h2 {
+  color: #222;
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+}
+
+/* ====== FOTO DE PERFIL ====== */
+.foto-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.foto-perfil {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #7d5fff;
+  margin-bottom: 10px;
+}
+
+.btn-foto {
+  background: transparent;
+  border: 2px solid #7d5fff;
+  color: #7d5fff;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.3s ease;
+}
+
+.btn-foto:hover {
+  background: #7d5fff;
+  color: white;
+}
+
+/* ====== FORMULARIO ====== */
+.perfil-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.input-group {
+  text-align: left;
+}
+
+.input-group label {
+  display: block;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+  transition: 0.3s;
+}
+
+.input-group input:focus {
+  border-color: #7d5fff;
+  outline: none;
+  box-shadow: 0 0 5px rgba(125, 95, 255, 0.3);
+}
+
+/* ====== BOTÓN GUARDAR ====== */
+.btn-guardar {
+  background: linear-gradient(135deg, #7d5fff, #5b3edc);
+  color: white;
+  border: none;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.btn-guardar:hover {
+  background: linear-gradient(135deg, #5b3edc, #4a2ecb);
+  transform: translateY(-2px);
+}

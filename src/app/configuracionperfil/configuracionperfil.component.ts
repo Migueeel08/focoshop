@@ -46,17 +46,27 @@ export class ConfiguracionComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error cargando usuario desde backend:', err);
-        // mantener lo que ya estaba en localStorage
         this.cargando = false;
       }
     });
   }
 
-  editarCuenta() { alert('Editar cuenta'); }
-  editarDireccion() { alert('Editar dirección'); }
-  editarPago() { alert('Editar método de pago'); }
+  // 🔹 Navegar al componente de edición pasando la sección correspondiente
+  editarCuenta() {
+    this.router.navigate(['/perfil/editar'], { queryParams: { seccion: 'cuenta' } });
+  }
 
-  volver() { this.router.navigate(['/inicio']); }
+  editarDireccion() {
+    this.router.navigate(['/perfil/editar'], { queryParams: { seccion: 'direccion' } });
+  }
+
+  editarPago() {
+    this.router.navigate(['/perfil/editar'], { queryParams: { seccion: 'pago' } });
+  }
+
+  volver() {
+    this.router.navigate(['/inicio']);
+  }
 
   cerrarSesion() { 
     localStorage.clear(); 

@@ -1,0 +1,43 @@
+<div class="perfil-container">
+  <header class="header">
+    <div class="logo">
+      <span class="logo-text">FOCOSHOP</span>
+      <i class="fa fa-shopping-cart"></i>
+    </div>
+    <button class="btn-volver" (click)="volver()">Volver</button>
+  </header>
+
+  <div class="perfil-card">
+    <h2>Configuración de Perfil</h2>
+
+    <div class="foto-section">
+      <img [src]="user.imagen" alt="Foto de perfil" class="foto-perfil" />
+      <input type="file" id="fotoInput" (change)="onFileSelected($event)" hidden />
+      <button class="btn-foto" (click)="abrirSelectorFoto()">Cambiar foto</button>
+    </div>
+
+    <form (ngSubmit)="guardarCambios()" class="perfil-form">
+      <div class="input-group">
+        <label>Nombre</label>
+        <input type="text" [(ngModel)]="user.nombre" name="nombre" required />
+      </div>
+
+      <div class="input-group">
+        <label>Apellido</label>
+        <input type="text" [(ngModel)]="user.apellido" name="apellido" required />
+      </div>
+
+      <div class="input-group">
+        <label>Correo electrónico</label>
+        <input type="email" [(ngModel)]="user.email" name="email" disabled />
+      </div>
+
+      <div class="input-group">
+        <label>Número de teléfono</label>
+        <input type="text" [(ngModel)]="user.telefono" name="telefono" placeholder="Ej. +52 6681234567" />
+      </div>
+
+      <button type="submit" class="btn-guardar">Guardar cambios</button>
+    </form>
+  </div>
+</div>

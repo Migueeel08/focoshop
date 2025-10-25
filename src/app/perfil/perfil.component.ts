@@ -50,7 +50,7 @@ export class PerfilComponent implements OnInit {
   }
 
   editarPerfil() {
-    this.router.navigate(['/configuracion']);
+    this.router.navigate(['/perfil/editar']);
   }
 
   volverInicio() {
