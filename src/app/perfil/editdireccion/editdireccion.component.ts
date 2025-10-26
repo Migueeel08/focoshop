@@ -10,10 +10,21 @@ interface Estado {
   codigo: string;
 }
 
-interface CPData {
-  estado: string;
-  municipio: string;
-  colonias: string[];
+interface MexicoAPIResponse {
+  meta: {
+    page: number;
+    per_page: string;
+    total: number;
+    total_pages: number;
+  };
+  data: {
+    d_codigo: string;
+    d_estado: string;
+    d_ciudad: string;
+    d_asenta: string;
+    D_mnpio: string;
+    d_tipo_asenta: string;
+  }[];
 }
 
 @Component({
@@ -106,9 +117,6 @@ export class EditDireccionComponent implements OnInit {
   mostrarAlerta = false;
   mensajeAlerta = '';
 
-  // ✅ Cache de códigos postales
-  private cpDatabase: { [key: string]: CPData } = {};
-
   constructor(
     private router: Router,
     private usuarioService: UsuariosService,
@@ -134,27 +142,10 @@ export class EditDireccionComponent implements OnInit {
     };
 
     this.cargarEstados();
-    
-    // ✅ Cargar base de datos de códigos postales
-    this.cargarCodigosPostales();
 
     if (userData.direccion && userData.direccion.trim() !== '') {
       this.parsearDireccion(userData.direccion);
     }
-  }
-
-  // ✅ Cargar base de datos local de códigos postales
-  cargarCodigosPostales(): void {
-    this.http.get<{ [key: string]: CPData }>('assets/CP_descaga.txt')
-      .subscribe({
-        next: (data) => {
-          this.cpDatabase = data;
-          console.log('✅ Base de datos de CPs cargada:', Object.keys(data).length, 'códigos postales');
-        },
-        error: (error) => {
-          console.error('❌ Error al cargar base de datos de CPs:', error);
-        }
-      });
   }
 
   cargarEstados(): void {
@@ -184,11 +175,17 @@ export class EditDireccionComponent implements OnInit {
     this.cargarEstados();
   }
 
-  // ✅ Buscar código postal en base de datos local
+  // ✅ Buscar código postal usando México API (100% gratuita, sin registro)
   buscarPorCodigoPostal(): void {
     const cp = this.direccion.codigoPostal.trim();
 
-    if (cp.length !== 5 || !/^\d{5}$/.test(cp) || this.direccion.pais !== 'México') {
+    // Validar formato de CP
+    if (cp.length !== 5 || !/^\d{5}$/.test(cp)) {
+      return;
+    }
+
+    // Solo funciona para México
+    if (this.direccion.pais !== 'México') {
       return;
     }
 
@@ -197,35 +194,60 @@ export class EditDireccionComponent implements OnInit {
     this.cpEncontrado = false;
     this.colonias = [];
 
-    console.log('🔍 Buscando CP:', cp);
+    console.log('🔍 Buscando CP en México API:', cp);
 
-    // Simular pequeña demora para mejor UX
-    setTimeout(() => {
-      if (this.cpDatabase[cp]) {
-        const datos = this.cpDatabase[cp];
-        
-        // Autocompletar datos
-        this.direccion.estado = datos.estado;
-        this.direccion.ciudad = datos.municipio;
-        this.colonias = datos.colonias;
-        
-        if (this.colonias.length > 0) {
-          this.direccion.colonia = this.colonias[0];
+    // México API - 100% gratuita, open source, sin registro
+    const apiUrl = `https://mexico-api.devaleff.com/api/codigo-postal/${cp}`;
+
+    this.http.get<MexicoAPIResponse>(apiUrl).subscribe({
+      next: (response) => {
+        console.log('📡 Respuesta API:', response);
+
+        if (response.data && response.data.length > 0) {
+          const primerRegistro = response.data[0];
+          
+          // Autocompletar estado
+          this.direccion.estado = primerRegistro.d_estado;
+          
+          // Autocompletar ciudad (municipio)
+          this.direccion.ciudad = primerRegistro.D_mnpio;
+          
+          // Obtener todas las colonias únicas disponibles para ese CP
+          this.colonias = [...new Set(response.data.map(item => item.d_asenta))];
+          
+          // Seleccionar la primera colonia por defecto
+          if (this.colonias.length > 0) {
+            this.direccion.colonia = this.colonias[0];
+          }
+
+          this.cpEncontrado = true;
+          this.buscandoCP = false;
+          
+          console.log('✅ CP encontrado');
+          console.log('📍 Estado:', this.direccion.estado);
+          console.log('🏙️ Ciudad:', this.direccion.ciudad);
+          console.log('🏘️ Colonias:', this.colonias);
+        } else {
+          this.errorCP = true;
+          this.buscandoCP = false;
+          console.log('❌ CP no encontrado');
         }
-
-        this.cpEncontrado = true;
-        this.buscandoCP = false;
-        
-        console.log('✅ CP encontrado');
-        console.log('📍 Estado:', this.direccion.estado);
-        console.log('🏙️ Ciudad:', this.direccion.ciudad);
-        console.log('🏘️ Colonias:', this.colonias);
-      } else {
+      },
+      error: (error) => {
+        console.error('❌ Error al consultar API:', error);
         this.errorCP = true;
         this.buscandoCP = false;
-        console.log('❌ CP no encontrado en la base de datos');
+        
+        // Mensaje de error amigable
+        if (error.status === 0) {
+          console.error('Error de conexión. Verifica tu conexión a internet.');
+        } else if (error.status === 404) {
+          console.error('Código postal no encontrado.');
+        } else {
+          console.error('Error en el servidor. Intenta de nuevo más tarde.');
+        }
       }
-    }, 500);
+    });
   }
 
   parsearDireccion(direccionString: string): void {
