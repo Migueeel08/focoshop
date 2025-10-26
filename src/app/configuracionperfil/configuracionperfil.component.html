@@ -43,11 +43,23 @@
         <!-- MÉTODO DE PAGO -->
         <div class="perfil-card">
           <h3>MÉTODO DE PAGO</h3>
-          <div class="tarjeta">
-            <p class="numero">NUMERO<br>{{usuario.tarjeta || '**** **** **** 0000'}}</p>
-            <div class="tarjeta-footer">
-              <span class="tipo">{{usuario.tipo_tarjeta || 'VISA'}}</span>
-              <span class="titular">{{usuario.nombre}} {{usuario.apellido}}</span>
+          <!-- ✅ Tarjeta simple como antes pero con datos dinámicos -->
+          <div class="tarjeta" [style.background]="colorTarjeta">
+            <div class="tarjeta-top">
+              @if (bancoTarjeta) {
+                <span class="banco">{{bancoTarjeta}}</span>
+              } @else {
+                <span class="tipo-mini">{{tipoTarjeta}}</span>
+              }
+              <i class="fa fa-credit-card chip-icon"></i>
+            </div>
+            <p class="numero">{{numeroTarjeta}}</p>
+            <div class="tarjeta-bottom">
+              <div class="titular-section">
+                <span class="label-small">TITULAR</span>
+                <span class="titular">{{titularTarjeta}}</span>
+              </div>
+              <span class="tipo">{{tipoTarjeta}}</span>
             </div>
           </div>
           <button (click)="editarPago()" class="btn-accion">EDITAR MÉTODO DE PAGO</button>
