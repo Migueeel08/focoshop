@@ -158,11 +158,9 @@ export class ConfiguracionComponent implements OnInit {
   this.router.navigate(['/perfil/editar-direccion']);
 }
 
-  editarPago() {
-    this.router.navigate(['/perfil/editar'], { 
-      queryParams: { seccion: 'pago' } 
-    });
-  }
+ editarPago() {
+  this.router.navigate(['/perfil/editar-pago']);
+}
 
   volver() {
     this.router.navigate(['/inicio']);
