@@ -27,9 +27,18 @@ export class ConfiguracionComponent implements OnInit {
 
     if (userString) {
       const user = JSON.parse(userString);
-      this.usuario = { ...user }; // carga inicial desde localStorage
+      this.usuario = {
+        nombre: user.nombre || '',
+        apellido: user.apellido || '',      // ✅ apellido incluido
+        email: user.email || '',
+        telefono: user.telefono || '',
+        imagen: user.imagen || 'assets/img/avatar.png',
+        direccion: user.direccion || '',
+        tarjeta: user.tarjeta || '',
+        tipo_tarjeta: user.tipo_tarjeta || ''
+      };
       email = user.email;
-      this.cargando = false; // mostrar datos mientras llega backend
+      this.cargando = false;
     }
 
     // 🔹 Si no hay email, redirigir al login
@@ -41,8 +50,20 @@ export class ConfiguracionComponent implements OnInit {
     // 🔹 Actualizar datos desde backend
     this.usuarioService.obtenerUsuarioPorEmail(email).subscribe({
       next: (data) => {
-        this.usuario = { ...this.usuario, ...data }; // actualizar info
+        this.usuario = {
+          nombre: data.nombre || this.usuario.nombre,
+          apellido: data.apellido || this.usuario.apellido,
+          email: data.email || this.usuario.email,
+          telefono: data.telefono || this.usuario.telefono,
+          imagen: data.imagen || this.usuario.imagen,
+          direccion: data.direccion || this.usuario.direccion,
+          tarjeta: data.tarjeta || this.usuario.tarjeta,
+          tipo_tarjeta: data.tipo_tarjeta || this.usuario.tipo_tarjeta
+        };
         this.cargando = false;
+
+        // Actualizar localStorage con los datos más recientes
+        localStorage.setItem('user', JSON.stringify(this.usuario));
       },
       error: (err) => {
         console.error('Error cargando usuario desde backend:', err);

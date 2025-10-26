@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
 
 @Component({
   selector: 'app-login',
@@ -18,7 +18,6 @@ export class LoginComponent {
   email = '';
   contrasena = '';
 
-  // 🔹 Propiedades para la alerta
   alertaVisible = false;
   mensajeAlerta = '';
   tipoAlerta: 'exito' | 'error' | 'info' = 'info';
@@ -33,11 +32,7 @@ export class LoginComponent {
     this.mensajeAlerta = mensaje;
     this.tipoAlerta = tipo;
     this.alertaVisible = true;
-
-    // Se oculta automáticamente después de 3 segundos
-    setTimeout(() => {
-      this.alertaVisible = false;
-    }, 10000);
+    setTimeout(() => this.alertaVisible = false, 3000);
   }
 
   onSubmit() {
@@ -48,12 +43,15 @@ export class LoginComponent {
     }
   }
 
+  // ===========================
+  // Registro de usuario
+  // ===========================
   register() {
     const user = {
       nombre: this.nombre,
       apellido: this.apellido,
       email: this.email,
-      contrasena: this.contrasena
+      password: this.contrasena // ⚠ Debe ser "password" para coincidir con el alias en UserCreate
     };
 
     this.http.post('http://localhost:8000/register', user).subscribe({
@@ -69,55 +67,57 @@ export class LoginComponent {
     });
   }
 
+  // ===========================
+  // Login
+  // ===========================
   login() {
     const body = new URLSearchParams();
-    body.set('username', this.email);
+    body.set('username', this.email); // username = email en backend
     body.set('password', this.contrasena);
 
-    this.http.post('http://localhost:8000/token', body.toString(), {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-    }).subscribe({
-      next: (res: any) => {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' });
+
+    this.http.post<any>('http://localhost:8000/token', body.toString(), { headers }).subscribe({
+      next: (res) => {
         console.log('Login exitoso:', res);
 
-        // 🔹 Obtener datos completos del usuario desde el backend
-        this.http.get<any>(`http://localhost:8000/api/usuario?email=${encodeURIComponent(this.email)}`)
-          .subscribe(
-            userRes => {
-              const nombreUsuario = userRes.nombre || 'Usuario';
-              const userData = {
-                nombre: nombreUsuario,
-                apellido: userRes.apellido || '',
-                email: this.email,
-                imagen: userRes.imagen || 'assets/img/profile.jpeg'
-              };
+        // 🔹 Guardamos el token JWT
+        localStorage.setItem('token', res.access_token);
 
-              // 🔹 Guardamos en localStorage para ConfiguracionComponent
-              localStorage.setItem('user', JSON.stringify(userData));
-              localStorage.setItem('email', this.email);
-              window.dispatchEvent(new Event('storage'));
+        // 🔹 Obtener datos completos del usuario desde backend
+        this.http.get<any>(`http://localhost:8000/api/usuario?email=${encodeURIComponent(this.email)}`).subscribe(
+          userRes => {
+            const nombreUsuario = userRes.nombre || 'Usuario';
+            const userData = {
+              nombre: nombreUsuario,
+              apellido: userRes.apellido || '',
+              email: this.email,
+              imagen: userRes.imagen || 'assets/img/profile.jpeg'
+            };
 
-              // Mostrar alerta con el nombre del usuario
-              this.mostrarAlerta(`¡Hola ${nombreUsuario}! Inicio de sesión correcto 🔥`, 'exito');
+            localStorage.setItem('user', JSON.stringify(userData));
+            localStorage.setItem('email', this.email);
+            window.dispatchEvent(new Event('storage'));
 
-              setTimeout(() => this.router.navigate(['/']), 1000); // Espera a mostrar la alerta
-            },
-            err => {
-              console.error('Error al obtener usuario desde backend:', err);
-              const userData = {
-                nombre: 'Usuario',
-                apellido: '',
-                email: this.email,
-                imagen: 'assets/img/profile.jpeg'
-              };
-              localStorage.setItem('user', JSON.stringify(userData));
-              localStorage.setItem('email', this.email);
-              window.dispatchEvent(new Event('storage'));
+            this.mostrarAlerta(`¡Hola ${nombreUsuario}! Inicio de sesión correcto 🔥`, 'exito');
+            setTimeout(() => this.router.navigate(['/']), 1000);
+          },
+          err => {
+            console.error('Error al obtener usuario desde backend:', err);
+            const userData = {
+              nombre: 'Usuario',
+              apellido: '',
+              email: this.email,
+              imagen: 'assets/img/profile.jpeg'
+            };
+            localStorage.setItem('user', JSON.stringify(userData));
+            localStorage.setItem('email', this.email);
+            window.dispatchEvent(new Event('storage'));
 
-              this.mostrarAlerta('¡Hola Usuario! Inicio de sesión correcto 🔥', 'exito');
-              setTimeout(() => this.router.navigate(['/']), 1000);
-            }
-          );
+            this.mostrarAlerta('¡Hola Usuario! Inicio de sesión correcto 🔥', 'exito');
+            setTimeout(() => this.router.navigate(['/']), 1000);
+          }
+        );
       },
       error: (err) => {
         console.error('Error al iniciar sesión:', err);
