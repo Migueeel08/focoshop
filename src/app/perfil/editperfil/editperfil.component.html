@@ -57,6 +57,19 @@
     </form>
   </div>
 </div>
+<!-- ✅ Alerta animada con foco (sintaxis moderna) -->
+@if (mostrarAlerta) {
+  <div class="alerta-overlay">
+    <div class="alerta-container">
+      <div class="foco-animado">
+        <div class="foco-base"></div>
+        <div class="foco-luz"></div>
+        <div class="filamento"></div>
+      </div>
+      <p class="mensaje-exito">{{ mensajeAlerta }}</p>
+    </div>
+  </div>
+}
 
 <!-- ESTILOS BÁSICOS PARA TELEFONO Y SELECT -->
 <style>

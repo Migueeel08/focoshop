@@ -22,6 +22,9 @@ export class LoginComponent {
   mensajeAlerta = '';
   tipoAlerta: 'exito' | 'error' | 'info' = 'info';
 
+  // 🔹 URL base del backend
+  private apiUrl = 'http://localhost:8000';
+
   constructor(public router: Router, private http: HttpClient) {}
 
   toggleMode() {
@@ -51,18 +54,26 @@ export class LoginComponent {
       nombre: this.nombre,
       apellido: this.apellido,
       email: this.email,
-      password: this.contrasena // ⚠ Debe ser "password" para coincidir con el alias en UserCreate
+      password: this.contrasena
     };
 
-    this.http.post('http://localhost:8000/register', user).subscribe({
+    // ✅ Ruta corregida: /usuarios/register
+    this.http.post(`${this.apiUrl}/usuarios/register`, user).subscribe({
       next: (res) => {
         console.log('Usuario registrado:', res);
         this.mostrarAlerta('Registro exitoso 🎉', 'exito');
+        // Limpiar campos
+        this.nombre = '';
+        this.apellido = '';
+        this.email = '';
+        this.contrasena = '';
+        // Cambiar a modo login
         this.toggleMode();
       },
       error: (err) => {
         console.error('Error al registrar:', err);
-        this.mostrarAlerta('Error al registrarte 😢', 'error');
+        const mensaje = err.error?.detail || 'Error al registrarte 😢';
+        this.mostrarAlerta(mensaje, 'error');
       }
     });
   }
@@ -71,58 +82,93 @@ export class LoginComponent {
   // Login
   // ===========================
   login() {
-    const body = new URLSearchParams();
-    body.set('username', this.email); // username = email en backend
-    body.set('password', this.contrasena);
+  const body = new URLSearchParams();
+  body.set('username', this.email);
+  body.set('password', this.contrasena);
 
-    const headers = new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' });
+  const headers = new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' });
 
-    this.http.post<any>('http://localhost:8000/token', body.toString(), { headers }).subscribe({
-      next: (res) => {
-        console.log('Login exitoso:', res);
+  this.http.post<any>(`${this.apiUrl}/usuarios/token`, body.toString(), { headers }).subscribe({
+    next: (res) => {
+      console.log('Login exitoso:', res);
 
-        // 🔹 Guardamos el token JWT
-        localStorage.setItem('token', res.access_token);
+      // 🔹 Guardamos el token JWT
+      localStorage.setItem('token', res.access_token);
 
-        // 🔹 Obtener datos completos del usuario desde backend
-        this.http.get<any>(`http://localhost:8000/api/usuario?email=${encodeURIComponent(this.email)}`).subscribe(
-          userRes => {
-            const nombreUsuario = userRes.nombre || 'Usuario';
-            const userData = {
-              nombre: nombreUsuario,
-              apellido: userRes.apellido || '',
-              email: this.email,
-              imagen: userRes.imagen || 'assets/img/profile.jpeg'
-            };
-
-            localStorage.setItem('user', JSON.stringify(userData));
-            localStorage.setItem('email', this.email);
-            window.dispatchEvent(new Event('storage'));
-
-            this.mostrarAlerta(`¡Hola ${nombreUsuario}! Inicio de sesión correcto 🔥`, 'exito');
-            setTimeout(() => this.router.navigate(['/']), 1000);
-          },
-          err => {
-            console.error('Error al obtener usuario desde backend:', err);
-            const userData = {
-              nombre: 'Usuario',
-              apellido: '',
-              email: this.email,
-              imagen: 'assets/img/profile.jpeg'
-            };
-            localStorage.setItem('user', JSON.stringify(userData));
-            localStorage.setItem('email', this.email);
-            window.dispatchEvent(new Event('storage'));
-
-            this.mostrarAlerta('¡Hola Usuario! Inicio de sesión correcto 🔥', 'exito');
-            setTimeout(() => this.router.navigate(['/']), 1000);
+      // ✅ Ruta corregida: /usuarios/email/{email}
+      this.http.get<any>(`${this.apiUrl}/usuarios/email/${encodeURIComponent(this.email)}`).subscribe({
+        next: (userRes) => {
+          console.log('Datos del usuario desde backend:', userRes);
+          
+          const nombreUsuario = userRes.nombre || 'Usuario';
+          
+          // ✅ Construir URL completa de la imagen
+          let imagenUrl = 'assets/img/profile.jpeg'; // Imagen por defecto
+          
+          if (userRes.imagen && userRes.imagen.trim() !== '') {
+            // Si la imagen empieza con /uploads, agregar la URL base del backend
+            if (userRes.imagen.startsWith('/uploads')) {
+              imagenUrl = `${this.apiUrl}${userRes.imagen}`;
+            } 
+            // Si ya es una URL completa (http:// o https://)
+            else if (userRes.imagen.startsWith('http')) {
+              imagenUrl = userRes.imagen;
+            }
+            // Si es una ruta de assets local
+            else if (userRes.imagen.startsWith('assets/')) {
+              imagenUrl = userRes.imagen;
+            }
+            // Cualquier otra ruta relativa
+            else {
+              imagenUrl = `${this.apiUrl}${userRes.imagen}`;
+            }
           }
-        );
-      },
-      error: (err) => {
-        console.error('Error al iniciar sesión:', err);
-        this.mostrarAlerta('Credenciales incorrectas ❌', 'error');
-      }
-    });
-  }
+          
+          const userData = {
+            id: userRes.id_usuario,
+            id_usuario: userRes.id_usuario,
+            nombre: nombreUsuario,
+            apellido: userRes.apellido || '',
+            email: this.email,
+            telefono: userRes.telefono || '',
+            imagen: imagenUrl, // ✅ URL completa
+            rol: userRes.rol || 'user'
+          };
+
+          console.log('Datos guardados en localStorage:', userData);
+
+          localStorage.setItem('user', JSON.stringify(userData));
+          localStorage.setItem('email', this.email);
+          localStorage.setItem('userId', userRes.id_usuario.toString());
+          
+          window.dispatchEvent(new Event('storage'));
+
+          this.mostrarAlerta(`¡Hola ${nombreUsuario}! Inicio de sesión correcto 🔥`, 'exito');
+          setTimeout(() => this.router.navigate(['/']), 1000);
+        },
+        error: (err) => {
+          console.error('Error al obtener usuario desde backend:', err);
+          
+          const userData = {
+            nombre: 'Usuario',
+            apellido: '',
+            email: this.email,
+            imagen: 'assets/img/profile.jpeg'
+          };
+          localStorage.setItem('user', JSON.stringify(userData));
+          localStorage.setItem('email', this.email);
+          window.dispatchEvent(new Event('storage'));
+
+          this.mostrarAlerta('¡Hola Usuario! Inicio de sesión correcto 🔥', 'exito');
+          setTimeout(() => this.router.navigate(['/']), 1000);
+        }
+      });
+    },
+    error: (err) => {
+      console.error('Error al iniciar sesión:', err);
+      const mensaje = err.error?.detail || 'Credenciales incorrectas ❌';
+      this.mostrarAlerta(mensaje, 'error');
+    }
+  });
+}
 }

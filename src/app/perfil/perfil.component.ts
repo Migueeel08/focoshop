@@ -26,6 +26,11 @@ export class PerfilComponent implements OnInit {
 
   ngOnInit() {
     this.cargarUsuario();
+    
+    // ✅ Escuchar cambios en localStorage
+    window.addEventListener('storage', () => {
+      this.cargarUsuario();
+    });
   }
 
   cargarUsuario() {
@@ -39,14 +44,48 @@ export class PerfilComponent implements OnInit {
           parsed.username ||
           (parsed.email ? parsed.email.split('@')[0] : 'Usuario');
         this.user.email = parsed.email || '';
-        this.user.imagen =
-          parsed.imagen && parsed.imagen.trim() !== ''
-            ? parsed.imagen
-            : 'assets/img/profile.jpeg';
+        
+        // ✅ Manejar la imagen correctamente
+        this.user.imagen = this.obtenerUrlImagen(parsed.imagen);
+        
+        console.log('Usuario cargado en perfil:', this.user);
       } catch (e) {
         console.error('Error cargando usuario:', e);
       }
     }
+  }
+
+  // ✅ Función auxiliar para obtener la URL completa de la imagen
+  obtenerUrlImagen(imagenPath: string | null | undefined): string {
+    const apiUrl = 'http://localhost:8000';
+    const defaultImage = 'assets/img/profile.jpeg';
+    
+    if (!imagenPath || imagenPath.trim() === '') {
+      return defaultImage;
+    }
+    
+    // Si ya es una URL completa
+    if (imagenPath.startsWith('http://') || imagenPath.startsWith('https://')) {
+      return imagenPath;
+    }
+    
+    // Si es una imagen de assets
+    if (imagenPath.startsWith('assets/')) {
+      return imagenPath;
+    }
+    
+    // Si empieza con /uploads, construir URL completa
+    if (imagenPath.startsWith('/uploads')) {
+      return `${apiUrl}${imagenPath}`;
+    }
+    
+    // Si es data:image (base64)
+    if (imagenPath.startsWith('data:image')) {
+      return imagenPath;
+    }
+    
+    // Por defecto, retornar imagen por defecto
+    return defaultImage;
   }
 
   editarPerfil() {
