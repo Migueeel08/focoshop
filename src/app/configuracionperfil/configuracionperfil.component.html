@@ -7,7 +7,10 @@
       </div>
 
       <div class="menu">
-        
+        <!-- 🔹 Botón eliminar cuenta en esquina superior derecha -->
+        <button (click)="abrirModalEliminar()" class="btn-eliminar-cuenta" title="Eliminar cuenta">
+          <i class="fa fa-trash"></i>
+        </button>
       </div>
     </header>
 
@@ -17,7 +20,6 @@
         <div class="perfil-card">
           <h3>CONFIGURACIÓN DE PERFIL</h3>
           <div class="perfil-info">
-            <!-- 🔹 Mostrar la imagen de user si existe, sino avatar por defecto -->
             <img [src]="usuario.imagen || 'assets/img/avatar.png'" alt="avatar" class="avatar" />
             <p class="nombre">{{usuario.nombre}} {{usuario.apellido}}</p>
             <p>Email: {{usuario.email}}</p>
@@ -59,5 +61,56 @@
   <div class="loading">
     <div class="spinner"></div>
     <p>Cargando perfil...</p>
+  </div>
+}
+
+<!-- 🔹 MODAL DE CONFIRMACIÓN PARA ELIMINAR CUENTA -->
+@if (mostrarModalEliminar) {
+  <div class="modal-overlay" (click)="cerrarModalEliminar()">
+    <div class="modal-eliminar" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <i class="fa fa-exclamation-triangle"></i>
+        <h2>¿Estás seguro?</h2>
+      </div>
+      
+      <div class="modal-body">
+        <p class="advertencia">
+          Esta acción es <strong>irreversible</strong>. Se eliminarán permanentemente:
+        </p>
+        <ul class="lista-eliminacion">
+          <li><i class="fa fa-check"></i> Tu perfil y datos personales</li>
+          <li><i class="fa fa-check"></i> Historial de pedidos</li>
+          <li><i class="fa fa-check"></i> Direcciones guardadas</li>
+          <li><i class="fa fa-check"></i> Métodos de pago</li>
+        </ul>
+        
+        <div class="confirmacion-input">
+          <label>Para confirmar, escribe <strong>ELIMINAR</strong> en mayúsculas:</label>
+          <input 
+            type="text" 
+            [(ngModel)]="textoConfirmacion"
+            placeholder="Escribe ELIMINAR"
+            class="input-confirmar"
+            [class.error]="errorConfirmacion"
+          />
+          @if (errorConfirmacion) {
+            <p class="mensaje-error">Debes escribir exactamente "ELIMINAR"</p>
+          }
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button (click)="cerrarModalEliminar()" class="btn-cancelar">
+          <i class="fa fa-times"></i> Cancelar
+        </button>
+        <button 
+          (click)="confirmarEliminacion()" 
+          class="btn-confirmar-eliminar"
+          [disabled]="textoConfirmacion !== 'ELIMINAR'"
+        >
+          <i class="fa fa-trash"></i> Eliminar mi cuenta
+        </button>
+      </div>
+    </div>
   </div>
 }

@@ -230,3 +230,220 @@
     transform: rotate(360deg);
   }
 }
+
+/* Botón eliminar en esquina */
+.btn-eliminar-cuenta {
+  background: #ff4444;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-eliminar-cuenta:hover {
+  background: #cc0000;
+  transform: scale(1.05);
+}
+
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Modal de eliminación */
+.modal-eliminar {
+  background: white;
+  border-radius: 16px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease;
+  overflow: hidden;
+}
+
+@keyframes slideIn {
+  from { 
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to { 
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #ff4444, #cc0000);
+  color: white;
+  padding: 25px;
+  text-align: center;
+}
+
+.modal-header i {
+  font-size: 48px;
+  margin-bottom: 10px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.modal-body {
+  padding: 30px;
+}
+
+.advertencia {
+  font-size: 16px;
+  margin-bottom: 20px;
+  color: #333;
+  text-align: center;
+}
+
+.advertencia strong {
+  color: #ff4444;
+}
+
+.lista-eliminacion {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+}
+
+.lista-eliminacion li {
+  padding: 10px;
+  margin-bottom: 8px;
+  background: #f8f8f8;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lista-eliminacion i {
+  color: #ff4444;
+}
+
+.confirmacion-input {
+  margin-top: 25px;
+}
+
+.confirmacion-input label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: #333;
+}
+
+.confirmacion-input strong {
+  color: #ff4444;
+}
+
+.input-confirmar {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+.input-confirmar:focus {
+  outline: none;
+  border-color: #ff4444;
+}
+
+.input-confirmar.error {
+  border-color: #ff4444;
+  animation: shake 0.5s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+.mensaje-error {
+  color: #ff4444;
+  font-size: 14px;
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 15px;
+  padding: 20px 30px;
+  background: #f8f8f8;
+  border-top: 1px solid #eee;
+}
+
+.btn-cancelar,
+.btn-confirmar-eliminar {
+  flex: 1;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-cancelar {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-cancelar:hover {
+  background: #5a6268;
+  transform: translateY(-2px);
+}
+
+.btn-confirmar-eliminar {
+  background: #ff4444;
+  color: white;
+}
+
+.btn-confirmar-eliminar:hover:not(:disabled) {
+  background: #cc0000;
+  transform: translateY(-2px);
+}
+
+.btn-confirmar-eliminar:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
