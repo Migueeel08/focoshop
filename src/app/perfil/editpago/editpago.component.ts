@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UsuariosService } from '../../services/usuarios.service';
+import { MetodosPagoService } from '../../services/metodos-pago.service'; // 🆕 Nuevo servicio
 
 interface TarjetaInfo {
   numero: string;
@@ -125,7 +126,8 @@ export class EditPagoComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private usuarioService: UsuariosService
+    private usuarioService: UsuariosService,
+    private metodosPagoService: MetodosPagoService // 🆕 Inyectar servicio
   ) {
     const anioActual = new Date().getFullYear();
     for (let i = 0; i < 11; i++) {
@@ -152,15 +154,31 @@ export class EditPagoComponent implements OnInit {
 
     this.tarjeta.nombreTitular = `${this.user.nombre} ${this.user.apellido}`.toUpperCase();
 
-    if (userData.tarjeta) {
-      this.cargarTarjetaGuardada(userData.tarjeta);
-    }
+    // 🆕 Cargar método de pago desde la nueva API
+    this.cargarMetodoPago();
   }
 
-  cargarTarjetaGuardada(numeroTarjeta: string): void {
-    if (numeroTarjeta && numeroTarjeta.length >= 4) {
-      this.tarjeta.numero = '**** **** **** ' + numeroTarjeta.slice(-4);
-    }
+  // 🆕 Nuevo método para cargar desde API
+  cargarMetodoPago(): void {
+    this.metodosPagoService.obtenerMetodosPago(this.user.id).subscribe({
+      next: (metodos: any[]) => {
+        if (metodos && metodos.length > 0) {
+          // Buscar el método predeterminado o tomar el primero
+          const metodoPredeterminado = metodos.find(m => m.es_predeterminado === 1) || metodos[0];
+          
+          this.tarjeta.numero = '**** **** **** ' + metodoPredeterminado.ultimos_digitos;
+          this.tarjeta.tipoTarjeta = metodoPredeterminado.tipo_tarjeta;
+          this.tarjeta.banco = metodoPredeterminado.banco || '';
+          this.tarjeta.nombreTitular = metodoPredeterminado.nombre_titular;
+          this.tarjeta.mesExpiracion = metodoPredeterminado.mes_expiracion;
+          this.tarjeta.anioExpiracion = metodoPredeterminado.anio_expiracion;
+          this.tarjeta.colorTarjeta = metodoPredeterminado.color_tarjeta || this.tarjeta.colorTarjeta;
+        }
+      },
+      error: (err) => {
+        console.log('No hay métodos de pago guardados o error:', err);
+      }
+    });
   }
 
   onNumeroChange(): void {
@@ -236,6 +254,7 @@ export class EditPagoComponent implements OnInit {
     this.tarjetaFlipped = show;
   }
 
+  // ✅ Mantener validación de Luhn para seguridad
   validarTarjeta(): boolean {
     const numero = this.tarjeta.numero.replace(/\s/g, '');
     
@@ -263,17 +282,24 @@ export class EditPagoComponent implements OnInit {
     return suma % 10 === 0;
   }
 
+  // 🆕 Método actualizado para usar la nueva API
   guardarTarjeta(): void {
-    const numeroLimpio = this.tarjeta.numero.replace(/\s/g, '');
+    const numeroLimpio = this.tarjeta.numero.replace(/\s/g, '').replace(/\*/g, '');
     
-    if (!numeroLimpio || numeroLimpio.length < 13) {
-      alert('Por favor ingresa un número de tarjeta válido');
-      return;
-    }
+    // Si empieza con asteriscos, significa que es una tarjeta ya guardada
+    const esTarjetaExistente = this.tarjeta.numero.includes('*');
 
-    if (!this.validarTarjeta()) {
-      alert('El número de tarjeta no es válido');
-      return;
+    if (!esTarjetaExistente) {
+      // Solo validar si es una tarjeta nueva
+      if (!numeroLimpio || numeroLimpio.length < 13) {
+        alert('Por favor ingresa un número de tarjeta válido');
+        return;
+      }
+
+      if (!this.validarTarjeta()) {
+        alert('El número de tarjeta no es válido');
+        return;
+      }
     }
 
     if (!this.tarjeta.nombreTitular) {
@@ -286,11 +312,12 @@ export class EditPagoComponent implements OnInit {
       return;
     }
 
-    if (!this.tarjeta.cvv || this.tarjeta.cvv.length < 3) {
+    if (!esTarjetaExistente && (!this.tarjeta.cvv || this.tarjeta.cvv.length < 3)) {
       alert('Por favor ingresa un CVV válido');
       return;
     }
 
+    // Validar fecha de expiración
     const hoy = new Date();
     const mesActual = hoy.getMonth() + 1;
     const anioActual = parseInt(hoy.getFullYear().toString().slice(-2));
@@ -309,40 +336,48 @@ export class EditPagoComponent implements OnInit {
       return;
     }
 
-    const ultimosCuatroDigitos = numeroLimpio.slice(-4);
+    // 🆕 Usar la nueva API de métodos de pago
+    let ultimosCuatroDigitos: string;
+    
+    if (esTarjetaExistente) {
+      // Extraer los últimos 4 dígitos de la tarjeta enmascarada
+      ultimosCuatroDigitos = this.tarjeta.numero.trim().slice(-4);
+    } else {
+      ultimosCuatroDigitos = numeroLimpio.slice(-4);
+    }
 
-    const datosActualizar = {
-      tarjeta: ultimosCuatroDigitos,
-      tipo_tarjeta: this.tarjeta.tipoTarjeta
+    const metodoPago = {
+      ultimos_digitos: ultimosCuatroDigitos,
+      tipo_tarjeta: this.tarjeta.tipoTarjeta,
+      banco: this.tarjeta.banco || null,
+      nombre_titular: this.tarjeta.nombreTitular,
+      mes_expiracion: this.tarjeta.mesExpiracion,
+      anio_expiracion: this.tarjeta.anioExpiracion,
+      color_tarjeta: this.tarjeta.colorTarjeta
     };
 
-    console.log('💳 Guardando método de pago...');
+    console.log('💳 Guardando método de pago:', metodoPago);
 
-    this.usuarioService.actualizarUsuario(userId, datosActualizar).subscribe({
+    this.metodosPagoService.crearMetodoPago(userId, metodoPago).subscribe({
       next: (response: any) => {
-        console.log('✅ Método de pago actualizado:', response);
+        console.log('✅ Método de pago guardado:', response);
 
-        const userStorage = JSON.parse(localStorage.getItem('user') || '{}');
-        userStorage.tarjeta = ultimosCuatroDigitos;
-        userStorage.tipo_tarjeta = this.tarjeta.tipoTarjeta;
-        localStorage.setItem('user', JSON.stringify(userStorage));
-        this.usuarioService.setUsuarioActual(userStorage);
-
-        this.mensajeAlerta = '¡Método de pago actualizado correctamente!';
+        this.mensajeAlerta = '¡Método de pago guardado correctamente!';
         this.mostrarAlerta = true;
 
         setTimeout(() => {
-          this.router.navigate(['/perfil']);
+          this.router.navigate(['/configuracion']);
         }, 2000);
       },
       error: (err: any) => {
-        console.error('❌ Error al actualizar método de pago:', err);
-        alert('No se pudo actualizar el método de pago: ' + (err.error?.detail || 'Error desconocido'));
+        console.error('❌ Error al guardar método de pago:', err);
+        const mensaje = err.error?.detail || 'Error desconocido';
+        alert('No se pudo guardar el método de pago: ' + mensaje);
       }
     });
   }
 
   volver(): void {
-    this.router.navigate(['/perfil']);
+    this.router.navigate(['/configuracion']);
   }
 }

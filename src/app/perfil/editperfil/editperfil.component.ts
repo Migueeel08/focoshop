@@ -231,12 +231,12 @@ export class EditPerfilComponent implements OnInit {
     this.mostrarAlerta = true;
 
     setTimeout(() => {
-      this.router.navigate(['/perfil']);
+      this.router.navigate(['/configuracion']);
     }, 2500);
   }
 
   volver(): void {
-    this.router.navigate(['/perfil']);
+    this.router.navigate(['/configuracion']);
   }
 
   abrirSelectorFoto(): void {

@@ -299,7 +299,7 @@ export class EditDireccionComponent implements OnInit {
         this.mostrarAlerta = true;
 
         setTimeout(() => {
-          this.router.navigate(['/perfil']);
+          this.router.navigate(['/configuracion']);
         }, 2000);
       },
       error: (err: any) => {
@@ -310,6 +310,6 @@ export class EditDireccionComponent implements OnInit {
   }
 
   volver(): void {
-    this.router.navigate(['/perfil']);
+    this.router.navigate(['/configuracion']);
   }
 }
