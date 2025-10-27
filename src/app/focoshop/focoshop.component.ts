@@ -36,8 +36,8 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
   // ===== Usuario =====
   isLoggedIn = false;
   userName = '';
-  userImage = 'assets/img/user-icon.png'; // icono por defecto
-  userMenuOpen = false; // menú desplegable del usuario
+  userImage = 'assets/img/user-icon.png';
+  userMenuOpen = false;
 
   private storageListener = (event: StorageEvent) => {
     if (event.key === 'user' || event.key === null) {
@@ -50,10 +50,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
   ngOnInit() {
     this.cargarUsuario();
     window.addEventListener('storage', this.storageListener);
-
-    // 🔹 Aquí más adelante se pueden cargar los productos desde la BD
-    // Ejemplo:
-    // this.productService.getProductos().subscribe(data => this.productos = data);
   }
 
   ngOnDestroy() {
@@ -72,10 +68,18 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     );
   }
 
+  // ✅ CORREGIDO: Ya no cierra el menú al seleccionar categoría desde el menú lateral
   seleccionarCategoria(index: number) {
     this.categoriaSeleccionada = index;
     this.scrollCategoriaCentrada(index);
-    this.menuAbierto = false;
+    // ❌ REMOVIDO: this.menuAbierto = false;
+  }
+
+  // 🆕 NUEVO: Método específico para seleccionar desde el carrusel (cierra el menú)
+  seleccionarDesdeCarrusel(index: number) {
+    this.categoriaSeleccionada = index;
+    this.scrollCategoriaCentrada(index);
+    this.menuAbierto = false; // Solo cierra desde el carrusel
   }
 
   anterior() {
@@ -108,19 +112,16 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     this.router.navigate(['/register']);
   }
 
-  // ✅ Ir a la pantalla de configuración del usuario
   irConfiguracion() {
     this.userMenuOpen = false;
     this.router.navigate(['/configuracion']);
   }
 
-  // ✅ NUEVA FUNCIÓN: Ir a la pantalla "Mi perfil"
   irPerfil() {
     this.userMenuOpen = false;
     this.router.navigate(['/perfil']);
   }
 
-  // ✅ Cargar datos del usuario desde localStorage
   cargarUsuario() {
     const userData = localStorage.getItem('user');
     if (userData) {
@@ -128,14 +129,12 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
         const parsed = JSON.parse(userData);
         this.isLoggedIn = true;
 
-        // 🔹 Mostrar nombre real si existe, si no, usar parte del correo
         this.userName =
           parsed.nombre ||
           parsed.firstName ||
           parsed.username ||
           (parsed.email ? parsed.email.split('@')[0] : 'Usuario');
 
-        // 🔹 Imagen del perfil (si no hay, usar la predeterminada)
         this.userImage =
           parsed.imagen && parsed.imagen.trim() !== ''
             ? parsed.imagen
@@ -167,8 +166,21 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
   clickFuera(event: MouseEvent) {
     const target = event.target as HTMLElement;
     const clickedInsideUserInfo = target.closest('.user-info');
+    
+    // ✅ MEJORADO: También evita cerrar el menú de categorías si se hace clic dentro de él
+    const clickedInsideMenu = target.closest('.menu-categorias');
+    const clickedMenuButton = target.closest('.btn-menu-categorias');
+    
     if (!clickedInsideUserInfo && this.userMenuOpen) {
       this.userMenuOpen = false;
+    }
+
+    // 🆕 Cierra el menú lateral solo si se hace clic fuera de él
+    if (!clickedInsideMenu && !clickedMenuButton && this.menuAbierto) {
+      const clickedOverlay = target.closest('.menu-overlay');
+      if (clickedOverlay) {
+        this.menuAbierto = false;
+      }
     }
   }
 }

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UsuariosService } from '../services/usuarios.service';
-import { MetodosPagoService } from '../services/metodos-pago.service'; // 🆕 Nuevo servicio
+import { MetodosPagoService } from '../services/metodos-pago.service';
 import { HttpClientModule } from '@angular/common/http';
 
 @Component({
@@ -15,17 +15,12 @@ import { HttpClientModule } from '@angular/common/http';
 })
 export class ConfiguracionComponent implements OnInit {
   usuario: any = null;
-  metodoPago: any = null; // 🆕 Método de pago desde la API
+  metodoPago: any = null;
   cargando = true;
-  
-  // Variables para el modal de eliminación
-  mostrarModalEliminar = false;
-  textoConfirmacion = '';
-  errorConfirmacion = false;
 
   constructor(
     private usuarioService: UsuariosService,
-    private metodosPagoService: MetodosPagoService, // 🆕 Inyectar servicio
+    private metodosPagoService: MetodosPagoService,
     private router: Router
   ) {}
 
@@ -82,7 +77,6 @@ export class ConfiguracionComponent implements OnInit {
         localStorage.setItem('user', JSON.stringify(this.usuario));
         this.usuarioService.setUsuarioActual(this.usuario);
 
-        // 🆕 Cargar método de pago desde la API
         this.cargarMetodoPago();
       },
       error: (err: any) => {
@@ -92,7 +86,6 @@ export class ConfiguracionComponent implements OnInit {
     });
   }
 
-  // 🆕 Nuevo método para cargar desde la API
   cargarMetodoPago(): void {
     if (!this.usuario?.id && !this.usuario?.id_usuario) {
       return;
@@ -103,7 +96,6 @@ export class ConfiguracionComponent implements OnInit {
     this.metodosPagoService.obtenerMetodosPago(userId).subscribe({
       next: (metodos: any[]) => {
         if (metodos && metodos.length > 0) {
-          // Buscar el predeterminado o tomar el primero
           this.metodoPago = metodos.find(m => m.es_predeterminado === 1) || metodos[0];
           console.log('💳 Método de pago cargado:', this.metodoPago);
         }
@@ -114,42 +106,34 @@ export class ConfiguracionComponent implements OnInit {
     });
   }
 
-  // 🆕 Getter para mostrar el número de tarjeta
   get numeroTarjeta(): string {
     if (this.metodoPago?.ultimos_digitos) {
       return `**** **** **** ${this.metodoPago.ultimos_digitos}`;
     }
-    // Fallback a los datos antiguos si existen
     if (this.usuario?.tarjeta) {
       return `**** **** **** ${this.usuario.tarjeta}`;
     }
     return '**** **** **** 0000';
   }
 
-  // 🆕 Getter para el tipo de tarjeta
   get tipoTarjeta(): string {
     if (this.metodoPago?.tipo_tarjeta) {
       return this.metodoPago.tipo_tarjeta;
     }
-    // Fallback
     return this.usuario?.tipo_tarjeta || 'VISA';
   }
 
-  // 🆕 Getter para el color de la tarjeta
   get colorTarjeta(): string {
     if (this.metodoPago?.color_tarjeta) {
       return this.metodoPago.color_tarjeta;
     }
-    // Color por defecto
     return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
   }
 
-  // 🆕 Getter para el banco
   get bancoTarjeta(): string {
     return this.metodoPago?.banco || '';
   }
 
-  // 🆕 Getter para el nombre del titular
   get titularTarjeta(): string {
     if (this.metodoPago?.nombre_titular) {
       return this.metodoPago.nombre_titular;
@@ -176,47 +160,6 @@ export class ConfiguracionComponent implements OnInit {
     }
 
     return 'assets/img/avatar.png';
-  }
-
-  // Funciones para el modal de eliminación
-  abrirModalEliminar(): void {
-    this.mostrarModalEliminar = true;
-    this.textoConfirmacion = '';
-    this.errorConfirmacion = false;
-  }
-
-  cerrarModalEliminar(): void {
-    this.mostrarModalEliminar = false;
-    this.textoConfirmacion = '';
-    this.errorConfirmacion = false;
-  }
-
-  confirmarEliminacion(): void {
-    if (this.textoConfirmacion !== 'ELIMINAR') {
-      this.errorConfirmacion = true;
-      return;
-    }
-
-    const userId = this.usuario.id || this.usuario.id_usuario;
-    
-    if (!userId) {
-      alert('Error: No se pudo identificar el usuario');
-      return;
-    }
-
-    if (confirm('¿Estás absolutamente seguro? Esta acción NO se puede deshacer.')) {
-      this.usuarioService.eliminarUsuario(userId).subscribe({
-        next: () => {
-          alert('Tu cuenta ha sido eliminada permanentemente');
-          localStorage.clear();
-          this.router.navigate(['/login']);
-        },
-        error: (err: any) => {
-          console.error('Error al eliminar cuenta:', err);
-          alert('No se pudo eliminar la cuenta: ' + (err.error?.detail || 'Error desconocido'));
-        }
-      });
-    }
   }
 
   editarCuenta() {

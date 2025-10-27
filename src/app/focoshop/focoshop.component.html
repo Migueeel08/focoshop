@@ -52,22 +52,74 @@
 
   <!-- BOTÓN DE MENÚ LATERAL DE CATEGORÍAS -->
   <button class="btn-menu-categorias" (click)="toggleMenu()">
-    <i class="fa fa-bars"></i> CATEGORÍAS
+    <i class="fa fa-bars"></i> 
+    <span>CATEGORÍAS</span>
   </button>
 
-  <!-- MENÚ LATERAL -->
+  <!-- OVERLAY OSCURO CUANDO EL MENÚ ESTÁ ABIERTO -->
+  <div class="menu-overlay" [class.active]="menuAbierto" (click)="toggleMenu()"></div>
+
+  <!-- MENÚ LATERAL MEJORADO -->
   <aside class="menu-categorias" [class.open]="menuAbierto">
-    <ul>
+    <!-- HEADER DEL MENÚ -->
+    <div class="menu-header">
+      <div class="menu-titulo">
+        <i class="fa fa-th-large"></i>
+        <h3>Categorías</h3>
+      </div>
+      <button class="btn-cerrar-menu" (click)="toggleMenu()">
+        <i class="fa fa-times"></i>
+      </button>
+    </div>
+
+    <!-- BARRA DE BÚSQUEDA EN EL MENÚ -->
+    <div class="menu-search">
+      <i class="fa fa-search"></i>
+      <input type="text" placeholder="Buscar categoría..." />
+    </div>
+
+    <!-- LISTA DE CATEGORÍAS -->
+    <ul class="categorias-list">
       <li
         *ngFor="let cat of categorias; let i = index"
-        (click)="seleccionarCategoria(i)"
+        class="categoria-item"
+        [class.active]="i === categoriaSeleccionada"
       >
-        {{ cat.nombre }}
-        <ul class="subcategorias" *ngIf="cat.subcategorias?.length">
-          <li *ngFor="let sub of cat.subcategorias">{{ sub }}</li>
+        <div class="categoria-principal" (click)="seleccionarCategoria(i)">
+          <div class="categoria-info">
+            <i class="fa fa-folder"></i>
+            <span>{{ cat.nombre }}</span>
+          </div>
+          <i 
+            *ngIf="cat.subcategorias?.length" 
+            class="fa fa-chevron-right arrow-icon"
+            [class.rotate]="i === categoriaSeleccionada"
+          ></i>
+        </div>
+
+        <!-- SUBCATEGORÍAS -->
+        <ul 
+          class="subcategorias" 
+          *ngIf="cat.subcategorias?.length && i === categoriaSeleccionada"
+        >
+          <li 
+            *ngFor="let sub of cat.subcategorias" 
+            class="subcategoria-item"
+          >
+            <i class="fa fa-angle-right"></i>
+            {{ sub }}
+          </li>
         </ul>
       </li>
     </ul>
+
+    <!-- FOOTER DEL MENÚ -->
+    <div class="menu-footer">
+      <button class="btn-ver-todas">
+        <i class="fa fa-grip-horizontal"></i>
+        Ver todas las categorías
+      </button>
+    </div>
   </aside>
 
   <!-- CARRUSEL DE CATEGORÍAS -->
