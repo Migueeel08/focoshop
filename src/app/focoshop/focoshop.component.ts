@@ -122,6 +122,12 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     this.router.navigate(['/perfil']);
   }
 
+  // 🆕 NUEVA FUNCIÓN: Navegar a la página de vender
+  irVender() {
+    this.userMenuOpen = false;
+    this.router.navigate(['/vender']);
+  }
+
   cargarUsuario() {
     const userData = localStorage.getItem('user');
     if (userData) {
