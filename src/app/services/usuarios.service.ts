@@ -89,4 +89,51 @@ export class UsuariosService {
       { headers }
     );
   }
+
+  // 📍 MÉTODO PARA AGREGAR DIRECCIÓN
+  agregarDireccion(userId: number, direccion: any): Observable<any> {
+    const token = localStorage.getItem('token');
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    });
+
+    // Agregar el id_usuario al objeto de dirección
+    const direccionConUsuario = {
+      ...direccion,
+      id_usuario: userId
+    };
+
+    return this.http.post(
+      `${this.apiUrl}/api/direcciones`,
+      direccionConUsuario,
+      { headers }
+    );
+  }
+
+  // 📍 MÉTODO PARA OBTENER DIRECCIONES
+  obtenerDirecciones(userId: number): Observable<any> {
+    const token = localStorage.getItem('token');
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+    });
+
+    return this.http.get(
+      `${this.apiUrl}/usuarios/${userId}/direcciones`,
+      { headers }
+    );
+  }
+
+  // 📍 MÉTODO PARA ELIMINAR DIRECCIÓN
+  eliminarDireccion(userId: number, direccionId: number): Observable<any> {
+    const token = localStorage.getItem('token');
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+    });
+
+    return this.http.delete(
+      `${this.apiUrl}/usuarios/${userId}/direcciones/${direccionId}`,
+      { headers }
+    );
+  }
 }

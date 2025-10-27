@@ -175,16 +175,13 @@ export class EditDireccionComponent implements OnInit {
     this.cargarEstados();
   }
 
-  // ✅ Buscar código postal usando México API (100% gratuita, sin registro)
   buscarPorCodigoPostal(): void {
     const cp = this.direccion.codigoPostal.trim();
 
-    // Validar formato de CP
     if (cp.length !== 5 || !/^\d{5}$/.test(cp)) {
       return;
     }
 
-    // Solo funciona para México
     if (this.direccion.pais !== 'México') {
       return;
     }
@@ -196,7 +193,6 @@ export class EditDireccionComponent implements OnInit {
 
     console.log('🔍 Buscando CP en México API:', cp);
 
-    // México API - 100% gratuita, open source, sin registro
     const apiUrl = `https://mexico-api.devaleff.com/api/codigo-postal/${cp}`;
 
     this.http.get<MexicoAPIResponse>(apiUrl).subscribe({
@@ -206,16 +202,10 @@ export class EditDireccionComponent implements OnInit {
         if (response.data && response.data.length > 0) {
           const primerRegistro = response.data[0];
           
-          // Autocompletar estado
           this.direccion.estado = primerRegistro.d_estado;
-          
-          // Autocompletar ciudad (municipio)
           this.direccion.ciudad = primerRegistro.D_mnpio;
-          
-          // Obtener todas las colonias únicas disponibles para ese CP
           this.colonias = [...new Set(response.data.map(item => item.d_asenta))];
           
-          // Seleccionar la primera colonia por defecto
           if (this.colonias.length > 0) {
             this.direccion.colonia = this.colonias[0];
           }
@@ -238,7 +228,6 @@ export class EditDireccionComponent implements OnInit {
         this.errorCP = true;
         this.buscandoCP = false;
         
-        // Mensaje de error amigable
         if (error.status === 0) {
           console.error('Error de conexión. Verifica tu conexión a internet.');
         } else if (error.status === 404) {
@@ -275,24 +264,13 @@ export class EditDireccionComponent implements OnInit {
     this.cargarEstados();
   }
 
+  // ✅ MÉTODO CORREGIDO - Ahora usa agregarDireccion
   guardarDireccion(): void {
     if (!this.direccion.calle || !this.direccion.numeroExterior || 
         !this.direccion.colonia || !this.direccion.codigoPostal ||
         !this.direccion.ciudad || !this.direccion.estado || !this.direccion.pais) {
       alert('Por favor completa todos los campos obligatorios (marcados con *)');
       return;
-    }
-
-    let direccionCompleta = `${this.direccion.calle} #${this.direccion.numeroExterior}`;
-    
-    if (this.direccion.numeroInterior) {
-      direccionCompleta += `, Int ${this.direccion.numeroInterior}`;
-    }
-    
-    direccionCompleta += `, ${this.direccion.colonia}, CP ${this.direccion.codigoPostal}, ${this.direccion.ciudad}, ${this.direccion.estado}, ${this.direccion.pais}`;
-    
-    if (this.direccion.referencias) {
-      direccionCompleta += ` | Ref: ${this.direccion.referencias}`;
     }
 
     const userId = this.user.id;
@@ -302,22 +280,28 @@ export class EditDireccionComponent implements OnInit {
       return;
     }
 
-    const datosActualizar = {
-      direccion: direccionCompleta
+    // 📦 Preparar el objeto de dirección para enviar al backend
+    const nuevaDireccion = {
+      id_usuario: userId,  // ✅ Agregar id_usuario
+      calle: this.direccion.calle,
+      numero_exterior: this.direccion.numeroExterior,
+      numero_interior: this.direccion.numeroInterior || null,
+      colonia: this.direccion.colonia,
+      codigo_postal: this.direccion.codigoPostal,
+      ciudad: this.direccion.ciudad,
+      estado: this.direccion.estado,
+      pais: this.direccion.pais,
+      referencias: this.direccion.referencias || null
     };
 
-    console.log('💾 Guardando dirección:', direccionCompleta);
+    console.log('💾 Guardando dirección:', nuevaDireccion);
 
-    this.usuarioService.actualizarUsuario(userId, datosActualizar).subscribe({
+    // ✅ USAR agregarDireccion en lugar de actualizarUsuario
+    this.usuarioService.agregarDireccion(userId, nuevaDireccion).subscribe({
       next: (response: any) => {
-        console.log('✅ Dirección actualizada:', response);
+        console.log('✅ Dirección agregada:', response);
 
-        const userStorage = JSON.parse(localStorage.getItem('user') || '{}');
-        userStorage.direccion = direccionCompleta;
-        localStorage.setItem('user', JSON.stringify(userStorage));
-        this.usuarioService.setUsuarioActual(userStorage);
-
-        this.mensajeAlerta = '¡Dirección actualizada correctamente!';
+        this.mensajeAlerta = '¡Dirección agregada correctamente!';
         this.mostrarAlerta = true;
 
         setTimeout(() => {
@@ -325,8 +309,9 @@ export class EditDireccionComponent implements OnInit {
         }, 2000);
       },
       error: (err: any) => {
-        console.error('❌ Error al actualizar dirección:', err);
-        alert('No se pudo actualizar la dirección: ' + (err.error?.detail || 'Error desconocido'));
+        console.error('❌ Error al agregar dirección:', err);
+        console.error('Detalles del error:', err.error);
+        alert('No se pudo agregar la dirección: ' + (err.error?.detail || JSON.stringify(err.error) || 'Error desconocido'));
       }
     });
   }
