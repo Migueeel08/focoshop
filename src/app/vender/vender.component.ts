@@ -105,14 +105,13 @@ export class VenderComponent implements OnInit {
 
   onImageUpload(event: any) {
     const files = event.target.files;
-    if (files) {
-      for (let i = 0; i < files.length; i++) {
-        const reader = new FileReader();
-        reader.onload = (e: any) => {
-          this.imagenes.push(e.target.result);
-        };
-        reader.readAsDataURL(files[i]);
-      }
+    if (files && files.length > 0) {
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        // Solo guardar una imagen (la primera o reemplazar)
+        this.imagenes = [e.target.result];
+      };
+      reader.readAsDataURL(files[0]);
     }
   }
 

@@ -23,28 +23,29 @@
       <!-- LEFT COLUMN - Image Upload -->
       <div class="left-column">
         <div class="image-upload-box" (click)="fileInput.click()">
-          <i class="fa fa-upload upload-icon"></i>
-          <h3>INSERTAR IMÁGENES</h3>
-          <p>Click para subir o arrastra las imágenes aquí</p>
-          <span class="upload-hint">PNG, JPG o WEBP (máx. 5MB cada una)</span>
+          <!-- Si no hay imágenes, mostrar el icono de upload -->
+          <ng-container *ngIf="imagenes.length === 0">
+            <i class="fa fa-upload upload-icon"></i>
+            <h3>INSERTAR IMÁGENES</h3>
+            <p>Click para subir o arrastra las imágenes aquí</p>
+            <span class="upload-hint">PNG, JPG o WEBP (máx. 5MB cada una)</span>
+          </ng-container>
+
+          <!-- Si hay imágenes, mostrar la primera -->
+          <ng-container *ngIf="imagenes.length > 0">
+            <img [src]="imagenes[0]" alt="Producto" class="main-image" />
+            <button class="btn-change-img" (click)="$event.stopPropagation(); removeImage(0)">
+              <i class="fa fa-times"></i> Cambiar imagen
+            </button>
+          </ng-container>
+
           <input
             #fileInput
             type="file"
-            multiple
             accept="image/*"
             style="display: none"
             (change)="onImageUpload($event)"
           />
-        </div>
-
-        <!-- Preview de imágenes -->
-        <div class="images-preview" *ngIf="imagenes.length > 0">
-          <div class="preview-item" *ngFor="let img of imagenes; let i = index">
-            <img [src]="img" alt="Preview" />
-            <button class="btn-remove-img" (click)="removeImage(i)">
-              <i class="fa fa-times"></i>
-            </button>
-          </div>
         </div>
       </div>
 
