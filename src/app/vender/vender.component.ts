@@ -2,11 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 
 @Component({
   selector: 'app-vender',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HttpClientModule],
   templateUrl: './vender.component.html',
   styleUrls: ['./vender.component.css']
 })
@@ -14,11 +15,14 @@ export class VenderComponent implements OnInit {
   // Usuario
   userName = '';
   userImage = 'assets/img/profile.jpeg';
+  userId = 0;
 
   // Producto
   nombreProducto = '';
   precio = 0;
+  categoriaId = 0;
   categoria = '';
+  subcategoriaId = 0;
   subcategoria = '';
   color = '';
   talla = '';
@@ -29,17 +33,10 @@ export class VenderComponent implements OnInit {
   disponible = true;
   imagenes: string[] = [];
 
-  // Opciones
-  categorias = [
-    { nombre: 'TECNOLOGÍA', subcategorias: ['Celulares', 'Computadoras', 'Accesorios'] },
-    { nombre: 'VESTIMENTA', subcategorias: ['Hombres', 'Mujeres', 'Niños'] },
-    { nombre: 'CALZADO', subcategorias: ['Deporte', 'Casual', 'Botas'] },
-    { nombre: 'VIDEOJUEGOS', subcategorias: ['Consolas', 'Juegos', 'Accesorios'] },
-    { nombre: 'JUGUETES', subcategorias: ['Educativos', 'Acción', 'Muñecos'] },
-    { nombre: 'HOGAR', subcategorias: ['Muebles', 'Decoración', 'Electrodomésticos'] },
-    { nombre: 'DEPORTE', subcategorias: ['Fitness', 'Bicicletas', 'Balones'] }
-  ];
-
+  // Opciones desde el backend
+  categorias: any[] = [];
+  subcategorias: any[] = [];
+  
   colores = [
     { nombre: 'Negro', hex: '#000000' },
     { nombre: 'Blanco', hex: '#FFFFFF' },
@@ -53,10 +50,13 @@ export class VenderComponent implements OnInit {
     { nombre: 'Naranja', hex: '#FFA500' }
   ];
 
-  constructor(private router: Router) {}
+  private apiUrl = 'http://localhost:8000/api'; // Con /api
+
+  constructor(private router: Router, private http: HttpClient) {}
 
   ngOnInit() {
     this.cargarUsuario();
+    this.cargarCategorias();
   }
 
   cargarUsuario() {
@@ -64,43 +64,90 @@ export class VenderComponent implements OnInit {
     if (userData) {
       try {
         const parsed = JSON.parse(userData);
-        this.userName =
-          parsed.nombre ||
-          parsed.firstName ||
-          parsed.username ||
-          (parsed.email ? parsed.email.split('@')[0] : 'Usuario');
+        
+        this.userId = parsed.id_usuario || parsed.id || 0;
+        this.userName = parsed.nombre || parsed.firstName || parsed.username || 
+                        (parsed.email ? parsed.email.split('@')[0] : 'Usuario');
+        this.userImage = parsed.imagen && parsed.imagen.trim() !== '' 
+                         ? parsed.imagen 
+                         : 'assets/img/profile.jpeg';
 
-        this.userImage =
-          parsed.imagen && parsed.imagen.trim() !== ''
-            ? parsed.imagen
-            : 'assets/img/profile.jpeg';
+        if (this.userId === 0) {
+          alert('Error: No se pudo obtener el ID del usuario');
+          this.router.navigate(['/login']);
+        }
       } catch (error) {
         console.error('Error al cargar usuario:', error);
+        this.router.navigate(['/login']);
       }
+    } else {
+      alert('Debes iniciar sesión para vender productos');
+      this.router.navigate(['/login']);
     }
   }
 
-  getSubcategorias(): string[] {
-    const cat = this.categorias.find(c => c.nombre === this.categoria);
-    return cat ? cat.subcategorias : [];
+  cargarCategorias() {
+    this.http.get<any[]>(`${this.apiUrl}/categorias`).subscribe({
+      next: (data) => {
+        this.categorias = data;
+        console.log('Categorías cargadas:', this.categorias);
+      },
+      error: (error) => {
+        console.error('Error al cargar categorías:', error);
+        alert('Error al cargar las categorías');
+      }
+    });
+  }
+
+  onCategoriaChange() {
+    const categoriaSeleccionada = this.categorias.find(c => c.id_categoria === Number(this.categoriaId));
+    
+    if (categoriaSeleccionada) {
+      this.categoria = categoriaSeleccionada.nombre;
+      this.cargarSubcategorias(this.categoriaId);
+    }
+    
+    // Limpiar subcategoría al cambiar categoría
+    this.subcategoriaId = 0;
+    this.subcategoria = '';
+  }
+
+  cargarSubcategorias(idCategoria: number) {
+    this.http.get<any[]>(`${this.apiUrl}/subcategorias/categoria/${idCategoria}`).subscribe({
+      next: (data) => {
+        this.subcategorias = data;
+        console.log('Subcategorías cargadas:', this.subcategorias);
+      },
+      error: (error) => {
+        console.error('Error al cargar subcategorías:', error);
+        this.subcategorias = [];
+      }
+    });
+  }
+
+  onSubcategoriaChange() {
+    const subcategoriaSeleccionada = this.subcategorias.find(s => s.id_subcategoria === Number(this.subcategoriaId));
+    if (subcategoriaSeleccionada) {
+      this.subcategoria = subcategoriaSeleccionada.nombre;
+    }
   }
 
   // Verificar si la categoría necesita talla
   necesitaTalla(): boolean {
     const categoriasConTalla = ['VESTIMENTA', 'CALZADO', 'DEPORTE'];
-    return categoriasConTalla.includes(this.categoria);
+    return categoriasConTalla.includes(this.categoria.toUpperCase());
   }
 
   // Verificar si la categoría necesita color
   necesitaColor(): boolean {
     const categoriasConColor = ['VESTIMENTA', 'CALZADO', 'TECNOLOGÍA', 'DEPORTE'];
-    return categoriasConColor.includes(this.categoria);
+    return categoriasConColor.includes(this.categoria.toUpperCase());
   }
 
   // Verificar si la categoría necesita marca
   necesitaMarca(): boolean {
     const categoriasConMarca = ['TECNOLOGÍA', 'VESTIMENTA', 'CALZADO', 'VIDEOJUEGOS', 'DEPORTE'];
-    return categoriasConMarca.includes(this.categoria);
+    return categoriasConMarca.includes(this.categoria.toUpperCase());
   }
 
   onImageUpload(event: any) {
@@ -108,7 +155,6 @@ export class VenderComponent implements OnInit {
     if (files && files.length > 0) {
       const reader = new FileReader();
       reader.onload = (e: any) => {
-        // Solo guardar una imagen (la primera o reemplazar)
         this.imagenes = [e.target.result];
       };
       reader.readAsDataURL(files[0]);
@@ -145,7 +191,7 @@ export class VenderComponent implements OnInit {
       return;
     }
 
-    if (!this.categoria) {
+    if (!this.categoriaId) {
       alert('Por favor selecciona una categoría');
       return;
     }
@@ -155,39 +201,48 @@ export class VenderComponent implements OnInit {
       return;
     }
 
-    // Crear objeto producto
+    // Crear objeto producto para el backend
     const producto = {
       nombre: this.nombreProducto,
-      precio: this.precio,
-      categoria: this.categoria,
-      subcategoria: this.subcategoria,
-      color: this.color,
-      talla: this.talla,
-      marca: this.marca,
-      condicion: this.condicion,
       descripcion: this.descripcion,
-      cantidad: this.cantidad,
+      precio: this.precio,
+      cantidad_disponible: this.cantidad,
       disponible: this.disponible,
-      imagenes: this.imagenes,
-      vendedor: this.userName,
-      fechaPublicacion: new Date().toISOString()
+      id_categoria: Number(this.categoriaId),
+      id_subcategoria: this.subcategoriaId ? Number(this.subcategoriaId) : null,
+      id_vendedor: this.userId,
+      color: this.color || null,
+      talla: this.talla || null,
+      marca: this.marca || null,
+      condicion: this.condicion,
+      imagen: this.imagenes[0] // Solo una imagen
     };
 
     console.log('Producto a publicar:', producto);
 
-    // Aquí deberías enviar el producto a tu backend
-    // Por ahora solo mostramos un mensaje
-    alert('¡Producto publicado exitosamente!');
-    
-    // Limpiar formulario
-    this.limpiarFormulario();
+    // Enviar al backend
+    this.http.post(`${this.apiUrl}/productos`, producto).subscribe({
+      next: (response) => {
+        console.log('Producto publicado exitosamente:', response);
+        alert('¡Producto publicado exitosamente!');
+        this.limpiarFormulario();
+        this.router.navigate(['/']); // Redirigir al inicio
+      },
+      error: (error) => {
+        console.error('Error al publicar producto:', error);
+        alert('Error al publicar el producto: ' + (error.error?.detail || 'Error desconocido'));
+      }
+    });
   }
 
   limpiarFormulario() {
     this.nombreProducto = '';
     this.precio = 0;
+    this.categoriaId = 0;
     this.categoria = '';
+    this.subcategoriaId = 0;
     this.subcategoria = '';
+    this.subcategorias = [];
     this.color = '';
     this.talla = '';
     this.marca = '';

@@ -95,20 +95,20 @@
             <label class="form-label">
               <i class="fa fa-tag"></i> Categoría
             </label>
-            <select class="form-select" [(ngModel)]="categoria">
-              <option value="">Seleccionar categoría</option>
-              <option *ngFor="let cat of categorias" [value]="cat.nombre">{{ cat.nombre }}</option>
+            <select class="form-select" [(ngModel)]="categoriaId" (change)="onCategoriaChange()">
+              <option [value]="0">Seleccionar categoría</option>
+              <option *ngFor="let cat of categorias" [value]="cat.id_categoria">{{ cat.nombre }}</option>
             </select>
           </div>
 
           <!-- Subcategoría -->
-          <div class="form-section" *ngIf="categoria">
+          <div class="form-section" *ngIf="categoriaId > 0 && subcategorias.length > 0">
             <label class="form-label">
               <i class="fa fa-tags"></i> Subcategoría
             </label>
-            <select class="form-select" [(ngModel)]="subcategoria">
-              <option value="">Seleccionar subcategoría</option>
-              <option *ngFor="let sub of getSubcategorias()" [value]="sub">{{ sub }}</option>
+            <select class="form-select" [(ngModel)]="subcategoriaId" (change)="onSubcategoriaChange()">
+              <option [value]="0">Seleccionar subcategoría</option>
+              <option *ngFor="let sub of subcategorias" [value]="sub.id_subcategoria">{{ sub.nombre }}</option>
             </select>
           </div>
 
