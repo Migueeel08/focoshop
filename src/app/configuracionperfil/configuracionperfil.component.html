@@ -25,12 +25,86 @@
         <div class="perfil-card">
           <h3>DIRECCIÓN DE ENVÍO</h3>
           <div class="perfil-info">
-            <p><strong>{{usuario.nombre}} {{usuario.apellido}}</strong></p>
-            <p>{{usuario.direccion || 'Sin dirección registrada'}}</p>
-            <p>Phone Number: {{usuario.telefono || 'No disponible'}}</p>
-            <p>Email: {{usuario.email}}</p>
+            <!-- ✅ Mostrar mientras carga -->
+            @if (cargandoDirecciones) {
+              <div class="loading-section">
+                <i class="fa fa-spinner fa-spin"></i>
+                <p>Cargando dirección...</p>
+              </div>
+            }
+            
+            <!-- ✅ Mostrar cuando no hay direcciones -->
+            @else if (!tieneDireccion) {
+              <div class="no-data-section">
+                <i class="fa fa-map-marker-alt" style="font-size: 2rem; color: #ccc; margin-bottom: 10px;"></i>
+                <p style="color: #999; font-style: italic;">No tienes dirección registrada</p>
+                <p style="color: #666; font-size: 0.9rem; margin-top: 5px;">
+                  Agrega una dirección para realizar tus compras
+                </p>
+              </div>
+            }
+            
+            <!-- ✅ Mostrar dirección principal -->
+            @else {
+              <div class="direccion-info">
+                <p><strong>{{usuario.nombre}} {{usuario.apellido}}</strong></p>
+                
+                @if (direccionPrincipal) {
+                  <!-- Dirección formateada desde el backend -->
+                  <div class="direccion-detalle">
+                    <p class="direccion-linea">
+                      <i class="fa fa-map-marker-alt" style="color: #667eea; margin-right: 8px;"></i>
+                      {{direccionPrincipal.calle}} #{{direccionPrincipal.numero_exterior}}
+                      @if (direccionPrincipal.numero_interior) {
+                        <span>, Int {{direccionPrincipal.numero_interior}}</span>
+                      }
+                    </p>
+                    <p class="direccion-linea">{{direccionPrincipal.colonia}}</p>
+                    <p class="direccion-linea">
+                      CP {{direccionPrincipal.codigo_postal}}, 
+                      {{direccionPrincipal.ciudad}}, 
+                      {{direccionPrincipal.estado}}
+                    </p>
+                    <p class="direccion-linea">{{direccionPrincipal.pais}}</p>
+                    
+                    @if (direccionPrincipal.referencias) {
+                      <p class="direccion-referencias">
+                        <i class="fa fa-info-circle" style="color: #666; margin-right: 5px;"></i>
+                        <em>{{direccionPrincipal.referencias}}</em>
+                      </p>
+                    }
+                  </div>
+                } @else {
+                  <!-- Fallback: dirección antigua del usuario -->
+                  <p class="direccion-legacy">{{usuario.direccion}}</p>
+                }
+                
+                <p style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee;">
+                  <i class="fa fa-phone" style="color: #667eea; margin-right: 5px;"></i>
+                  {{usuario.telefono || 'No disponible'}}
+                </p>
+                <p>
+                  <i class="fa fa-envelope" style="color: #667eea; margin-right: 5px;"></i>
+                  {{usuario.email}}
+                </p>
+                
+                <!-- ✅ Mostrar cantidad de direcciones si hay más de una -->
+                @if (direcciones.length > 1) {
+                  <p class="direcciones-extra">
+                    <i class="fa fa-home" style="margin-right: 5px;"></i>
+                    + {{direcciones.length - 1}} dirección(es) adicional(es)
+                  </p>
+                }
+              </div>
+            }
           </div>
-          <button (click)="editarDireccion()" class="btn-accion">EDITAR DIRECCIÓN</button>
+          <button (click)="editarDireccion()" class="btn-accion">
+            @if (tieneDireccion) {
+              EDITAR DIRECCIÓN
+            } @else {
+              AGREGAR DIRECCIÓN
+            }
+          </button>
         </div>
 
         <!-- MÉTODO DE PAGO -->

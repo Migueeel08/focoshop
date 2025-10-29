@@ -16,7 +16,10 @@ import { HttpClientModule } from '@angular/common/http';
 export class ConfiguracionComponent implements OnInit {
   usuario: any = null;
   metodoPago: any = null;
+  direcciones: any[] = []; // ✅ AGREGADO
+  direccionPrincipal: any = null; // ✅ AGREGADO
   cargando = true;
+  cargandoDirecciones = true; // ✅ AGREGADO
 
   constructor(
     private usuarioService: UsuariosService,
@@ -77,11 +80,43 @@ export class ConfiguracionComponent implements OnInit {
         localStorage.setItem('user', JSON.stringify(this.usuario));
         this.usuarioService.setUsuarioActual(this.usuario);
 
+        // ✅ Cargar direcciones y métodos de pago
+        this.cargarDirecciones();
         this.cargarMetodoPago();
       },
       error: (err: any) => {
         console.error('Error cargando usuario desde backend:', err);
         this.cargando = false;
+        this.cargandoDirecciones = false;
+      }
+    });
+  }
+
+  // ✅ NUEVO MÉTODO
+  cargarDirecciones(): void {
+    if (!this.usuario?.id && !this.usuario?.id_usuario) {
+      this.cargandoDirecciones = false;
+      return;
+    }
+
+    const userId = this.usuario.id || this.usuario.id_usuario;
+
+    this.usuarioService.obtenerDirecciones(userId).subscribe({
+      next: (direcciones: any[]) => {
+        console.log('📍 Direcciones cargadas:', direcciones);
+        this.direcciones = direcciones || [];
+        
+        if (this.direcciones.length > 0) {
+          this.direccionPrincipal = this.direcciones[0];
+        }
+        
+        this.cargandoDirecciones = false;
+      },
+      error: (err) => {
+        console.log('ℹ️ No hay direcciones guardadas o error:', err);
+        this.direcciones = [];
+        this.direccionPrincipal = null;
+        this.cargandoDirecciones = false;
       }
     });
   }
@@ -104,6 +139,12 @@ export class ConfiguracionComponent implements OnInit {
         console.log('ℹ️ No hay métodos de pago guardados o error:', err);
       }
     });
+  }
+
+  // ✅ NUEVO GETTER
+  get tieneDireccion(): boolean {
+    return this.direcciones.length > 0 || 
+           (this.usuario?.direccion && this.usuario.direccion.trim() !== '');
   }
 
   get numeroTarjeta(): string {

@@ -33,6 +33,7 @@ export class UsuariosService {
     localStorage.setItem('user', JSON.stringify(usuario));
   }
 
+  // ✅ CORREGIDO: Agregar /api/ en la ruta
   actualizarUsuario(userId: number, datosUsuario: any): Observable<any> {
     const token = localStorage.getItem('token');
     const headers = new HttpHeaders({
@@ -40,12 +41,16 @@ export class UsuariosService {
       'Authorization': `Bearer ${token}`
     });
 
+    console.log('🔄 Actualizando usuario en:', `${this.apiUrl}/api/usuarios/${userId}`);
+    console.log('📦 Datos a enviar:', datosUsuario);
+
     return this.http.put(
-      `${this.apiUrl}/usuarios/${userId}`,
+      `${this.apiUrl}/api/usuarios/${userId}`,  // ✅ Agregado /api/
       datosUsuario,
       { headers }
     ).pipe(
       tap((usuarioActualizado: any) => {
+        console.log('✅ Respuesta del servidor:', usuarioActualizado);
         const currentUser = this.usuarioActual || {};
         const updatedUser = { ...currentUser, ...usuarioActualizado };
         this.setUsuarioActual(updatedUser);
@@ -53,6 +58,7 @@ export class UsuariosService {
     );
   }
 
+  // ✅ CORREGIDO: Agregar /api/ en la ruta de foto
   subirFotoPerfil(userId: number, file: File): Observable<any> {
     const formData = new FormData();
     formData.append('foto', file);
@@ -63,21 +69,23 @@ export class UsuariosService {
     });
 
     return this.http.post(
-      `${this.apiUrl}/usuarios/${userId}/foto`,
+      `${this.apiUrl}/api/usuarios/${userId}/foto`,  // ✅ Agregado /api/
       formData,
       { headers }
     );
   }
 
+  // ✅ CORREGIDO: Agregar /api/ en obtener por email
   obtenerUsuarioPorEmail(email: string): Observable<any> {
-    return this.http.get(`${this.apiUrl}/usuarios/email/${email}`);
+    return this.http.get(`${this.apiUrl}/api/usuarios/email/${email}`);  // ✅ Agregado /api/
   }
 
+  // ✅ CORREGIDO: Agregar /api/ en obtener por ID
   obtenerUsuarioPorId(userId: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/usuarios/${userId}`);
+    return this.http.get(`${this.apiUrl}/api/usuarios/${userId}`);  // ✅ Agregado /api/
   }
 
-  // 🗑️ MÉTODO PARA ELIMINAR USUARIO
+  // ✅ CORREGIDO: Agregar /api/ en eliminar usuario
   eliminarUsuario(userId: number): Observable<any> {
     const token = localStorage.getItem('token');
     const headers = new HttpHeaders({
@@ -85,7 +93,7 @@ export class UsuariosService {
     });
 
     return this.http.delete(
-      `${this.apiUrl}/usuarios/${userId}`,
+      `${this.apiUrl}/api/usuarios/${userId}`,  // ✅ Agregado /api/
       { headers }
     );
   }
@@ -98,11 +106,22 @@ export class UsuariosService {
       'Authorization': `Bearer ${token}`
     });
 
-    // Agregar el id_usuario al objeto de dirección
+    // ✅ Asegurar que id_usuario esté en el objeto
+    // ✅ Convertir strings vacíos a null para campos opcionales
     const direccionConUsuario = {
-      ...direccion,
-      id_usuario: userId
+      id_usuario: userId,
+      calle: direccion.calle,
+      numero_exterior: direccion.numero_exterior,
+      numero_interior: direccion.numero_interior || null, // ✅ null si está vacío
+      colonia: direccion.colonia,
+      codigo_postal: direccion.codigo_postal,
+      ciudad: direccion.ciudad,
+      estado: direccion.estado,
+      pais: direccion.pais || 'México',
+      referencias: direccion.referencias || null // ✅ null si está vacío
     };
+
+    console.log('📤 Enviando a API:', direccionConUsuario);
 
     return this.http.post(
       `${this.apiUrl}/api/direcciones`,
@@ -111,7 +130,7 @@ export class UsuariosService {
     );
   }
 
-  // 📍 MÉTODO PARA OBTENER DIRECCIONES
+  // ✅ CORREGIDO: Usar ruta correcta /api/direcciones/usuario/{id}
   obtenerDirecciones(userId: number): Observable<any> {
     const token = localStorage.getItem('token');
     const headers = new HttpHeaders({
@@ -119,20 +138,20 @@ export class UsuariosService {
     });
 
     return this.http.get(
-      `${this.apiUrl}/usuarios/${userId}/direcciones`,
+      `${this.apiUrl}/api/direcciones/usuario/${userId}`,  // ✅ Ruta correcta según el router
       { headers }
     );
   }
 
-  // 📍 MÉTODO PARA ELIMINAR DIRECCIÓN
-  eliminarDireccion(userId: number, direccionId: number): Observable<any> {
+  // ✅ CORREGIDO: Eliminar dirección por ID directo
+  eliminarDireccion(direccionId: number): Observable<any> {
     const token = localStorage.getItem('token');
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`
     });
 
     return this.http.delete(
-      `${this.apiUrl}/usuarios/${userId}/direcciones/${direccionId}`,
+      `${this.apiUrl}/api/direcciones/${direccionId}`,  // ✅ Ruta simplificada
       { headers }
     );
   }

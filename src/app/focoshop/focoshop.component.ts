@@ -2,30 +2,28 @@ import { Component, ElementRef, ViewChild, AfterViewInit, OnInit, OnDestroy, Hos
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 
 @Component({
   selector: 'foco-shop',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, HttpClientModule],
   templateUrl: './focoshop.component.html',
   styleUrls: ['./focoshop.component.css'],
   encapsulation: ViewEncapsulation.None
 })
 export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
 
-  // ===== CATEGORÍAS =====
-  categorias = [
-    { nombre: 'TECNOLOGÍA', imagen: 'assets/img/tecnologia.jpeg', subcategorias: ['Celulares', 'Computadoras', 'Accesorios'] },
-    { nombre: 'VESTIMENTA', imagen: 'assets/img/emma.jpg', subcategorias: ['Hombres', 'Mujeres', 'Niños'] },
-    { nombre: 'CALZADO', imagen: 'assets/img/calzadooo.png', subcategorias: ['Deporte', 'Casual', 'Botas'] },
-    { nombre: 'VIDEOJUEGOS', imagen: 'assets/img/videojuegos.jpg', subcategorias: ['Consolas', 'Juegos', 'Accesorios'] },
-    { nombre: 'JUGUETES', imagen: 'assets/img/juguetes.jpg', subcategorias: ['Educativos', 'Acción', 'Muñecos'] },
-    { nombre: 'HOGAR', imagen: 'assets/img/hogar.jpg', subcategorias: ['Muebles', 'Decoración', 'Electrodomésticos'] },
-    { nombre: 'DEPORTE', imagen: 'assets/img/deporte.jpg', subcategorias: ['Fitness', 'Bicicletas', 'Balones'] }
-  ];
+  // ===== API =====
+  private apiUrl = 'http://localhost:8000/api';
 
-  // ===== PRODUCTOS (serán cargados desde la base de datos) =====
+  // ===== CATEGORÍAS (serán cargadas desde la BD) =====
+  categorias: any[] = [];
+  categoriasCargadas = false;
+
+  // ===== PRODUCTOS (cargados desde la base de datos) =====
   productos: any[] = [];
+  productosCargando = false;
 
   categoriaSeleccionada = 0;
   busqueda = '';
@@ -45,10 +43,12 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     }
   };
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private http: HttpClient) {}
 
   ngOnInit() {
     this.cargarUsuario();
+    this.cargarCategorias();
+    this.cargarProductos();
     window.addEventListener('storage', this.storageListener);
   }
 
@@ -60,26 +60,173 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     this.scrollCategoriaCentrada(this.categoriaSeleccionada);
   }
 
-  get productosFiltrados() {
-    return this.productos.filter(
-      p =>
-        p.categoria === this.categorias[this.categoriaSeleccionada].nombre &&
-        p.nombre.toLowerCase().includes(this.busqueda.toLowerCase())
-    );
+  // ===== CARGAR CATEGORÍAS DESDE EL BACKEND =====
+  cargarCategorias() {
+    this.http.get<any[]>(`${this.apiUrl}/categorias`).subscribe({
+      next: (data) => {
+        this.categorias = data.map(cat => ({
+          id_categoria: cat.id_categoria,
+          nombre: cat.nombre,
+          imagen: this.getImagenCategoria(cat.nombre),
+          subcategorias: cat.subcategorias || []
+        }));
+        this.categoriasCargadas = true;
+        console.log('Categorías cargadas:', this.categorias);
+      },
+      error: (error) => {
+        console.error('Error al cargar categorías:', error);
+        // Usar categorías por defecto en caso de error
+        this.categorias = [
+          { nombre: 'TECNOLOGÍA', imagen: 'assets/img/tecnologia.jpeg', subcategorias: [] },
+          { nombre: 'VESTIMENTA', imagen: 'assets/img/emma.jpg', subcategorias: [] },
+          { nombre: 'CALZADO', imagen: 'assets/img/calzadooo.png', subcategorias: [] }
+        ];
+        this.categoriasCargadas = true;
+      }
+    });
   }
 
-  // ✅ CORREGIDO: Ya no cierra el menú al seleccionar categoría desde el menú lateral
+  // Asignar imágenes a las categorías (puedes personalizar esto)
+  getImagenCategoria(nombre: string): string {
+    const imagenes: any = {
+      'TECNOLOGÍA': 'assets/img/tecnologia.jpeg',
+      'VESTIMENTA': 'assets/img/emma.jpg',
+      'CALZADO': 'assets/img/calzadooo.png',
+      'VIDEOJUEGOS': 'assets/img/videojuegos.jpg',
+      'JUGUETES': 'assets/img/juguetes.jpg',
+      'HOGAR': 'assets/img/hogar.jpg',
+      'DEPORTE': 'assets/img/deporte.jpg'
+    };
+    return imagenes[nombre.toUpperCase()] || 'assets/img/tecnologia.jpeg';
+  }
+
+  // ===== CARGAR PRODUCTOS DESDE EL BACKEND =====
+  cargarProductos() {
+    this.productosCargando = true;
+    const url = `${this.apiUrl}/productos`;
+    console.log('Intentando cargar productos desde:', url);
+    
+    this.http.get<any[]>(url).subscribe({
+      next: (data) => {
+        console.log('✅ Datos recibidos del backend:', data);
+        this.productos = data.map(prod => ({
+          id_producto: prod.id_producto,
+          nombre: prod.nombre,
+          descripcion: prod.descripcion,
+          precio: prod.precio,
+          imagen: prod.imagen || 'assets/img/tecnologia.jpeg',
+          categoria: prod.categoria?.nombre || '',
+          subcategoria: prod.subcategoria?.nombre || '',
+          disponible: prod.disponible,
+          cantidad_disponible: prod.cantidad_disponible,
+          vendedor: prod.vendedor?.nombre || 'Vendedor',
+          vistas: prod.vistas || 0,
+          estado: prod.estado,
+          reviews: Math.floor(Math.random() * 100) + 1 // Temporal hasta que tengas reviews reales
+        }));
+        this.productosCargando = false;
+        console.log('Productos procesados:', this.productos);
+      },
+      error: (error) => {
+        console.error('Error al cargar productos:', error);
+        console.error('Detalles del error:', error.error);
+        this.productosCargando = false;
+        this.productos = [];
+      }
+    });
+  }
+
+  // Función auxiliar para normalizar texto (quitar acentos)
+  normalizarTexto(texto: string): string {
+    if (!texto) return '';
+    return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  }
+
+  // ===== FILTRAR PRODUCTOS =====
+  get productosFiltrados() {
+    if (!this.categoriasCargadas || this.categorias.length === 0) {
+      console.log('❌ Categorías no cargadas');
+      return [];
+    }
+
+    const categoriaActual = this.categorias[this.categoriaSeleccionada];
+    if (!categoriaActual) {
+      console.log('❌ No hay categoría actual');
+      return [];
+    }
+
+    console.log('🔍 Filtrando productos:');
+    console.log('   - Categoría actual:', categoriaActual.nombre);
+    console.log('   - Total productos:', this.productos.length);
+    console.log('   - Búsqueda:', this.busqueda);
+
+    const categoriaNormalizada = this.normalizarTexto(categoriaActual.nombre);
+    const busquedaNormalizada = this.normalizarTexto(this.busqueda);
+
+    const filtrados = this.productos.filter(p => {
+      // 1. Filtro de categoría
+      const productoCategoriaNormalizada = this.normalizarTexto(p.categoria);
+      const coincideCategoria = productoCategoriaNormalizada === categoriaNormalizada;
+
+      // 2. Filtro de búsqueda (solo si hay texto de búsqueda)
+      let coincideBusqueda = true;
+      if (busquedaNormalizada) {
+        const nombreNormalizado = this.normalizarTexto(p.nombre);
+        const descripcionNormalizada = this.normalizarTexto(p.descripcion || '');
+        coincideBusqueda = nombreNormalizado.includes(busquedaNormalizada) || 
+                          descripcionNormalizada.includes(busquedaNormalizada);
+      }
+
+      // 3. Filtro de disponibilidad
+      // ✅ CORREGIDO: Verificar disponible Y que cantidad_disponible > 0
+      // Estado puede ser: 'activo', 'Activo', 'disponible', null, undefined
+      const tieneStock = p.cantidad_disponible > 0;
+      const estaActivo = !p.estado || 
+                        p.estado.toLowerCase() === 'activo' || 
+                        p.estado.toLowerCase() === 'disponible';
+      const estaDisponible = (p.disponible === true || p.disponible === 1) && tieneStock && estaActivo;
+
+      // Log detallado solo si debug está activo
+      if (this.productos.length < 10) { // Solo loguear si hay pocos productos
+        console.log(`   - Producto "${p.nombre}":`, {
+          categoria: p.categoria,
+          categoriaNormalizada: productoCategoriaNormalizada,
+          categoriaEsperada: categoriaNormalizada,
+          coincideCategoria,
+          coincideBusqueda,
+          disponible: p.disponible,
+          cantidad: p.cantidad_disponible,
+          estado: p.estado,
+          tieneStock,
+          estaActivo,
+          estaDisponible,
+          pasaFiltro: coincideCategoria && coincideBusqueda && estaDisponible
+        });
+      }
+
+      return coincideCategoria && coincideBusqueda && estaDisponible;
+    });
+
+    console.log('✅ Productos filtrados:', filtrados.length);
+    if (filtrados.length === 0 && this.productos.length > 0) {
+      console.warn('⚠️ No hay productos que cumplan los filtros. Revisa:');
+      console.warn('   - Categoría del producto coincide con:', categoriaNormalizada);
+      console.warn('   - Productos tienen disponible=true y cantidad > 0');
+      console.warn('   - Estado del producto es "activo" o similar');
+    }
+    return filtrados;
+  }
+
+  // ===== NAVEGACIÓN DE CATEGORÍAS =====
   seleccionarCategoria(index: number) {
     this.categoriaSeleccionada = index;
     this.scrollCategoriaCentrada(index);
-    // ❌ REMOVIDO: this.menuAbierto = false;
   }
 
-  // 🆕 NUEVO: Método específico para seleccionar desde el carrusel (cierra el menú)
   seleccionarDesdeCarrusel(index: number) {
     this.categoriaSeleccionada = index;
     this.scrollCategoriaCentrada(index);
-    this.menuAbierto = false; // Solo cierra desde el carrusel
+    this.menuAbierto = false;
   }
 
   anterior() {
@@ -100,6 +247,13 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     this.categoriaGrid.nativeElement.scrollTo({ left: scrollPosition, behavior: 'smooth' });
   }
 
+  // ===== VER DETALLES DEL PRODUCTO =====
+  verDetalleProducto(producto: any) {
+    // Navegar a la página de detalles del producto
+    this.router.navigate(['/producto', producto.id_producto]);
+  }
+
+  // ===== MENÚ Y NAVEGACIÓN =====
   toggleMenu() {
     this.menuAbierto = !this.menuAbierto;
   }
@@ -122,12 +276,12 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     this.router.navigate(['/perfil']);
   }
 
-  // 🆕 NUEVA FUNCIÓN: Navegar a la página de vender
   irVender() {
     this.userMenuOpen = false;
     this.router.navigate(['/vender']);
   }
 
+  // ===== USUARIO =====
   cargarUsuario() {
     const userData = localStorage.getItem('user');
     if (userData) {
@@ -172,8 +326,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
   clickFuera(event: MouseEvent) {
     const target = event.target as HTMLElement;
     const clickedInsideUserInfo = target.closest('.user-info');
-    
-    // ✅ MEJORADO: También evita cerrar el menú de categorías si se hace clic dentro de él
     const clickedInsideMenu = target.closest('.menu-categorias');
     const clickedMenuButton = target.closest('.btn-menu-categorias');
     
@@ -181,7 +333,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
       this.userMenuOpen = false;
     }
 
-    // 🆕 Cierra el menú lateral solo si se hace clic fuera de él
     if (!clickedInsideMenu && !clickedMenuButton && this.menuAbierto) {
       const clickedOverlay = target.closest('.menu-overlay');
       if (clickedOverlay) {

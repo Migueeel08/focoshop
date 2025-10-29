@@ -578,3 +578,75 @@
     font-size: 12px;
   }
 }
+/* ===== ESTILOS PARA LA SECCIÓN DE DIRECCIÓN ===== */
+
+.loading-section {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+.loading-section i {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: #667eea;
+}
+
+.no-data-section {
+  text-align: center;
+  padding: 30px 20px;
+}
+
+.direccion-info {
+  text-align: left;
+}
+
+.direccion-detalle {
+  margin: 15px 0;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 3px solid #667eea;
+}
+
+.direccion-linea {
+  margin: 5px 0;
+  color: #333;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.direccion-referencias {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #ddd;
+  color: #666;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.direccion-legacy {
+  color: #666;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 5px;
+}
+
+.direcciones-extra {
+  margin-top: 15px;
+  padding: 10px;
+  background: #e8eaf6;
+  border-radius: 5px;
+  color: #667eea;
+  font-weight: 500;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* Ajuste para botones */
+.btn-accion {
+  width: 100%;
+  margin-top: 15px;
+}
