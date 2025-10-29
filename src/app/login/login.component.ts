@@ -23,15 +23,39 @@ export class LoginComponent {
   tipoAlerta: 'exito' | 'error' | 'info' = 'info';
 
   // 🔹 URL base del backend
-  private apiUrl = 'http://localhost:8000/api/usuarios';
+  private apiUrl = 'http://localhost:8000/api';
   private baseUrl = 'http://localhost:8000'; // URL base para imágenes
 
   constructor(public router: Router, private http: HttpClient) {}
 
+  // ===========================
+  // Cambiar entre Login y Registro
+  // ===========================
   toggleMode() {
     this.isRegisterMode = !this.isRegisterMode;
+    this.limpiarCampos();
   }
 
+  switchToLogin() {
+    this.isRegisterMode = false;
+    this.limpiarCampos();
+  }
+
+  switchToRegister() {
+    this.isRegisterMode = true;
+    this.limpiarCampos();
+  }
+
+  limpiarCampos() {
+    this.nombre = '';
+    this.apellido = '';
+    this.email = '';
+    this.contrasena = '';
+  }
+
+  // ===========================
+  // Mostrar alerta
+  // ===========================
   mostrarAlerta(mensaje: string, tipo: 'exito' | 'error' | 'info' = 'info') {
     this.mensajeAlerta = mensaje;
     this.tipoAlerta = tipo;
@@ -39,6 +63,9 @@ export class LoginComponent {
     setTimeout(() => this.alertaVisible = false, 3000);
   }
 
+  // ===========================
+  // Submit del formulario
+  // ===========================
   onSubmit() {
     if (this.isRegisterMode) {
       this.register();
@@ -51,6 +78,17 @@ export class LoginComponent {
   // Registro de usuario
   // ===========================
   register() {
+    // Validación básica
+    if (!this.nombre || !this.apellido || !this.email || !this.contrasena) {
+      this.mostrarAlerta('Por favor completa todos los campos', 'error');
+      return;
+    }
+
+    if (this.contrasena.length < 6) {
+      this.mostrarAlerta('La contraseña debe tener al menos 6 caracteres', 'error');
+      return;
+    }
+
     const user = {
       nombre: this.nombre,
       apellido: this.apellido,
@@ -63,13 +101,10 @@ export class LoginComponent {
       next: (res) => {
         console.log('Usuario registrado:', res);
         this.mostrarAlerta('Registro exitoso 🎉', 'exito');
-        // Limpiar campos
-        this.nombre = '';
-        this.apellido = '';
-        this.email = '';
-        this.contrasena = '';
-        // Cambiar a modo login
-        this.toggleMode();
+        // Cambiar a modo login después de 1 segundo
+        setTimeout(() => {
+          this.switchToLogin();
+        }, 1000);
       },
       error: (err) => {
         console.error('Error al registrar:', err);
@@ -83,6 +118,12 @@ export class LoginComponent {
   // Login
   // ===========================
   login() {
+    // Validación básica
+    if (!this.email || !this.contrasena) {
+      this.mostrarAlerta('Por favor completa todos los campos', 'error');
+      return;
+    }
+
     const body = new URLSearchParams();
     body.set('username', this.email);
     body.set('password', this.contrasena);

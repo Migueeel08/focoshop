@@ -542,56 +542,77 @@ body {
 
 .producto-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 25px;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 18px;
 }
 
 .producto-card {
   background: white;
-  border-radius: 15px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 3px 15px rgba(0,0,0,0.08);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+  cursor: pointer;
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 .producto-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 10px 25px rgba(107, 68, 255, 0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(107, 68, 255, 0.25);
 }
 
 .producto-card img {
   width: 100%;
-  height: 180px;
+  height: 140px;
   object-fit: cover;
   transition: transform 0.3s ease;
 }
 
 .producto-card:hover img {
-  transform: scale(1.05);
+  transform: scale(1.08);
 }
 
 .producto-card .info {
-  padding: 15px;
+  padding: 12px;
+}
+
+.producto-card .rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.producto-card .rating i {
+  color: #ffc107;
+  font-size: 11px;
+}
+
+.producto-card .rating span {
+  color: #999;
+  font-size: 11px;
+  margin-left: 2px;
 }
 
 .producto-card .nombre {
   font-weight: 600;
-  font-size: 16px;
+  font-size: 14px;
   margin-bottom: 8px;
   color: #333;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  height: 36px;
 }
 
 .producto-card .precio {
   color: #4b0082;
   font-weight: 700;
-  font-size: 15px;
-}
-
-.producto-card .rating {
-  color: #ffc107;
-  font-size: 13px;
-  margin-top: 5px;
+  font-size: 16px;
+  margin-top: 4px;
 }
 
 /* ======= SCROLL PERSONALIZADO ======= */
@@ -768,7 +789,7 @@ body {
   margin-top: 5px;
 }
 
-/* ======= RESPONSIVE ======= */
+/* ======= RESPONSIVE PARA PRODUCTOS ======= */
 @media (max-width: 768px) {
   .menu-categorias {
     width: 280px;
@@ -783,5 +804,33 @@ body {
 
   .container {
     padding: 100px 1rem 1rem;
+  }
+
+  .producto-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+  }
+
+  .producto-card img {
+    height: 120px;
+  }
+
+  .producto-card .info {
+    padding: 10px;
+  }
+
+  .producto-card .nombre {
+    font-size: 13px;
+  }
+
+  .producto-card .precio {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .producto-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
 }

@@ -16,10 +16,14 @@ import { HttpClientModule } from '@angular/common/http';
 export class ConfiguracionComponent implements OnInit {
   usuario: any = null;
   metodoPago: any = null;
-  direcciones: any[] = []; // ✅ AGREGADO
-  direccionPrincipal: any = null; // ✅ AGREGADO
+  direcciones: any[] = [];
+  direccionPrincipal: any = null;
   cargando = true;
-  cargandoDirecciones = true; // ✅ AGREGADO
+  cargandoDirecciones = true;
+  
+  // ✅ NUEVO: Variables para el modal
+  mostrarModal = false;
+  eliminandoDireccion = false;
 
   constructor(
     private usuarioService: UsuariosService,
@@ -80,7 +84,6 @@ export class ConfiguracionComponent implements OnInit {
         localStorage.setItem('user', JSON.stringify(this.usuario));
         this.usuarioService.setUsuarioActual(this.usuario);
 
-        // ✅ Cargar direcciones y métodos de pago
         this.cargarDirecciones();
         this.cargarMetodoPago();
       },
@@ -92,7 +95,6 @@ export class ConfiguracionComponent implements OnInit {
     });
   }
 
-  // ✅ NUEVO MÉTODO
   cargarDirecciones(): void {
     if (!this.usuario?.id && !this.usuario?.id_usuario) {
       this.cargandoDirecciones = false;
@@ -141,7 +143,91 @@ export class ConfiguracionComponent implements OnInit {
     });
   }
 
-  // ✅ NUEVO GETTER
+  // ✅ NUEVO: Abrir modal de direcciones
+  abrirModalDirecciones(): void {
+    this.mostrarModal = true;
+  }
+
+  // ✅ NUEVO: Cerrar modal
+  cerrarModal(): void {
+    this.mostrarModal = false;
+  }
+
+  // ✅ NUEVO: Seleccionar dirección como principal
+  seleccionarDireccionPrincipal(direccion: any): void {
+    this.direccionPrincipal = direccion;
+    console.log('📍 Dirección principal actualizada:', direccion);
+    this.cerrarModal();
+  }
+
+  // ✅ NUEVO: Editar una dirección específica
+  editarDireccionEspecifica(direccion: any): void {
+    // Puedes navegar a la página de edición con el ID de la dirección
+    this.router.navigate(['/perfil/editar-direccion'], {
+      queryParams: { id: direccion.id_direccion }
+    });
+  }
+
+  // ✅ NUEVO: Eliminar dirección
+  eliminarDireccion(direccion: any, event: Event): void {
+    event.stopPropagation(); // Evitar que se seleccione al hacer clic en eliminar
+    
+    if (!confirm(`¿Estás seguro de eliminar la dirección:\n${direccion.calle} #${direccion.numero_exterior}, ${direccion.colonia}?`)) {
+      return;
+    }
+
+    this.eliminandoDireccion = true;
+
+    this.usuarioService.eliminarDireccion(direccion.id_direccion).subscribe({
+      next: () => {
+        console.log('🗑️ Dirección eliminada:', direccion.id_direccion);
+        
+        // Remover de la lista
+        this.direcciones = this.direcciones.filter(d => d.id_direccion !== direccion.id_direccion);
+        
+        // Si era la principal, seleccionar otra
+        if (this.direccionPrincipal?.id_direccion === direccion.id_direccion) {
+          this.direccionPrincipal = this.direcciones.length > 0 ? this.direcciones[0] : null;
+        }
+        
+        this.eliminandoDireccion = false;
+        
+        // Mensaje de éxito
+        alert('Dirección eliminada correctamente');
+      },
+      error: (err) => {
+        console.error('❌ Error al eliminar dirección:', err);
+        this.eliminandoDireccion = false;
+        alert('No se pudo eliminar la dirección. Intenta nuevamente.');
+      }
+    });
+  }
+
+  // ✅ NUEVO: Formatear dirección corta
+  formatearDireccionCorta(direccion: any): string {
+    return `${direccion.calle} #${direccion.numero_exterior}, ${direccion.colonia}, ${direccion.ciudad}`;
+  }
+
+  // ✅ NUEVO: Formatear dirección completa
+  formatearDireccionCompleta(direccion: any): string {
+    let dir = `${direccion.calle} #${direccion.numero_exterior}`;
+    
+    if (direccion.numero_interior) {
+      dir += `, Int ${direccion.numero_interior}`;
+    }
+    
+    dir += `, ${direccion.colonia}`;
+    dir += `, CP ${direccion.codigo_postal}`;
+    dir += `, ${direccion.ciudad}, ${direccion.estado}`;
+    dir += `, ${direccion.pais}`;
+    
+    if (direccion.referencias) {
+      dir += ` | Ref: ${direccion.referencias}`;
+    }
+    
+    return dir;
+  }
+
   get tieneDireccion(): boolean {
     return this.direcciones.length > 0 || 
            (this.usuario?.direccion && this.usuario.direccion.trim() !== '');

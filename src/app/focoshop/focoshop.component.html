@@ -154,7 +154,7 @@
     <h2>{{ categorias[categoriaSeleccionada]?.nombre || 'Productos' }}</h2>
 
     <div class="producto-grid">
-      <div class="producto-card" *ngFor="let prod of productosFiltrados">
+      <div class="producto-card" *ngFor="let prod of productosFiltrados" (click)="verDetalleProducto(prod)">
         <img [src]="prod.imagen" [alt]="prod.nombre" />
         <div class="info">
           <div class="rating">
@@ -162,7 +162,7 @@
             <span>({{ prod.reviews }})</span>
           </div>
           <p class="nombre">{{ prod.nombre }}</p>
-          <p class="precio">\${{ prod.precio }}</p>
+          <p class="precio">${{ prod.precio }}</p>
         </div>
       </div>
     </div>
