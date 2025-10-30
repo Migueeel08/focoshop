@@ -24,6 +24,7 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
   // ===== PRODUCTOS (cargados desde la base de datos) =====
   productos: any[] = [];
   productosCargando = false;
+  productosFiltrados: any[] = [];
 
   categoriaSeleccionada = 0;
   busqueda = '';
@@ -72,6 +73,7 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
         }));
         this.categoriasCargadas = true;
         console.log('Categorías cargadas:', this.categorias);
+        this.filtrarProductos();
       },
       error: (error) => {
         console.error('Error al cargar categorías:', error);
@@ -82,11 +84,12 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
           { nombre: 'CALZADO', imagen: 'assets/img/calzadooo.png', subcategorias: [] }
         ];
         this.categoriasCargadas = true;
+        this.filtrarProductos();
       }
     });
   }
 
-  // Asignar imágenes a las categorías (puedes personalizar esto)
+  // Asignar imágenes a las categorías
   getImagenCategoria(nombre: string): string {
     const imagenes: any = {
       'TECNOLOGÍA': 'assets/img/tecnologia.jpeg',
@@ -114,26 +117,82 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
           nombre: prod.nombre,
           descripcion: prod.descripcion,
           precio: prod.precio,
-          imagen: prod.imagen || 'assets/img/tecnologia.jpeg',
+          imagen: this.construirUrlImagen(prod.imagen),
           categoria: prod.categoria || '',
           subcategoria: prod.subcategoria || '',
           disponible: prod.disponible,
           cantidad_disponible: prod.cantidad_disponible,
-          vendedor: prod.vendedor?.nombre || 'Vendedor',
+          vendedor: prod.vendedor_nombre || 'Vendedor',
           vistas: prod.vistas || 0,
           estado: prod.estado,
-          reviews: Math.floor(Math.random() * 100) + 1 // Temporal hasta que tengas reviews reales
+          reviews: Math.floor(Math.random() * 100) + 1,
+          
+          // ✅ NUEVOS CAMPOS PARA DISEÑO MERCADO LIBRE
+          marca: prod.marca || null,
+          calificacion: this.calcularCalificacion(Math.floor(Math.random() * 100) + 1),
+          condicion: prod.condicion || 'nuevo',
+          
+          // ✅ Campos opcionales (si los tienes en BD, si no, estos valores por defecto)
+          precio_anterior: prod.precio_anterior || null,
+          descuento: prod.descuento || null,
+          envio_gratis: prod.envio_gratis || false
         }));
         this.productosCargando = false;
         console.log('Productos procesados:', this.productos);
+        this.filtrarProductos();
       },
       error: (error) => {
         console.error('Error al cargar productos:', error);
         console.error('Detalles del error:', error.error);
         this.productosCargando = false;
         this.productos = [];
+        this.filtrarProductos();
       }
     });
+  }
+
+  /**
+   * ✅ Construir URL completa para las imágenes
+   */
+  construirUrlImagen(imagen: string | null): string {
+    if (!imagen) {
+      return 'assets/img/producto-default.jpg';
+    }
+
+    // Si ya es una URL completa, retornarla
+    if (imagen.startsWith('http')) {
+      return imagen;
+    }
+
+    // Si es una ruta local de assets
+    if (imagen.startsWith('assets/')) {
+      return imagen;
+    }
+
+    // Si es una imagen en Base64
+    if (imagen.startsWith('data:image')) {
+      return imagen;
+    }
+
+    // Si es una ruta de uploads del servidor
+    if (imagen.startsWith('/uploads/')) {
+      return `http://localhost:8000${imagen}`;
+    }
+
+    // Fallback a imagen por defecto
+    return 'assets/img/producto-default.jpg';
+  }
+
+  /**
+   * ✅ NUEVO: Calcular calificación basada en número de reviews
+   * Puedes ajustar la lógica según tus necesidades
+   */
+  calcularCalificacion(reviews: number): number {
+    if (reviews === 0) return 0;
+    if (reviews < 10) return 3;
+    if (reviews < 30) return 4;
+    if (reviews < 50) return 4;
+    return 5;
   }
 
   // Función auxiliar para normalizar texto (quitar acentos)
@@ -143,16 +202,18 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   // ===== FILTRAR PRODUCTOS =====
-  get productosFiltrados() {
+  filtrarProductos() {
     if (!this.categoriasCargadas || this.categorias.length === 0) {
       console.log('❌ Categorías no cargadas');
-      return [];
+      this.productosFiltrados = [];
+      return;
     }
 
     const categoriaActual = this.categorias[this.categoriaSeleccionada];
     if (!categoriaActual) {
       console.log('❌ No hay categoría actual');
-      return [];
+      this.productosFiltrados = [];
+      return;
     }
 
     console.log('🔍 Filtrando productos:');
@@ -178,8 +239,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
       }
 
       // 3. Filtro de disponibilidad
-      // ✅ CORREGIDO: Verificar disponible Y que cantidad_disponible > 0
-      // Estado puede ser: 'activo', 'Activo', 'disponible', null, undefined
       const tieneStock = p.cantidad_disponible > 0;
       const estaActivo = !p.estado || 
                         p.estado.toLowerCase() === 'activo' || 
@@ -187,7 +246,7 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
       const estaDisponible = (p.disponible === true || p.disponible === 1) && tieneStock && estaActivo;
 
       // Log detallado solo si debug está activo
-      if (this.productos.length < 10) { // Solo loguear si hay pocos productos
+      if (this.productos.length < 10) {
         console.log(`   - Producto "${p.nombre}":`, {
           categoria: p.categoria,
           categoriaNormalizada: productoCategoriaNormalizada,
@@ -207,37 +266,42 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
       return coincideCategoria && coincideBusqueda && estaDisponible;
     });
 
+    this.productosFiltrados = filtrados;
     console.log('✅ Productos filtrados:', filtrados.length);
+    
     if (filtrados.length === 0 && this.productos.length > 0) {
       console.warn('⚠️ No hay productos que cumplan los filtros. Revisa:');
       console.warn('   - Categoría del producto coincide con:', categoriaNormalizada);
       console.warn('   - Productos tienen disponible=true y cantidad > 0');
       console.warn('   - Estado del producto es "activo" o similar');
     }
-    return filtrados;
   }
 
   // ===== NAVEGACIÓN DE CATEGORÍAS =====
   seleccionarCategoria(index: number) {
     this.categoriaSeleccionada = index;
     this.scrollCategoriaCentrada(index);
+    this.filtrarProductos();
   }
 
   seleccionarDesdeCarrusel(index: number) {
     this.categoriaSeleccionada = index;
     this.scrollCategoriaCentrada(index);
     this.menuAbierto = false;
+    this.filtrarProductos();
   }
 
   anterior() {
     this.categoriaSeleccionada =
       (this.categoriaSeleccionada - 1 + this.categorias.length) % this.categorias.length;
     this.scrollCategoriaCentrada(this.categoriaSeleccionada);
+    this.filtrarProductos();
   }
 
   siguiente() {
     this.categoriaSeleccionada = (this.categoriaSeleccionada + 1) % this.categorias.length;
     this.scrollCategoriaCentrada(this.categoriaSeleccionada);
+    this.filtrarProductos();
   }
 
   scrollCategoriaCentrada(index: number) {
@@ -245,6 +309,11 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     const cardWidth = 160 + 25;
     const scrollPosition = cardWidth * index - (this.categoriaGrid.nativeElement.offsetWidth / 2 - cardWidth / 2);
     this.categoriaGrid.nativeElement.scrollTo({ left: scrollPosition, behavior: 'smooth' });
+  }
+
+  // Método para actualizar filtro cuando cambia la búsqueda
+  onBusquedaChange() {
+    this.filtrarProductos();
   }
 
   // ===== VER DETALLES DEL PRODUCTO =====

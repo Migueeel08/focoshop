@@ -31,7 +31,10 @@ export class VenderComponent implements OnInit {
   descripcion = '';
   cantidad = 1;
   disponible = true;
-  imagenes: string[] = [];
+
+  // ✅ NUEVO: Variables para manejo de archivos (igual que editperfil)
+  selectedFile: File | null = null;
+  imagenPreview: string | ArrayBuffer | null = null;
 
   // Opciones desde el backend
   categorias: any[] = [];
@@ -50,7 +53,7 @@ export class VenderComponent implements OnInit {
     { nombre: 'Naranja', hex: '#FFA500' }
   ];
 
-  private apiUrl = 'http://localhost:8000/api'; // Con /api
+  private apiUrl = 'http://localhost:8000/api';
 
   constructor(private router: Router, private http: HttpClient) {}
 
@@ -150,19 +153,51 @@ export class VenderComponent implements OnInit {
     return categoriasConMarca.includes(this.categoria.toUpperCase());
   }
 
+  /**
+   * ✅ ACTUALIZADO: Manejo de imagen como archivo (igual que editperfil)
+   */
   onImageUpload(event: any) {
-    const files = event.target.files;
-    if (files && files.length > 0) {
+    const file: File = event.target.files[0];
+    
+    if (file) {
+      // Validar tipo de archivo
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Por favor selecciona una imagen válida (JPG, PNG, GIF, WEBP)');
+        event.target.value = '';
+        return;
+      }
+
+      // Validar tamaño (máximo 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('La imagen es muy grande. Máximo 5MB');
+        event.target.value = '';
+        return;
+      }
+
+      // ✅ Guardar el archivo (NO convertir a Base64 para enviar)
+      this.selectedFile = file;
+
+      // Mostrar preview
       const reader = new FileReader();
       reader.onload = (e: any) => {
-        this.imagenes = [e.target.result];
+        this.imagenPreview = e.target.result;
       };
-      reader.readAsDataURL(files[0]);
+      reader.readAsDataURL(file);
+      
+      console.log('✅ Imagen seleccionada:', file.name, 'Tamaño:', file.size, 'bytes');
     }
   }
 
-  removeImage(index: number) {
-    this.imagenes.splice(index, 1);
+  removeImage() {
+    this.selectedFile = null;
+    this.imagenPreview = null;
+    
+    // Limpiar input de archivo
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
   }
 
   incrementarCantidad() {
@@ -179,6 +214,9 @@ export class VenderComponent implements OnInit {
     this.disponible = !this.disponible;
   }
 
+  /**
+   * ✅ ACTUALIZADO: Enviar con FormData en lugar de JSON
+   */
   publicarProducto() {
     // Validaciones
     if (!this.nombreProducto) {
@@ -196,40 +234,54 @@ export class VenderComponent implements OnInit {
       return;
     }
 
-    if (this.imagenes.length === 0) {
-      alert('Por favor agrega al menos una imagen');
+    // ✅ Validar que se haya seleccionado una imagen
+    if (!this.selectedFile) {
+      alert('Por favor agrega una imagen del producto');
       return;
     }
 
-    // Crear objeto producto para el backend
-    const producto = {
-      nombre: this.nombreProducto,
-      descripcion: this.descripcion,
-      precio: this.precio,
-      cantidad_disponible: this.cantidad,
-      disponible: this.disponible,
-      id_categoria: Number(this.categoriaId),
-      id_subcategoria: this.subcategoriaId ? Number(this.subcategoriaId) : null,
-      id_vendedor: this.userId,
-      color: this.color || null,
-      talla: this.talla || null,
-      marca: this.marca || null,
-      condicion: this.condicion,
-      imagen: this.imagenes[0] // Solo una imagen
-    };
+    // ✅ Crear FormData para enviar archivo
+    const formData = new FormData();
+    
+    // Agregar campos del formulario
+    formData.append('nombre', this.nombreProducto);
+    formData.append('descripcion', this.descripcion);
+    formData.append('precio', this.precio.toString());
+    formData.append('cantidad_disponible', this.cantidad.toString());
+    formData.append('id_categoria', this.categoriaId.toString());
+    formData.append('id_vendedor', this.userId.toString());
+    formData.append('condicion', this.condicion);
+    
+    // Campos opcionales
+    if (this.subcategoriaId) {
+      formData.append('id_subcategoria', this.subcategoriaId.toString());
+    }
+    if (this.color) {
+      formData.append('color', this.color);
+    }
+    if (this.talla) {
+      formData.append('talla', this.talla);
+    }
+    if (this.marca) {
+      formData.append('marca', this.marca);
+    }
+    
+    // ✅ Agregar el archivo de imagen
+    formData.append('imagen', this.selectedFile, this.selectedFile.name);
 
-    console.log('Producto a publicar:', producto);
+    console.log('📦 Publicando producto...');
+    console.log('📸 Con imagen:', this.selectedFile.name);
 
-    // Enviar al backend
-    this.http.post(`${this.apiUrl}/productos`, producto).subscribe({
+    // ✅ Enviar FormData (FastAPI lo recibirá como UploadFile)
+    this.http.post(`${this.apiUrl}/productos/`, formData).subscribe({
       next: (response) => {
-        console.log('Producto publicado exitosamente:', response);
+        console.log('✅ Producto publicado exitosamente:', response);
         alert('¡Producto publicado exitosamente!');
         this.limpiarFormulario();
-        this.router.navigate(['/']); // Redirigir al inicio
+        this.router.navigate(['/focoshop']);
       },
       error: (error) => {
-        console.error('Error al publicar producto:', error);
+        console.error('❌ Error al publicar producto:', error);
         alert('Error al publicar el producto: ' + (error.error?.detail || 'Error desconocido'));
       }
     });
@@ -250,7 +302,15 @@ export class VenderComponent implements OnInit {
     this.descripcion = '';
     this.cantidad = 1;
     this.disponible = true;
-    this.imagenes = [];
+    
+    // ✅ Limpiar imagen
+    this.selectedFile = null;
+    this.imagenPreview = null;
+    
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
   }
 
   volver() {

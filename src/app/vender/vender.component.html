@@ -23,18 +23,18 @@
       <!-- LEFT COLUMN - Image Upload -->
       <div class="left-column">
         <div class="image-upload-box" (click)="fileInput.click()">
-          <!-- Si no hay imágenes, mostrar el icono de upload -->
-          <ng-container *ngIf="imagenes.length === 0">
+          <!-- ✅ ACTUALIZADO: Si no hay imagen, mostrar el icono de upload -->
+          <ng-container *ngIf="!imagenPreview">
             <i class="fa fa-upload upload-icon"></i>
-            <h3>INSERTAR IMÁGENES</h3>
-            <p>Click para subir o arrastra las imágenes aquí</p>
-            <span class="upload-hint">PNG, JPG o WEBP (máx. 5MB cada una)</span>
+            <h3>INSERTAR IMAGEN</h3>
+            <p>Click para subir o arrastra la imagen aquí</p>
+            <span class="upload-hint">PNG, JPG, GIF o WEBP (máx. 5MB)</span>
           </ng-container>
 
-          <!-- Si hay imágenes, mostrar la primera -->
-          <ng-container *ngIf="imagenes.length > 0">
-            <img [src]="imagenes[0]" alt="Producto" class="main-image" />
-            <button class="btn-change-img" (click)="$event.stopPropagation(); removeImage(0)">
+          <!-- ✅ ACTUALIZADO: Si hay imagen, mostrar el preview -->
+          <ng-container *ngIf="imagenPreview">
+            <img [src]="imagenPreview" alt="Producto" class="main-image" />
+            <button type="button" class="btn-change-img" (click)="$event.stopPropagation(); removeImage()">
               <i class="fa fa-times"></i> Cambiar imagen
             </button>
           </ng-container>
