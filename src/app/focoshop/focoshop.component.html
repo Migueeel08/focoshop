@@ -148,112 +148,197 @@
     </button>
   </div>
 
-  <!-- ✅ SECCIÓN DE PRODUCTOS - DISEÑO HORIZONTAL MERCADO LIBRE -->
-  <section class="productos">
-    <h2>{{ categorias[categoriaSeleccionada]?.nombre || 'Productos' }}</h2>
+  <!-- ✅ BREADCRUMB Y RESULTADOS -->
+  <div class="breadcrumb-container">
+    <div class="breadcrumb">
+      <span>Inicio</span>
+      <i class="fa fa-chevron-right"></i>
+      <span>{{ categorias[categoriaSeleccionada]?.nombre || 'Productos' }}</span>
+    </div>
+    <div class="ordenar-por">
+      <label>Ordenar por</label>
+      <select [(ngModel)]="ordenamiento" (change)="ordenarProductos()">
+        <option value="relevantes">Más relevantes</option>
+        <option value="menor-precio">Menor precio</option>
+        <option value="mayor-precio">Mayor precio</option>
+        <option value="mas-vendidos">Más vendidos</option>
+      </select>
+    </div>
+  </div>
 
-    <!-- Lista de productos horizontal -->
-    <div class="productos-lista-ml">
-      <div 
-        class="producto-item-ml" 
-        *ngFor="let prod of productosFiltrados" 
-        (click)="verDetalleProducto(prod)"
-      >
-        <!-- Columna Izquierda: Imagen -->
-        <div class="producto-imagen-wrapper">
-          <img [src]="prod.imagen" [alt]="prod.nombre" class="producto-imagen-ml" />
-          
-          <!-- Badge de envío gratis -->
-          <div class="badge-envio-ml" *ngIf="prod.envio_gratis">
-            <i class="fa fa-truck"></i> Envío gratis
-          </div>
+  <!-- ✅ CONTENEDOR PRINCIPAL: FILTROS + PRODUCTOS -->
+  <div class="main-content">
+    <!-- PANEL DE FILTROS LATERAL -->
+    <aside class="filtros-panel">
+      <h3 class="filtros-titulo">Filtros</h3>
+
+      <!-- Filtro: Condición -->
+      <div class="filtro-seccion">
+        <h4 class="filtro-subtitulo">Condición</h4>
+        <label class="filtro-checkbox">
+          <input type="checkbox" [(ngModel)]="filtros.nuevo" (change)="aplicarFiltros()" />
+          <span>Nuevo</span>
+        </label>
+        <label class="filtro-checkbox">
+          <input type="checkbox" [(ngModel)]="filtros.usado" (change)="aplicarFiltros()" />
+          <span>Usado</span>
+        </label>
+      </div>
+
+      <!-- Filtro: Precio -->
+      <div class="filtro-seccion">
+        <h4 class="filtro-subtitulo">Precio</h4>
+        <div class="precio-inputs">
+          <input 
+            type="number" 
+            placeholder="Mínimo" 
+            [(ngModel)]="filtros.precioMin"
+            (change)="aplicarFiltros()"
+          />
+          <span>-</span>
+          <input 
+            type="number" 
+            placeholder="Máximo" 
+            [(ngModel)]="filtros.precioMax"
+            (change)="aplicarFiltros()"
+          />
         </div>
+      </div>
 
-        <!-- Columna Derecha: Información -->
-        <div class="producto-detalles-ml">
-          <!-- Badge de tienda oficial (si aplica) -->
-          <div class="badge-oficial" *ngIf="prod.oficial">
-            {{ prod.vendedor }} TIENDA OFICIAL
+      <!-- Filtro: Marca -->
+      <div class="filtro-seccion" *ngIf="marcasDisponibles.length > 0">
+        <h4 class="filtro-subtitulo">Marca</h4>
+        <div class="filtro-buscar">
+          <input type="text" placeholder="Buscar marca..." [(ngModel)]="buscarMarca" />
+        </div>
+        <div class="filtro-lista">
+          <label 
+            class="filtro-checkbox" 
+            *ngFor="let marca of marcasDisponibles | slice:0:5"
+          >
+            <input 
+              type="checkbox" 
+              [checked]="filtros.marcas.includes(marca)"
+              (change)="toggleMarca(marca)"
+            />
+            <span>{{ marca }}</span>
+          </label>
+        </div>
+        <button class="ver-mas-btn" *ngIf="marcasDisponibles.length > 5">
+          Ver todas las marcas
+        </button>
+      </div>
+
+      <!-- Filtro: Calificación -->
+      <div class="filtro-seccion">
+        <h4 class="filtro-subtitulo">Calificación</h4>
+        <label class="filtro-checkbox">
+          <input type="radio" name="calificacion" [(ngModel)]="filtros.calificacion" value="5" (change)="aplicarFiltros()" />
+          <span>
+            <i class="fa fa-star star-filled"></i>
+            <i class="fa fa-star star-filled"></i>
+            <i class="fa fa-star star-filled"></i>
+            <i class="fa fa-star star-filled"></i>
+            <i class="fa fa-star star-filled"></i>
+          </span>
+        </label>
+        <label class="filtro-checkbox">
+          <input type="radio" name="calificacion" [(ngModel)]="filtros.calificacion" value="4" (change)="aplicarFiltros()" />
+          <span>
+            <i class="fa fa-star star-filled"></i>
+            <i class="fa fa-star star-filled"></i>
+            <i class="fa fa-star star-filled"></i>
+            <i class="fa fa-star star-filled"></i>
+            <i class="fa fa-star star-empty"></i>
+            o más
+          </span>
+        </label>
+        <label class="filtro-checkbox">
+          <input type="radio" name="calificacion" [(ngModel)]="filtros.calificacion" value="3" (change)="aplicarFiltros()" />
+          <span>
+            <i class="fa fa-star star-filled"></i>
+            <i class="fa fa-star star-filled"></i>
+            <i class="fa fa-star star-filled"></i>
+            <i class="fa fa-star star-empty"></i>
+            <i class="fa fa-star star-empty"></i>
+            o más
+          </span>
+        </label>
+      </div>
+
+      <!-- Botón limpiar filtros -->
+      <button class="limpiar-filtros-btn" (click)="limpiarFiltros()">
+        <i class="fa fa-times"></i>
+        Limpiar filtros
+      </button>
+    </aside>
+
+    <!-- SECCIÓN DE PRODUCTOS (GRID 3 COLUMNAS) -->
+    <section class="productos-seccion">
+      <div class="productos-header">
+        <h2>{{ categorias[categoriaSeleccionada]?.nombre || 'Productos' }}</h2>
+        <p class="resultados-count">{{ productosFiltrados.length }} resultados</p>
+      </div>
+
+      <!-- Grid de productos 3 columnas -->
+      <div class="productos-grid">
+        <div 
+          class="producto-card-grid" 
+          *ngFor="let prod of productosFiltrados" 
+          (click)="verDetalleProducto(prod)"
+        >
+          <!-- Imagen -->
+          <div class="producto-imagen-container">
+            <img [src]="prod.imagen" [alt]="prod.nombre" />
           </div>
 
-          <!-- Nombre del producto -->
-          <h3 class="producto-titulo-ml">{{ prod.nombre }}</h3>
+          <!-- Info del producto -->
+          <div class="producto-info">
+            <!-- Nombre -->
+            <h3 class="producto-nombre">{{ prod.nombre }}</h3>
 
-          <!-- Marca con verificación -->
-          <div class="producto-marca-ml" *ngIf="prod.marca">
-            <span>{{ prod.marca }}</span>
-            <i class="fa fa-check-circle verificado"></i>
-          </div>
+            <!-- Marca -->
+            <p class="producto-marca" *ngIf="prod.marca">{{ prod.marca }}</p>
 
-          <!-- Precio y descuento -->
-          <div class="producto-precio-wrapper">
-            <div class="precio-linea">
-              <span class="precio-grande">${{ prod.precio | number:'1.0-0' }}</span>
-              <span class="precio-anterior-ml" *ngIf="prod.precio_anterior">
-                ${{ prod.precio_anterior | number:'1.0-0' }}
-              </span>
-              <span class="descuento-ml" *ngIf="prod.descuento">
-                {{ prod.descuento }}% OFF
-              </span>
+            <!-- Precio -->
+            <div class="producto-precio-container">
+              <span class="precio">${{ prod.precio | number:'1.0-0' }}</span>
             </div>
 
-            <!-- Cuotas sin interés -->
-            <div class="cuotas-ml" *ngIf="prod.precio >= 1000">
-              <span>Hasta 12 cuotas sin interés de</span>
-              <strong>${{ (prod.precio / 12) | number:'1.0-0' }}</strong>
+            <!-- Rating y reviews -->
+            <div class="producto-rating-reviews">
+              <div class="estrellas">
+                <i 
+                  *ngFor="let star of [1,2,3,4,5]" 
+                  class="fa fa-star"
+                  [class.filled]="star <= (prod.calificacion || 0)"
+                  [class.empty]="star > (prod.calificacion || 0)"
+                ></i>
+              </div>
+              <span class="reviews-text">({{ prod.reviews || 0 }})</span>
             </div>
-          </div>
 
-          <!-- Envío gratis texto -->
-          <div class="envio-texto" *ngIf="prod.envio_gratis">
-            <i class="fa fa-truck"></i>
-            <span>Envío gratis</span>
-          </div>
-
-          <!-- Rating y vendidos -->
-          <div class="rating-vendedor-ml">
-            <div class="rating-ml">
-              <i 
-                *ngFor="let star of [1,2,3,4,5]" 
-                class="fa fa-star"
-                [class.filled]="star <= (prod.calificacion || 4)"
-              ></i>
-              <span class="rating-numero">{{ prod.calificacion || 4 }}</span>
-              <span class="reviews-ml">({{ prod.reviews || 0 }})</span>
-            </div>
-            
-            <!-- Vendidos -->
-            <div class="vendidos-ml" *ngIf="prod.reviews > 10">
-              <span>+{{ prod.reviews }} vendidos</span>
-            </div>
-          </div>
-
-          <!-- Vendedor -->
-          <div class="vendedor-ml">
-            <i class="fa fa-store"></i>
-            <span>por {{ prod.vendedor }}</span>
-          </div>
-
-          <!-- Stock bajo (alerta) -->
-          <div class="stock-bajo-ml" *ngIf="prod.cantidad_disponible <= 5 && prod.cantidad_disponible > 0">
-            <i class="fa fa-exclamation-circle"></i>
-            ¡Últimas {{ prod.cantidad_disponible }} unidades!
+            <!-- Vendedor -->
+            <p class="producto-vendedor">
+              <i class="fa fa-store"></i>
+              {{ prod.vendedor }}
+            </p>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Mensaje si no hay productos -->
-    <div class="no-productos" *ngIf="productosFiltrados.length === 0 && !productosCargando">
-      <i class="fa fa-box-open fa-3x"></i>
-      <h3>No se encontraron productos</h3>
-      <p>Intenta con otra categoría o búsqueda</p>
-    </div>
+      <!-- Mensaje sin productos -->
+      <div class="no-productos" *ngIf="productosFiltrados.length === 0 && !productosCargando">
+        <i class="fa fa-box-open fa-3x"></i>
+        <h3>No se encontraron productos</h3>
+        <p>Intenta ajustando los filtros o cambia de categoría</p>
+      </div>
 
-    <!-- Indicador de carga -->
-    <div class="loading" *ngIf="productosCargando">
-      <i class="fa fa-spinner fa-spin fa-3x"></i>
-      <p>Cargando productos...</p>
-    </div>
-  </section>
+      <!-- Loading -->
+      <div class="loading" *ngIf="productosCargando">
+        <i class="fa fa-spinner fa-spin fa-3x"></i>
+        <p>Cargando productos...</p>
+      </div>
+    </section>
+  </div>
 </div>
