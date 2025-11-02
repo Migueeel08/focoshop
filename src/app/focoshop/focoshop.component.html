@@ -18,11 +18,10 @@
 
     <!-- LINKS DE AUTENTICACIÓN -->
     <div class="auth-links">
-      <ng-container *ngIf="isLoggedIn; else notLoggedIn">
+      @if (isLoggedIn) {
         <div class="user-info" (click)="toggleUserMenu()">
           <img [src]="userImage" alt="Perfil" class="user-icon" />
 
-          <!-- MENÚ DESPLEGABLE MODERNO -->
           <div class="user-menu" [class.open]="userMenuOpen">
             <div class="user-name-header">{{ userName }}</div>
 
@@ -45,26 +44,17 @@
             </button>
           </div>
         </div>
-      </ng-container>
-
-      <ng-template #notLoggedIn>
+      } @else {
         <a [routerLink]="['/login']" class="auth-link">Iniciar Sesión</a>
-      </ng-template>
+      }
     </div>
   </header>
 
-  <!-- BOTÓN DE MENÚ LATERAL DE CATEGORÍAS -->
-  <button class="btn-menu-categorias" (click)="toggleMenu()">
-    <i class="fa fa-bars"></i> 
-    <span>CATEGORÍAS</span>
-  </button>
-
-  <!-- OVERLAY OSCURO CUANDO EL MENÚ ESTÁ ABIERTO -->
+  <!-- OVERLAY OSCURO -->
   <div class="menu-overlay" [class.active]="menuAbierto" (click)="toggleMenu()"></div>
 
-  <!-- MENÚ LATERAL MEJORADO -->
+  <!-- MENÚ LATERAL -->
   <aside class="menu-categorias" [class.open]="menuAbierto">
-    <!-- HEADER DEL MENÚ -->
     <div class="menu-header">
       <div class="menu-titulo">
         <i class="fa fa-th-large"></i>
@@ -75,48 +65,38 @@
       </button>
     </div>
 
-    <!-- BARRA DE BÚSQUEDA EN EL MENÚ -->
     <div class="menu-search">
       <i class="fa fa-search"></i>
       <input type="text" placeholder="Buscar categoría..." />
     </div>
 
-    <!-- LISTA DE CATEGORÍAS -->
     <ul class="categorias-list">
-      <li
-        *ngFor="let cat of categorias; let i = index"
-        class="categoria-item"
-        [class.active]="i === categoriaSeleccionada"
-      >
-        <div class="categoria-principal" (click)="seleccionarCategoria(i)">
-          <div class="categoria-info">
-            <i class="fa fa-folder"></i>
-            <span>{{ cat.nombre }}</span>
+      @for (cat of categorias; track cat.nombre; let i = $index) {
+        <li class="categoria-item" [class.active]="i === categoriaSeleccionada">
+          <div class="categoria-principal" (click)="seleccionarCategoria(i)">
+            <div class="categoria-info">
+              <i class="fa fa-folder"></i>
+              <span>{{ cat.nombre }}</span>
+            </div>
+            @if (cat.subcategorias?.length) {
+              <i class="fa fa-chevron-right arrow-icon" [class.rotate]="i === categoriaSeleccionada"></i>
+            }
           </div>
-          <i 
-            *ngIf="cat.subcategorias?.length" 
-            class="fa fa-chevron-right arrow-icon"
-            [class.rotate]="i === categoriaSeleccionada"
-          ></i>
-        </div>
 
-        <!-- SUBCATEGORÍAS -->
-        <ul 
-          class="subcategorias" 
-          *ngIf="cat.subcategorias?.length && i === categoriaSeleccionada"
-        >
-          <li 
-            *ngFor="let sub of cat.subcategorias" 
-            class="subcategoria-item"
-          >
-            <i class="fa fa-angle-right"></i>
-            {{ sub }}
-          </li>
-        </ul>
-      </li>
+          @if (cat.subcategorias?.length && i === categoriaSeleccionada) {
+            <ul class="subcategorias">
+              @for (sub of cat.subcategorias; track sub) {
+                <li class="subcategoria-item">
+                  <i class="fa fa-angle-right"></i>
+                  {{ sub }}
+                </li>
+              }
+            </ul>
+          }
+        </li>
+      }
     </ul>
 
-    <!-- FOOTER DEL MENÚ -->
     <div class="menu-footer">
       <button class="btn-ver-todas">
         <i class="fa fa-grip-horizontal"></i>
@@ -125,6 +105,12 @@
     </div>
   </aside>
 
+  <!-- BOTÓN DE MENÚ DE CATEGORÍAS -->
+  <button class="btn-menu-categorias" (click)="toggleMenu()">
+    <i class="fa fa-bars"></i> 
+    <span>CATEGORÍAS</span>
+  </button>
+
   <!-- CARRUSEL DE CATEGORÍAS -->
   <div class="carrusel-container">
     <button (click)="anterior()" class="arrow-btn left">
@@ -132,15 +118,12 @@
     </button>
 
     <div class="categoria-grid" #categoriaGrid>
-      <div
-        class="categoria-card"
-        *ngFor="let cat of categorias; let i = index"
-        [class.active]="i === categoriaSeleccionada"
-        (click)="seleccionarCategoria(i)"
-      >
-        <img [src]="cat.imagen" [alt]="cat.nombre" />
-        <p>{{ cat.nombre }}</p>
-      </div>
+      @for (cat of categorias; track cat.nombre; let i = $index) {
+        <div class="categoria-card" [class.active]="i === categoriaSeleccionada" (click)="seleccionarCategoria(i)">
+          <img [src]="cat.imagen" [alt]="cat.nombre" />
+          <p>{{ cat.nombre }}</p>
+        </div>
+      }
     </div>
 
     <button (click)="siguiente()" class="arrow-btn right">
@@ -148,7 +131,7 @@
     </button>
   </div>
 
-  <!-- ✅ BREADCRUMB Y RESULTADOS -->
+  <!-- BREADCRUMB -->
   <div class="breadcrumb-container">
     <div class="breadcrumb">
       <span>Inicio</span>
@@ -166,13 +149,12 @@
     </div>
   </div>
 
-  <!-- ✅ CONTENEDOR PRINCIPAL: FILTROS + PRODUCTOS -->
+  <!-- CONTENEDOR PRINCIPAL -->
   <div class="main-content">
-    <!-- PANEL DE FILTROS LATERAL -->
+    <!-- FILTROS -->
     <aside class="filtros-panel">
       <h3 class="filtros-titulo">Filtros</h3>
 
-      <!-- Filtro: Condición -->
       <div class="filtro-seccion">
         <h4 class="filtro-subtitulo">Condición</h4>
         <label class="filtro-checkbox">
@@ -185,51 +167,35 @@
         </label>
       </div>
 
-      <!-- Filtro: Precio -->
       <div class="filtro-seccion">
         <h4 class="filtro-subtitulo">Precio</h4>
         <div class="precio-inputs">
-          <input 
-            type="number" 
-            placeholder="Mínimo" 
-            [(ngModel)]="filtros.precioMin"
-            (change)="aplicarFiltros()"
-          />
+          <input type="number" placeholder="Mínimo" [(ngModel)]="filtros.precioMin" (change)="aplicarFiltros()" />
           <span>-</span>
-          <input 
-            type="number" 
-            placeholder="Máximo" 
-            [(ngModel)]="filtros.precioMax"
-            (change)="aplicarFiltros()"
-          />
+          <input type="number" placeholder="Máximo" [(ngModel)]="filtros.precioMax" (change)="aplicarFiltros()" />
         </div>
       </div>
 
-      <!-- Filtro: Marca -->
-      <div class="filtro-seccion" *ngIf="marcasDisponibles.length > 0">
-        <h4 class="filtro-subtitulo">Marca</h4>
-        <div class="filtro-buscar">
-          <input type="text" placeholder="Buscar marca..." [(ngModel)]="buscarMarca" />
+      @if (marcasDisponibles.length > 0) {
+        <div class="filtro-seccion">
+          <h4 class="filtro-subtitulo">Marca</h4>
+          <div class="filtro-buscar">
+            <input type="text" placeholder="Buscar marca..." [(ngModel)]="buscarMarca" />
+          </div>
+          <div class="filtro-lista">
+            @for (marca of marcasDisponibles | slice:0:5; track marca) {
+              <label class="filtro-checkbox">
+                <input type="checkbox" [checked]="filtros.marcas.includes(marca)" (change)="toggleMarca(marca)" />
+                <span>{{ marca }}</span>
+              </label>
+            }
+          </div>
+          @if (marcasDisponibles.length > 5) {
+            <button class="ver-mas-btn">Ver todas las marcas</button>
+          }
         </div>
-        <div class="filtro-lista">
-          <label 
-            class="filtro-checkbox" 
-            *ngFor="let marca of marcasDisponibles | slice:0:5"
-          >
-            <input 
-              type="checkbox" 
-              [checked]="filtros.marcas.includes(marca)"
-              (change)="toggleMarca(marca)"
-            />
-            <span>{{ marca }}</span>
-          </label>
-        </div>
-        <button class="ver-mas-btn" *ngIf="marcasDisponibles.length > 5">
-          Ver todas las marcas
-        </button>
-      </div>
+      }
 
-      <!-- Filtro: Calificación -->
       <div class="filtro-seccion">
         <h4 class="filtro-subtitulo">Calificación</h4>
         <label class="filtro-checkbox">
@@ -266,79 +232,69 @@
         </label>
       </div>
 
-      <!-- Botón limpiar filtros -->
       <button class="limpiar-filtros-btn" (click)="limpiarFiltros()">
         <i class="fa fa-times"></i>
         Limpiar filtros
       </button>
     </aside>
 
-    <!-- SECCIÓN DE PRODUCTOS (GRID 3 COLUMNAS) -->
+    <!-- PRODUCTOS -->
     <section class="productos-seccion">
       <div class="productos-header">
         <h2>{{ categorias[categoriaSeleccionada]?.nombre || 'Productos' }}</h2>
         <p class="resultados-count">{{ productosFiltrados.length }} resultados</p>
       </div>
 
-      <!-- Grid de productos 3 columnas -->
       <div class="productos-grid">
-        <div 
-          class="producto-card-grid" 
-          *ngFor="let prod of productosFiltrados" 
-          (click)="verDetalleProducto(prod)"
-        >
-          <!-- Imagen -->
-          <div class="producto-imagen-container">
-            <img [src]="prod.imagen" [alt]="prod.nombre" />
-          </div>
-
-          <!-- Info del producto -->
-          <div class="producto-info">
-            <!-- Nombre -->
-            <h3 class="producto-nombre">{{ prod.nombre }}</h3>
-
-            <!-- Marca -->
-            <p class="producto-marca" *ngIf="prod.marca">{{ prod.marca }}</p>
-
-            <!-- Precio -->
-            <div class="producto-precio-container">
-              <span class="precio">${{ prod.precio | number:'1.0-0' }}</span>
+        @for (prod of productosFiltrados; track prod.id) {
+          <div class="producto-card-grid" (click)="verDetalleProducto(prod)">
+            <div class="producto-imagen-container">
+              <img [src]="prod.imagen" [alt]="prod.nombre" />
             </div>
 
-            <!-- Rating y reviews -->
-            <div class="producto-rating-reviews">
-              <div class="estrellas">
-                <i 
-                  *ngFor="let star of [1,2,3,4,5]" 
-                  class="fa fa-star"
-                  [class.filled]="star <= (prod.calificacion || 0)"
-                  [class.empty]="star > (prod.calificacion || 0)"
-                ></i>
+            <div class="producto-info">
+              <h3 class="producto-nombre">{{ prod.nombre }}</h3>
+
+              @if (prod.marca) {
+                <p class="producto-marca">{{ prod.marca }}</p>
+              }
+
+              <div class="producto-precio-container">
+                <span class="precio">${{ prod.precio | number:'1.0-0' }}</span>
               </div>
-              <span class="reviews-text">({{ prod.reviews || 0 }})</span>
+
+              <div class="producto-rating-reviews">
+                <div class="estrellas">
+                  @for (star of [1,2,3,4,5]; track star) {
+                    <i class="fa fa-star" [class.filled]="star <= (prod.calificacion || 0)" [class.empty]="star > (prod.calificacion || 0)"></i>
+                  }
+                </div>
+                <span class="reviews-text">({{ prod.reviews || 0 }})</span>
+              </div>
+
+              <p class="producto-vendedor">
+                <i class="fa fa-store"></i>
+                {{ prod.vendedor }}
+              </p>
             </div>
-
-            <!-- Vendedor -->
-            <p class="producto-vendedor">
-              <i class="fa fa-store"></i>
-              {{ prod.vendedor }}
-            </p>
           </div>
+        }
+      </div>
+
+      @if (productosFiltrados.length === 0 && !productosCargando) {
+        <div class="no-productos">
+          <i class="fa fa-box-open fa-3x"></i>
+          <h3>No se encontraron productos</h3>
+          <p>Intenta ajustando los filtros o cambia de categoría</p>
         </div>
-      </div>
+      }
 
-      <!-- Mensaje sin productos -->
-      <div class="no-productos" *ngIf="productosFiltrados.length === 0 && !productosCargando">
-        <i class="fa fa-box-open fa-3x"></i>
-        <h3>No se encontraron productos</h3>
-        <p>Intenta ajustando los filtros o cambia de categoría</p>
-      </div>
-
-      <!-- Loading -->
-      <div class="loading" *ngIf="productosCargando">
-        <i class="fa fa-spinner fa-spin fa-3x"></i>
-        <p>Cargando productos...</p>
-      </div>
+      @if (productosCargando) {
+        <div class="loading">
+          <i class="fa fa-spinner fa-spin fa-3x"></i>
+          <p>Cargando productos...</p>
+        </div>
+      }
     </section>
   </div>
 </div>
