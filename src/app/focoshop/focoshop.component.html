@@ -131,12 +131,51 @@
     </button>
   </div>
 
+  <!-- SUBCATEGORÍAS -->
+  @if (categorias[categoriaSeleccionada]?.subcategorias?.length) {
+    <div class="subcategorias-container">
+      <h3 class="subcategorias-titulo">
+        <i class="fa fa-list"></i>
+        Subcategorías de {{ categorias[categoriaSeleccionada].nombre }}
+      </h3>
+      <div class="subcategorias-grid">
+        @for (sub of categorias[categoriaSeleccionada].subcategorias; track sub) {
+          <button 
+            class="subcategoria-btn"
+            [class.active]="subcategoriaSeleccionada === sub"
+            (click)="seleccionarSubcategoria(sub)"
+          >
+            <i class="fa fa-tag"></i>
+            {{ sub }}
+          </button>
+        }
+        <button 
+          class="subcategoria-btn todas"
+          [class.active]="!subcategoriaSeleccionada"
+          (click)="seleccionarSubcategoria(null)"
+        >
+          <i class="fa fa-th"></i>
+          Ver todas
+        </button>
+      </div>
+    </div>
+  }
+
   <!-- BREADCRUMB -->
   <div class="breadcrumb-container">
     <div class="breadcrumb">
-      <span>Inicio</span>
-      <i class="fa fa-chevron-right"></i>
-      <span>{{ categorias[categoriaSeleccionada]?.nombre || 'Productos' }}</span>
+      <span (click)="limpiarBusqueda()">Inicio</span>
+      @if (busqueda.trim() !== '') {
+        <i class="fa fa-chevron-right"></i>
+        <span class="actual">Resultados de búsqueda: "{{ busqueda }}"</span>
+      } @else {
+        <i class="fa fa-chevron-right"></i>
+        <span>{{ categorias[categoriaSeleccionada]?.nombre || 'Productos' }}</span>
+        @if (subcategoriaSeleccionada) {
+          <i class="fa fa-chevron-right"></i>
+          <span class="actual">{{ subcategoriaSeleccionada }}</span>
+        }
+      }
     </div>
     <div class="ordenar-por">
       <label>Ordenar por</label>
@@ -241,7 +280,11 @@
     <!-- PRODUCTOS -->
     <section class="productos-seccion">
       <div class="productos-header">
-        <h2>{{ categorias[categoriaSeleccionada]?.nombre || 'Productos' }}</h2>
+        @if (busqueda.trim() !== '') {
+          <h2>Resultados para "{{ busqueda }}"</h2>
+        } @else {
+          <h2>{{ categorias[categoriaSeleccionada]?.nombre || 'Productos' }}</h2>
+        }
         <p class="resultados-count">{{ productosFiltrados.length }} resultados</p>
       </div>
 

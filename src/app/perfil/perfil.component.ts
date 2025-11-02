@@ -205,4 +205,12 @@ export class PerfilComponent implements OnInit {
   verDetalleProducto(producto: any) {
     this.router.navigate(['/producto', producto.id]);
   }
+
+  irAVender() {
+    this.router.navigate(['/vender']);
+  }
+
+  explorarProductos() {
+    this.router.navigate(['/']);
+  }
 }

@@ -79,7 +79,7 @@
             @if (tabSeleccionado === 'vendiendo') {
               <i class="fas fa-box-open fa-3x"></i>
               <p>No tienes productos en venta</p>
-              <button class="btn-vender" (click)="router.navigate(['/vender'])">
+              <button class="btn-vender" (click)="irAVender()">
                 <i class="fas fa-plus"></i> Publicar producto
               </button>
             } @else if (tabSeleccionado === 'vendidos') {
@@ -88,7 +88,7 @@
             } @else {
               <i class="fas fa-shopping-cart fa-3x"></i>
               <p>No has realizado ninguna compra</p>
-              <button class="btn-vender" (click)="router.navigate(['/'])">
+              <button class="btn-vender" (click)="explorarProductos()">
                 <i class="fas fa-search"></i> Explorar productos
               </button>
             }

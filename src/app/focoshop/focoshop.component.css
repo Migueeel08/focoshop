@@ -383,6 +383,86 @@ body {
   background: #f2efff;
 }
 
+/* ======= SUBCATEGORÍAS HORIZONTAL ======= */
+.subcategorias-container {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.subcategorias-titulo {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.subcategorias-titulo i {
+  color: #667eea;
+  font-size: 16px;
+}
+
+.subcategorias-grid {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.subcategoria-btn {
+  padding: 10px 20px;
+  border: 2px solid #e0e0e0;
+  border-radius: 20px;
+  background: white;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.subcategoria-btn i {
+  font-size: 12px;
+}
+
+.subcategoria-btn:hover {
+  border-color: #667eea;
+  color: #667eea;
+  background: #f0f3ff;
+  transform: translateY(-2px);
+}
+
+.subcategoria-btn.active {
+  border-color: #667eea;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.subcategoria-btn.todas {
+  border-color: #4b0082;
+  color: #4b0082;
+  font-weight: 600;
+}
+
+.subcategoria-btn.todas:hover {
+  background: #f2efff;
+  border-color: #4b0082;
+}
+
+.subcategoria-btn.todas.active {
+  background: #4b0082;
+  color: white;
+  border-color: #4b0082;
+}
+
 /* ============================================
    BREADCRUMB Y ORDENAR
    ============================================ */
@@ -411,6 +491,25 @@ body {
 .breadcrumb span:last-child {
   color: #333;
   font-weight: 600;
+}
+
+.breadcrumb span {
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.breadcrumb span:hover {
+  color: #667eea;
+}
+
+.breadcrumb span.actual {
+  color: #667eea;
+  font-weight: 600;
+  cursor: default;
+}
+
+.breadcrumb span.actual:hover {
+  color: #667eea;
 }
 
 .ordenar-por {
@@ -931,6 +1030,27 @@ body {
     left: 10px;
     padding: 10px 16px;
     font-size: 14px;
+  }
+
+  .carrusel-container {
+    margin-left: 0;
+  }
+
+  .subcategorias-container {
+    padding: 15px;
+  }
+
+  .subcategorias-titulo {
+    font-size: 16px;
+  }
+
+  .subcategorias-grid {
+    gap: 8px;
+  }
+
+  .subcategoria-btn {
+    padding: 8px 16px;
+    font-size: 13px;
   }
 }
 

@@ -27,6 +27,7 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
   productosFiltrados: any[] = [];
 
   categoriaSeleccionada = 0;
+  subcategoriaSeleccionada: string | null = null; // ✅ NUEVO
   busqueda = '';
   menuAbierto = false;
 
@@ -95,9 +96,21 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
       error: (error) => {
         console.error('Error al cargar categorías:', error);
         this.categorias = [
-          { nombre: 'TECNOLOGÍA', imagen: 'assets/img/tecnologia.jpeg', subcategorias: [] },
-          { nombre: 'VESTIMENTA', imagen: 'assets/img/emma.jpg', subcategorias: [] },
-          { nombre: 'CALZADO', imagen: 'assets/img/calzadooo.png', subcategorias: [] }
+          { 
+            nombre: 'TECNOLOGÍA', 
+            imagen: 'assets/img/tecnologia.jpeg', 
+            subcategorias: ['Laptops', 'Celulares', 'Tablets', 'Accesorios']
+          },
+          { 
+            nombre: 'VESTIMENTA', 
+            imagen: 'assets/img/emma.jpg', 
+            subcategorias: ['Camisas', 'Pantalones', 'Zapatos', 'Vestidos']
+          },
+          { 
+            nombre: 'CALZADO', 
+            imagen: 'assets/img/calzadooo.png', 
+            subcategorias: ['Deportivos', 'Casuales', 'Formales', 'Botas']
+          }
         ];
         this.categoriasCargadas = true;
         this.filtrarProductos();
@@ -139,9 +152,9 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
           vendedor: prod.vendedor_nombre || 'Vendedor',
           vistas: prod.vistas || 0,
           estado: prod.estado,
-          reviews: prod.reviews || 0, // ✅ Ahora usa el valor real o 0
+          reviews: prod.reviews || 0,
           marca: prod.marca || null,
-          calificacion: prod.calificacion || 0, // ✅ 0 si no ha sido calificado
+          calificacion: prod.calificacion || 0,
           condicion: prod.condicion || 'nuevo',
           precio_anterior: prod.precio_anterior || null,
           descuento: prod.descuento || null,
@@ -225,80 +238,114 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
       return;
     }
 
-    const categoriaActual = this.categorias[this.categoriaSeleccionada];
-    if (!categoriaActual) {
-      this.productosFiltrados = [];
-      return;
-    }
-
-    const categoriaNormalizada = this.normalizarTexto(categoriaActual.nombre);
     const busquedaNormalizada = this.normalizarTexto(this.busqueda);
-
-    let filtrados = this.productos.filter(p => {
-      // 1. Filtro de categoría
-      const productoCategoriaNormalizada = this.normalizarTexto(p.categoria);
-      const coincideCategoria = productoCategoriaNormalizada === categoriaNormalizada;
-
-      // 2. Filtro de búsqueda
-      let coincideBusqueda = true;
-      if (busquedaNormalizada) {
+    
+    // ✅ SI HAY BÚSQUEDA: Buscar en TODAS las categorías
+    let filtrados: any[];
+    
+    if (busquedaNormalizada.trim() !== '') {
+      // MODO BÚSQUEDA GLOBAL: Buscar en todos los productos
+      filtrados = this.productos.filter(p => {
         const nombreNormalizado = this.normalizarTexto(p.nombre);
         const descripcionNormalizada = this.normalizarTexto(p.descripcion || '');
-        coincideBusqueda = nombreNormalizado.includes(busquedaNormalizada) || 
-                          descripcionNormalizada.includes(busquedaNormalizada);
+        const categoriaNormalizada = this.normalizarTexto(p.categoria);
+        const subcategoriaNormalizada = this.normalizarTexto(p.subcategoria || '');
+        const marcaNormalizada = this.normalizarTexto(p.marca || '');
+        
+        const coincideBusqueda = 
+          nombreNormalizado.includes(busquedaNormalizada) || 
+          descripcionNormalizada.includes(busquedaNormalizada) ||
+          categoriaNormalizada.includes(busquedaNormalizada) ||
+          subcategoriaNormalizada.includes(busquedaNormalizada) ||
+          marcaNormalizada.includes(busquedaNormalizada);
+
+        // Verificar disponibilidad
+        const tieneStock = p.cantidad_disponible > 0;
+        const estaActivo = !p.estado || 
+                          p.estado.toLowerCase() === 'activo' || 
+                          p.estado.toLowerCase() === 'disponible';
+        const estaDisponible = (p.disponible === true || p.disponible === 1) && tieneStock && estaActivo;
+
+        return coincideBusqueda && estaDisponible;
+      });
+    } else {
+      // MODO NORMAL: Filtrar por categoría seleccionada
+      const categoriaActual = this.categorias[this.categoriaSeleccionada];
+      if (!categoriaActual) {
+        this.productosFiltrados = [];
+        return;
       }
 
-      // 3. Filtro de disponibilidad
-      const tieneStock = p.cantidad_disponible > 0;
-      const estaActivo = !p.estado || 
-                        p.estado.toLowerCase() === 'activo' || 
-                        p.estado.toLowerCase() === 'disponible';
-      const estaDisponible = (p.disponible === true || p.disponible === 1) && tieneStock && estaActivo;
+      const categoriaNormalizada = this.normalizarTexto(categoriaActual.nombre);
 
-      // 4. Filtro de condición (nuevo/usado)
-      let coincideCondicion = true;
-      if (this.filtros.nuevo || this.filtros.usado) {
-        coincideCondicion = 
-          (this.filtros.nuevo && p.condicion === 'nuevo') ||
-          (this.filtros.usado && p.condicion === 'usado');
-      }
+      filtrados = this.productos.filter(p => {
+        // 1. Filtro de categoría
+        const productoCategoriaNormalizada = this.normalizarTexto(p.categoria);
+        const coincideCategoria = productoCategoriaNormalizada === categoriaNormalizada;
 
-      // 5. Filtro de precio
-      let coincidePrecio = true;
-      if (this.filtros.precioMin !== null && p.precio < this.filtros.precioMin) {
-        coincidePrecio = false;
-      }
-      if (this.filtros.precioMax !== null && p.precio > this.filtros.precioMax) {
-        coincidePrecio = false;
-      }
+        // 2. Filtro de subcategoría (si está seleccionada)
+        let coincideSubcategoria = true;
+        if (this.subcategoriaSeleccionada) {
+          const subcategoriaNormalizada = this.normalizarTexto(this.subcategoriaSeleccionada);
+          const productoSubcategoriaNormalizada = this.normalizarTexto(p.subcategoria || '');
+          coincideSubcategoria = productoSubcategoriaNormalizada === subcategoriaNormalizada;
+        }
 
-      // 6. Filtro de marca
-      let coincideMarca = true;
-      if (this.filtros.marcas.length > 0) {
-        coincideMarca = this.filtros.marcas.includes(p.marca);
-      }
+        // 3. Filtro de disponibilidad
+        const tieneStock = p.cantidad_disponible > 0;
+        const estaActivo = !p.estado || 
+                          p.estado.toLowerCase() === 'activo' || 
+                          p.estado.toLowerCase() === 'disponible';
+        const estaDisponible = (p.disponible === true || p.disponible === 1) && tieneStock && estaActivo;
 
-      // 7. Filtro de calificación
-      let coincideCalificacion = true;
-      if (this.filtros.calificacion !== null) {
-        const minCalificacion = parseInt(this.filtros.calificacion);
-        coincideCalificacion = p.calificacion >= minCalificacion;
-      }
+        return coincideCategoria && coincideSubcategoria && estaDisponible;
+      });
+    }
 
-      return coincideCategoria && 
-             coincideBusqueda && 
-             estaDisponible && 
-             coincideCondicion && 
-             coincidePrecio && 
-             coincideMarca && 
-             coincideCalificacion;
-    });
+    // Aplicar filtros adicionales (condición, precio, marca, calificación)
+    filtrados = this.aplicarFiltrosAdicionales(filtrados);
 
     // Aplicar ordenamiento
     filtrados = this.ordenarProductosArray(filtrados);
 
     this.productosFiltrados = filtrados;
-    console.log('✅ Productos filtrados:', filtrados.length);
+    console.log('✅ Productos filtrados:', filtrados.length, 'Búsqueda:', this.busqueda);
+  }
+
+  /**
+   * Aplicar filtros adicionales (precio, marca, calificación, condición)
+   */
+  aplicarFiltrosAdicionales(productos: any[]): any[] {
+    let filtrados = [...productos];
+
+    // Filtro de condición (nuevo/usado)
+    if (this.filtros.nuevo || this.filtros.usado) {
+      filtrados = filtrados.filter(p => 
+        (this.filtros.nuevo && p.condicion === 'nuevo') ||
+        (this.filtros.usado && p.condicion === 'usado')
+      );
+    }
+
+    // Filtro de precio
+    if (this.filtros.precioMin !== null) {
+      filtrados = filtrados.filter(p => p.precio >= this.filtros.precioMin!);
+    }
+    if (this.filtros.precioMax !== null) {
+      filtrados = filtrados.filter(p => p.precio <= this.filtros.precioMax!);
+    }
+
+    // Filtro de marca
+    if (this.filtros.marcas.length > 0) {
+      filtrados = filtrados.filter(p => this.filtros.marcas.includes(p.marca));
+    }
+
+    // Filtro de calificación
+    if (this.filtros.calificacion !== null) {
+      const minCalificacion = parseInt(this.filtros.calificacion);
+      filtrados = filtrados.filter(p => p.calificacion >= minCalificacion);
+    }
+
+    return filtrados;
   }
 
   /**
@@ -320,6 +367,7 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
       marcas: [],
       calificacion: null
     };
+    this.subcategoriaSeleccionada = null; // ✅ NUEVO
     this.aplicarFiltros();
   }
 
@@ -348,7 +396,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
       
       case 'relevantes':
       default:
-        // Ordenar por calificación * reviews (productos más relevantes)
         return copia.sort((a, b) => {
           const relevanciaA = (a.calificacion || 0) * (a.reviews || 0);
           const relevanciaB = (b.calificacion || 0) * (b.reviews || 0);
@@ -360,22 +407,32 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
   // ===== NAVEGACIÓN DE CATEGORÍAS =====
   seleccionarCategoria(index: number) {
     this.categoriaSeleccionada = index;
+    this.subcategoriaSeleccionada = null; // ✅ NUEVO: Resetear subcategoría
     this.scrollCategoriaCentrada(index);
-    this.limpiarFiltros(); // Limpiar filtros al cambiar de categoría
+    this.limpiarFiltros();
     this.filtrarProductos();
   }
 
   seleccionarDesdeCarrusel(index: number) {
     this.categoriaSeleccionada = index;
+    this.subcategoriaSeleccionada = null; // ✅ NUEVO: Resetear subcategoría
     this.scrollCategoriaCentrada(index);
     this.menuAbierto = false;
     this.limpiarFiltros();
     this.filtrarProductos();
   }
 
+  // ✅ NUEVO MÉTODO: Seleccionar subcategoría
+  seleccionarSubcategoria(subcategoria: string | null) {
+    this.subcategoriaSeleccionada = subcategoria;
+    console.log('Subcategoría seleccionada:', subcategoria);
+    this.aplicarFiltros();
+  }
+
   anterior() {
     this.categoriaSeleccionada =
       (this.categoriaSeleccionada - 1 + this.categorias.length) % this.categorias.length;
+    this.subcategoriaSeleccionada = null; // ✅ NUEVO
     this.scrollCategoriaCentrada(this.categoriaSeleccionada);
     this.limpiarFiltros();
     this.filtrarProductos();
@@ -383,6 +440,7 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
 
   siguiente() {
     this.categoriaSeleccionada = (this.categoriaSeleccionada + 1) % this.categorias.length;
+    this.subcategoriaSeleccionada = null; // ✅ NUEVO
     this.scrollCategoriaCentrada(this.categoriaSeleccionada);
     this.limpiarFiltros();
     this.filtrarProductos();
@@ -396,6 +454,11 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   onBusquedaChange() {
+    this.filtrarProductos();
+  }
+
+  limpiarBusqueda() {
+    this.busqueda = '';
     this.filtrarProductos();
   }
 
