@@ -23,13 +23,25 @@ export class AdminCategoriasComponent implements OnInit {
   modalVisible = false;
   categoriaSeleccionada: any = null;
   
-  // Modal de crear/editar
+  // Modal de crear/editar categoría
   modalFormVisible = false;
   modoEdicion = false;
   
-  // Formulario
+  // ✅ NUEVO: Modal de subcategorías
+  modalSubcategoriasVisible = false;
+  modalSubcategoriaFormVisible = false;
+  modoEdicionSubcategoria = false;
+  subcategoriaSeleccionada: any = null;
+  
+  // Formulario categoría
   formulario = {
     nombre: ''
+  };
+
+  // ✅ NUEVO: Formulario subcategoría
+  formularioSubcategoria = {
+    nombre: '',
+    descripcion: ''
   };
   
   // Estadísticas
@@ -279,5 +291,128 @@ export class AdminCategoriasComponent implements OnInit {
    */
   volverPanel() {
     this.router.navigate(['/admin']);
+  }
+
+  // ========================================
+  // ✅ GESTIÓN DE SUBCATEGORÍAS
+  // ========================================
+
+  /**
+   * Abrir modal para gestionar subcategorías de una categoría
+   */
+  gestionarSubcategorias(categoria: any) {
+    this.categoriaSeleccionada = categoria;
+    this.modalSubcategoriasVisible = true;
+  }
+
+  /**
+   * Cerrar modal de subcategorías
+   */
+  cerrarModalSubcategorias() {
+    this.modalSubcategoriasVisible = false;
+    this.categoriaSeleccionada = null;
+  }
+
+  /**
+   * Abrir modal para crear subcategoría
+   */
+  abrirModalCrearSubcategoria() {
+    this.modoEdicionSubcategoria = false;
+    this.subcategoriaSeleccionada = null;
+    this.formularioSubcategoria = {
+      nombre: '',
+      descripcion: ''
+    };
+    this.modalSubcategoriaFormVisible = true;
+  }
+
+  /**
+   * Abrir modal para editar subcategoría
+   */
+  abrirModalEditarSubcategoria(subcategoria: any) {
+    this.modoEdicionSubcategoria = true;
+    this.subcategoriaSeleccionada = subcategoria;
+    this.formularioSubcategoria = {
+      nombre: subcategoria.nombre,
+      descripcion: subcategoria.descripcion || ''
+    };
+    this.modalSubcategoriaFormVisible = true;
+  }
+
+  /**
+   * Cerrar modal de formulario de subcategoría
+   */
+  cerrarModalSubcategoriaForm() {
+    this.modalSubcategoriaFormVisible = false;
+    this.modoEdicionSubcategoria = false;
+    this.subcategoriaSeleccionada = null;
+    this.formularioSubcategoria = {
+      nombre: '',
+      descripcion: ''
+    };
+  }
+
+  /**
+   * Guardar subcategoría (crear o editar)
+   */
+  guardarSubcategoria() {
+    if (!this.formularioSubcategoria.nombre.trim()) {
+      alert('El nombre de la subcategoría es obligatorio');
+      return;
+    }
+
+    if (this.modoEdicionSubcategoria) {
+      // Editar subcategoría existente
+      this.http.put(
+        `${this.apiUrl}/subcategorias/${this.subcategoriaSeleccionada.id_subcategoria}`,
+        this.formularioSubcategoria
+      ).subscribe({
+        next: () => {
+          alert('Subcategoría actualizada correctamente');
+          this.cerrarModalSubcategoriaForm();
+          this.cargarCategorias(); // Recargar para actualizar conteos
+        },
+        error: (error) => {
+          console.error('Error al actualizar subcategoría:', error);
+          alert('Error al actualizar subcategoría');
+        }
+      });
+    } else {
+      // Crear nueva subcategoría
+      const nuevaSubcategoria = {
+        ...this.formularioSubcategoria,
+        id_categoria: this.categoriaSeleccionada.id_categoria
+      };
+
+      this.http.post(`${this.apiUrl}/subcategorias`, nuevaSubcategoria).subscribe({
+        next: () => {
+          alert('Subcategoría creada correctamente');
+          this.cerrarModalSubcategoriaForm();
+          this.cargarCategorias(); // Recargar para actualizar conteos
+        },
+        error: (error) => {
+          console.error('Error al crear subcategoría:', error);
+          alert('Error al crear subcategoría');
+        }
+      });
+    }
+  }
+
+  /**
+   * Eliminar subcategoría
+   */
+  eliminarSubcategoria(subcategoria: any) {
+    if (!confirm(`¿Estás seguro de eliminar la subcategoría "${subcategoria.nombre}"?`)) return;
+
+    this.http.delete(`${this.apiUrl}/subcategorias/${subcategoria.id_subcategoria}`).subscribe({
+      next: () => {
+        alert('Subcategoría eliminada correctamente');
+        this.cargarCategorias(); // Recargar para actualizar conteos
+      },
+      error: (error) => {
+        console.error('Error al eliminar subcategoría:', error);
+        alert('Error al eliminar subcategoría. Puede que tenga productos asociados.');
+      }
+    });
   }
 }
