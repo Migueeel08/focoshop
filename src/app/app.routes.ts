@@ -6,12 +6,14 @@ import { PerfilComponent } from './perfil/perfil.component';
 import { EditPerfilComponent } from './perfil/editperfil/editperfil.component';
 import { EditDireccionComponent } from './perfil/editdireccion/editdireccion.component';
 import { EditPagoComponent } from './perfil/editpago/editpago.component';
-import { VenderComponent } from './vender/vender.component'; // ✅ Importar componente de vender
+import { VenderComponent } from './vender/vender.component';
+import { DetalleProductoComponent } from './detalle-producto/detalle-producto.component'; // ✅ AGREGAR ESTA LÍNEA
 
 export const routes: Routes = [
   { path: '', component: FocoShopComponent },
   { path: 'login', component: LoginComponent },
-  { path: 'vender', component: VenderComponent }, // ✅ Nueva ruta para vender
+  { path: 'vender', component: VenderComponent },
+  { path: 'producto/:id', component: DetalleProductoComponent }, // ✅ AGREGAR ESTA RUTA
   { path: 'configuracion', component: ConfiguracionComponent },
   { path: 'perfil', component: PerfilComponent },
   { path: 'perfil/editar', component: EditPerfilComponent },

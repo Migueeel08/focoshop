@@ -2,14 +2,18 @@
 
   <!-- HEADER NEGRO RECTANGULAR -->
   <div class="perfil-header-dashboard">
-    <button class="volver-btn" (click)="volverInicio()">← Volver</button>
+    <button class="volver-btn" (click)="volverInicio()">
+      <i class="fas fa-arrow-left"></i> Volver
+    </button>
 
     <div class="perfil-info">
       <img [src]="user.imagen" alt="Foto perfil" class="perfil-foto-dashboard"/>
       <div class="perfil-texto">
         <h2>{{ user.nombre }}</h2>
         <p>{{ user.email }}</p>
-        <button class="editar-btn" (click)="editarPerfil()">Editar perfil</button>
+        <button class="editar-btn" (click)="editarPerfil()">
+          <i class="fas fa-edit"></i> Editar perfil
+        </button>
       </div>
     </div>
   </div>
@@ -19,33 +23,78 @@
     <button 
       [class.active]="tabSeleccionado==='vendiendo'" 
       (click)="seleccionarTab('vendiendo')">
-       En venta
+      <i class="fas fa-store"></i> En venta
+      @if (productosVendiendo.length > 0) {
+        <span class="badge">{{ productosVendiendo.length }}</span>
+      }
     </button>
     <button 
       [class.active]="tabSeleccionado==='vendidos'" 
       (click)="seleccionarTab('vendidos')">
-       Vendidos
+      <i class="fas fa-check-circle"></i> Vendidos
+      @if (productosVendidos.length > 0) {
+        <span class="badge">{{ productosVendidos.length }}</span>
+      }
     </button>
     <button 
       [class.active]="tabSeleccionado==='compras'" 
       (click)="seleccionarTab('compras')">
-       Compras
+      <i class="fas fa-shopping-bag"></i> Compras
+      @if (compras.length > 0) {
+        <span class="badge">{{ compras.length }}</span>
+      }
     </button>
   </div>
 
   <!-- PRODUCTOS / SECCIÓN BLANCA -->
   <div class="productos-seccion">
-    <div class="productos-scroll">
-      <div class="producto-card" *ngFor="let p of obtenerProductosActivos()">
-        <img [src]="p.imagen" alt="{{ p.nombre }}" />
-        <div class="producto-detalles">
-          <h4>{{ p.nombre }}</h4>
-          <p>${{ p.precio }}</p>
-        </div>
+    @if (cargando) {
+      <div class="loading-productos">
+        <i class="fas fa-spinner fa-spin fa-3x"></i>
+        <p>Cargando productos...</p>
       </div>
-      <p *ngIf="obtenerProductosActivos().length===0" class="vacio">
-        No hay productos en esta sección
-      </p>
-    </div>
+    } @else {
+      <div class="productos-scroll">
+        @for (producto of obtenerProductosActivos(); track producto.id) {
+          <div class="producto-card" (click)="verDetalleProducto(producto)">
+            <img [src]="producto.imagen" alt="{{ producto.nombre }}" />
+            <div class="producto-detalles">
+              <h4>{{ producto.nombre }}</h4>
+              <p class="precio">${{ producto.precio | number:'1.0-0' }}</p>
+              @if (tabSeleccionado === 'vendidos' && producto.fecha_venta) {
+                <p class="fecha-venta">
+                  <i class="fas fa-calendar"></i>
+                  {{ producto.fecha_venta | date:'dd/MM/yyyy' }}
+                </p>
+              }
+              @if (producto.estado) {
+                <span class="estado-badge" [class]="'estado-' + producto.estado">
+                  {{ producto.estado }}
+                </span>
+              }
+            </div>
+          </div>
+        } @empty {
+          <div class="vacio">
+            @if (tabSeleccionado === 'vendiendo') {
+              <i class="fas fa-box-open fa-3x"></i>
+              <p>No tienes productos en venta</p>
+              <button class="btn-vender" (click)="router.navigate(['/vender'])">
+                <i class="fas fa-plus"></i> Publicar producto
+              </button>
+            } @else if (tabSeleccionado === 'vendidos') {
+              <i class="fas fa-receipt fa-3x"></i>
+              <p>Aún no has vendido ningún producto</p>
+            } @else {
+              <i class="fas fa-shopping-cart fa-3x"></i>
+              <p>No has realizado ninguna compra</p>
+              <button class="btn-vender" (click)="router.navigate(['/'])">
+                <i class="fas fa-search"></i> Explorar productos
+              </button>
+            }
+          </div>
+        }
+      </div>
+    }
   </div>
 </div>

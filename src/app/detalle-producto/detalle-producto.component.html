@@ -1,0 +1,295 @@
+<div class="detalle-container">
+  <!-- HEADER PRINCIPAL (mismo de FocoShop) -->
+  <header class="header">
+    <div class="logo" (click)="volverInicio()">
+      <span class="logo-text">FOCOSHOP</span>
+      <i class="fas fa-shopping-cart"></i>
+    </div>
+
+    <div class="search-box">
+      <input
+        type="text"
+        placeholder="Buscar productos..."
+        [(ngModel)]="busqueda"
+        (keyup.enter)="buscarProductos()"
+      />
+      <i class="fas fa-search"></i>
+    </div>
+
+    <!-- LINKS DE AUTENTICACIÓN -->
+    <div class="auth-links">
+      @if (isLoggedIn) {
+        <div class="user-info" (click)="toggleUserMenu()">
+          <img [src]="userImage" alt="Perfil" class="user-icon" />
+
+          <div class="user-menu" [class.open]="userMenuOpen">
+            <div class="user-name-header">{{ userName }}</div>
+
+            <button (click)="irPerfil()">
+              <i class="fas fa-user"></i> Mi perfil
+            </button>
+
+            <button (click)="irVender()">
+              <i class="fas fa-tag"></i> Vender
+            </button>
+
+            <button (click)="irConfiguracion()">
+              <i class="fas fa-cog"></i> Configuración
+            </button>
+
+            <div class="divider"></div>
+
+            <button class="logout-btn" (click)="logout()">
+              <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+            </button>
+          </div>
+        </div>
+      } @else {
+        <a [routerLink]="['/login']" class="auth-link">Iniciar Sesión</a>
+      }
+    </div>
+  </header>
+
+  <!-- BREADCRUMB -->
+  <div class="breadcrumb-detalle">
+    <span (click)="volverInicio()">Inicio</span>
+    <i class="fas fa-chevron-right"></i>
+    <span (click)="volverCategoria()">{{ producto?.categoria }}</span>
+    <i class="fas fa-chevron-right"></i>
+    <span class="actual">{{ producto?.nombre }}</span>
+  </div>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  @if (producto) {
+    <div class="detalle-content">
+      <!-- COLUMNA IZQUIERDA: IMÁGENES -->
+      <div class="imagenes-seccion">
+        <!-- Miniaturas laterales -->
+        <div class="miniaturas">
+          <div 
+            class="miniatura" 
+            [class.active]="imagenSeleccionada === 0"
+            (click)="seleccionarImagen(0)"
+          >
+            <img [src]="producto.imagen" [alt]="producto.nombre" />
+          </div>
+        </div>
+
+        <!-- Imagen principal -->
+        <div class="imagen-principal">
+          <img [src]="producto.imagen" [alt]="producto.nombre" />
+          
+          <!-- Botón favorito -->
+          <button class="btn-favorito" (click)="toggleFavorito()">
+            <i [class]="esFavorito ? 'fas fa-heart filled' : 'far fa-heart'"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- COLUMNA CENTRAL: INFORMACIÓN DEL PRODUCTO -->
+      <div class="info-seccion">
+        <!-- Condición y vendidos -->
+        <div class="condicion-vendidos">
+          <span class="condicion">{{ producto.condicion }}</span>
+          <span class="separador">|</span>
+          <span class="vendidos">+{{ producto.reviews || 0 }} vendidos</span>
+        </div>
+
+        <!-- Nombre del producto -->
+        <h1 class="producto-titulo">{{ producto.nombre }}</h1>
+
+        <!-- Rating -->
+        <div class="rating-section">
+          <span class="rating-numero">{{ producto.calificacion || 0 }}</span>
+          <div class="estrellas">
+            @for (star of [1,2,3,4,5]; track star) {
+              <i [class]="star <= (producto.calificacion || 0) ? 'fas fa-star filled' : 'far fa-star empty'"></i>
+            }
+          </div>
+          <span class="reviews-count">({{ producto.reviews || 0 }})</span>
+        </div>
+
+        <!-- Precio -->
+        <div class="precio-section">
+          @if (producto.precio_anterior) {
+            <span class="precio-anterior">
+              ${{ producto.precio_anterior | number:'1.0-0' }}
+            </span>
+          }
+          <div class="precio-actual-container">
+            <span class="precio-actual">${{ producto.precio | number:'1.0-0' }}</span>
+            @if (producto.descuento) {
+              <span class="descuento">
+                {{ producto.descuento }}% OFF
+              </span>
+            }
+          </div>
+        </div>
+
+        <!-- Color (si aplica) -->
+        @if (producto.color) {
+          <div class="selector-color">
+            <label>Color: <strong>{{ colorSeleccionado || producto.color }}</strong></label>
+            <div class="colores-opciones">
+              <div 
+                class="color-opcion" 
+                [style.background]="getColorHex(producto.color)"
+                [class.selected]="colorSeleccionado === producto.color"
+                (click)="colorSeleccionado = producto.color"
+              ></div>
+            </div>
+          </div>
+        }
+
+        <!-- Talla (si aplica) -->
+        @if (producto.talla) {
+          <div class="selector-talla">
+            <label>Talla: <strong>{{ tallaSeleccionada || producto.talla }}</strong></label>
+            <div class="tallas-opciones">
+              <button 
+                class="talla-btn"
+                [class.selected]="tallaSeleccionada === producto.talla"
+                (click)="tallaSeleccionada = producto.talla"
+              >
+                {{ producto.talla }}
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- Marca (si aplica) -->
+        @if (producto.marca) {
+          <div class="marca-info">
+            <label>Marca:</label>
+            <a class="marca-link">
+              {{ producto.marca }}
+              <i class="fas fa-chevron-right"></i>
+            </a>
+          </div>
+        }
+
+        <!-- Descripción -->
+        <div class="descripcion-section">
+          <h3>Lo que tienes que saber de este producto</h3>
+          <ul class="caracteristicas-lista">
+            @if (producto.descripcion) {
+              <li>{{ producto.descripcion }}</li>
+            }
+            @if (producto.marca) {
+              <li>Marca: {{ producto.marca }}</li>
+            }
+            @if (producto.condicion) {
+              <li>Condición: {{ producto.condicion }}</li>
+            }
+            @if (producto.color) {
+              <li>Color: {{ producto.color }}</li>
+            }
+            @if (producto.talla) {
+              <li>Talla: {{ producto.talla }}</li>
+            }
+          </ul>
+        </div>
+      </div>
+
+      <!-- COLUMNA DERECHA: COMPRA -->
+      <div class="compra-seccion">
+        <div class="compra-card">
+          <!-- Stock disponible -->
+          <div class="stock-info">
+            <h3>Stock disponible</h3>
+            <p class="stock-cantidad">
+              Cantidad: 
+              <strong>{{ producto.cantidad_disponible }}</strong>
+              @if (producto.cantidad_disponible <= 5) {
+                <span class="stock-bajo">
+                  ({{ producto.cantidad_disponible }} disponibles)
+                </span>
+              }
+            </p>
+          </div>
+
+          <!-- Selector de cantidad -->
+          <div class="cantidad-selector">
+            <label>Cantidad:</label>
+            <div class="cantidad-control">
+              <button 
+                class="btn-cantidad" 
+                (click)="decrementarCantidad()"
+                [disabled]="cantidadComprar <= 1"
+              >
+                <i class="fas fa-minus"></i>
+              </button>
+              <input 
+                type="number" 
+                [(ngModel)]="cantidadComprar" 
+                min="1" 
+                [max]="producto.cantidad_disponible"
+              />
+              <button 
+                class="btn-cantidad" 
+                (click)="incrementarCantidad()"
+                [disabled]="cantidadComprar >= producto.cantidad_disponible"
+              >
+                <i class="fas fa-plus"></i>
+              </button>
+            </div>
+            <span class="disponibles-text">(+{{ producto.cantidad_disponible }} disponibles)</span>
+          </div>
+
+          <!-- Botones de acción -->
+          <button class="btn-comprar" (click)="comprarAhora()">
+            Comprar ahora
+          </button>
+
+          <button class="btn-agregar-carrito" (click)="agregarAlCarrito()">
+            <i class="fas fa-shopping-cart"></i>
+            Agregar al carrito
+          </button>
+
+          <!-- Info del vendedor -->
+          <div class="vendedor-info">
+            <div class="vendedor-header">
+              <i class="fas fa-store"></i>
+              <div>
+                <h4>{{ producto.vendedor }}</h4>
+                <p class="ventas-vendedor">+{{ producto.reviews || 0 }} ventas</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Garantías -->
+          <div class="garantias-section">
+            <div class="garantia-item">
+              <i class="fas fa-shield-alt"></i>
+              <div>
+                <strong>Compra Protegida</strong>
+                <p>Recibe el producto que esperabas o te devolvemos tu dinero</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- LOADING -->
+  @if (!producto && cargando) {
+    <div class="loading">
+      <i class="fas fa-spinner fa-spin fa-3x"></i>
+      <p>Cargando producto...</p>
+    </div>
+  }
+
+  <!-- ERROR -->
+  @if (!producto && !cargando) {
+    <div class="error-section">
+      <i class="fas fa-exclamation-circle fa-3x"></i>
+      <h3>Producto no encontrado</h3>
+      <p>El producto que buscas no existe o ha sido eliminado</p>
+      <button class="btn-volver" (click)="volverInicio()">
+        <i class="fas fa-arrow-left"></i>
+        Volver al inicio
+      </button>
+    </div>
+  }
+</div>
