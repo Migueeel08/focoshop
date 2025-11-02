@@ -96,12 +96,10 @@ export class LoginComponent {
       password: this.contrasena
     };
 
-    // ✅ Ruta: /api/usuarios/usuarios/register
     this.http.post(`${this.apiUrl}/usuarios/register`, user).subscribe({
       next: (res) => {
         console.log('Usuario registrado:', res);
         this.mostrarAlerta('Registro exitoso 🎉', 'exito');
-        // Cambiar a modo login después de 1 segundo
         setTimeout(() => {
           this.switchToLogin();
         }, 1000);
@@ -115,7 +113,7 @@ export class LoginComponent {
   }
 
   // ===========================
-  // Login
+  // Login - ACTUALIZADO CON ROLES
   // ===========================
   login() {
     // Validación básica
@@ -124,102 +122,76 @@ export class LoginComponent {
       return;
     }
 
-    const body = new URLSearchParams();
-    body.set('username', this.email);
-    body.set('password', this.contrasena);
+    // ✅ NUEVO: Usar el endpoint /login simple que devuelve el usuario completo
+    const credentials = {
+      email: this.email,
+      password: this.contrasena
+    };
 
-    const headers = new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' });
+    console.log('🔐 Intentando login con:', credentials.email);
 
-    // ✅ CORREGIDO: /api/usuarios/usuarios/token
-    this.http.post<any>(`${this.apiUrl}/usuarios/token`, body.toString(), { headers }).subscribe({
-      next: (res) => {
-        console.log('Login exitoso:', res);
+    this.http.post<any>(`${this.apiUrl}/usuarios/login`, credentials).subscribe({
+      next: (response) => {
+        console.log('✅ Login exitoso:', response);
+        console.log('✅ Rol del usuario:', response.rol);
 
-        // 🔹 Guardamos el token JWT
-        localStorage.setItem('token', res.access_token);
-
-        // ✅ Ruta: /api/usuarios/usuarios/email/{email}
-        this.http.get<any>(`${this.apiUrl}/usuarios/email/${encodeURIComponent(this.email)}`).subscribe({
-          next: (userRes) => {
-            console.log('Datos del usuario desde backend:', userRes);
-            console.log('Imagen del usuario (raw):', userRes.imagen);
-            
-            const nombreUsuario = userRes.nombre || 'Usuario';
-            
-            // ✅ Construir URL completa de la imagen
-            let imagenUrl = 'assets/img/profile.jpeg'; // Imagen por defecto
-            
-            if (userRes.imagen && userRes.imagen.trim() !== '') {
-              // Si la imagen empieza con /uploads, agregar la URL base del servidor
-              if (userRes.imagen.startsWith('/uploads')) {
-                imagenUrl = `${this.baseUrl}${userRes.imagen}`;
-              }
-              // Si empieza con uploads (sin barra inicial)
-              else if (userRes.imagen.startsWith('uploads')) {
-                imagenUrl = `${this.baseUrl}/${userRes.imagen}`;
-              }
-              // Si ya es una URL completa (http:// o https://)
-              else if (userRes.imagen.startsWith('http')) {
-                imagenUrl = userRes.imagen;
-              }
-              // Si es una ruta de assets local
-              else if (userRes.imagen.startsWith('assets/')) {
-                imagenUrl = userRes.imagen;
-              }
-              // Si es solo el nombre del archivo, asumir que está en /uploads/perfiles/
-              else if (!userRes.imagen.includes('/')) {
-                imagenUrl = `${this.baseUrl}/uploads/perfiles/${userRes.imagen}`;
-              }
-              // Cualquier otra ruta relativa
-              else {
-                imagenUrl = `${this.baseUrl}${userRes.imagen}`;
-              }
-            }
-            
-            console.log('URL de imagen construida:', imagenUrl);
-            
-            const userData = {
-              id: userRes.id_usuario,
-              id_usuario: userRes.id_usuario,
-              nombre: nombreUsuario,
-              apellido: userRes.apellido || '',
-              email: this.email,
-              telefono: userRes.telefono || '',
-              imagen: imagenUrl, // ✅ URL completa
-              rol: userRes.rol || 'user'
-            };
-
-            console.log('Datos guardados en localStorage:', userData);
-
-            localStorage.setItem('user', JSON.stringify(userData));
-            localStorage.setItem('email', this.email);
-            localStorage.setItem('userId', userRes.id_usuario.toString());
-            
-            window.dispatchEvent(new Event('storage'));
-
-            this.mostrarAlerta(`¡Hola ${nombreUsuario}! Inicio de sesión correcto 🔥`, 'exito');
-            setTimeout(() => this.router.navigate(['/']), 1000);
-          },
-          error: (err) => {
-            console.error('Error al obtener usuario desde backend:', err);
-            
-            const userData = {
-              nombre: 'Usuario',
-              apellido: '',
-              email: this.email,
-              imagen: 'assets/img/profile.jpeg'
-            };
-            localStorage.setItem('user', JSON.stringify(userData));
-            localStorage.setItem('email', this.email);
-            window.dispatchEvent(new Event('storage'));
-
-            this.mostrarAlerta('¡Hola Usuario! Inicio de sesión correcto 🔥', 'exito');
-            setTimeout(() => this.router.navigate(['/']), 1000);
+        // Construir URL completa de la imagen
+        let imagenUrl = 'assets/img/profile.jpeg'; // Imagen por defecto
+        
+        if (response.imagen && response.imagen.trim() !== '') {
+          if (response.imagen.startsWith('/uploads')) {
+            imagenUrl = `${this.baseUrl}${response.imagen}`;
+          } else if (response.imagen.startsWith('uploads')) {
+            imagenUrl = `${this.baseUrl}/${response.imagen}`;
+          } else if (response.imagen.startsWith('http')) {
+            imagenUrl = response.imagen;
+          } else if (response.imagen.startsWith('assets/')) {
+            imagenUrl = response.imagen;
+          } else if (!response.imagen.includes('/')) {
+            imagenUrl = `${this.baseUrl}/uploads/perfiles/${response.imagen}`;
+          } else {
+            imagenUrl = `${this.baseUrl}${response.imagen}`;
           }
-        });
+        }
+
+        // ✅ Guardar usuario completo CON ROL
+        const userData = {
+          id: response.id_usuario,
+          id_usuario: response.id_usuario,
+          nombre: response.nombre,
+          apellido: response.apellido || '',
+          email: response.email,
+          telefono: response.telefono || '',
+          imagen: imagenUrl,
+          rol: response.rol  // ✅ CAMPO CLAVE
+        };
+
+        console.log('💾 Guardando en localStorage:', userData);
+
+        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('email', response.email);
+        localStorage.setItem('userId', response.id_usuario.toString());
+        
+        // Emitir evento para actualizar el header
+        window.dispatchEvent(new Event('storage'));
+
+        // ✅ REDIRIGIR SEGÚN EL ROL
+        if (response.rol === 'admin') {
+          console.log('🔐 Usuario ADMIN detectado, redirigiendo al panel admin...');
+          this.mostrarAlerta(`¡Bienvenido Admin ${response.nombre}! 👑`, 'exito');
+          setTimeout(() => {
+            this.router.navigate(['/admin']);
+          }, 1000);
+        } else {
+          console.log('👤 Usuario NORMAL detectado, redirigiendo a la tienda...');
+          this.mostrarAlerta(`¡Hola ${response.nombre}! Inicio de sesión correcto 🔥`, 'exito');
+          setTimeout(() => {
+            this.router.navigate(['/']);
+          }, 1000);
+        }
       },
       error: (err) => {
-        console.error('Error al iniciar sesión:', err);
+        console.error('❌ Error al iniciar sesión:', err);
         const mensaje = err.error?.detail || 'Credenciales incorrectas ❌';
         this.mostrarAlerta(mensaje, 'error');
       }
