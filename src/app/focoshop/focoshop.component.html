@@ -16,8 +16,19 @@
       <i class="fa fa-search"></i>
     </div>
 
-    <!-- LINKS DE AUTENTICACIÓN -->
+    <!-- LINKS DE AUTENTICACIÓN Y CARRITO -->
     <div class="auth-links">
+      <!-- ÍCONO DEL CARRITO (solo si está logueado) -->
+      @if (isLoggedIn) {
+        <div class="carrito-header" (click)="irAlCarrito()">
+          <i class="fa fa-shopping-cart"></i>
+          @if (contadorCarrito > 0) {
+            <span class="carrito-badge">{{ contadorCarrito }}</span>
+          }
+        </div>
+      }
+
+      <!-- USUARIO -->
       @if (isLoggedIn) {
         <div class="user-info" (click)="toggleUserMenu()">
           <img [src]="userImage" alt="Perfil" class="user-icon" />

@@ -1,0 +1,252 @@
+<div class="carrito-container">
+  <!-- HEADER (mismo de FocoShop) -->
+  <header class="header">
+    <div class="logo" (click)="volverInicio()">
+      <span class="logo-text">FOCOSHOP</span>
+      <i class="fas fa-shopping-cart"></i>
+    </div>
+
+    <div class="header-title">
+      <i class="fas fa-shopping-bag"></i>
+      <span>Mi Carrito</span>
+    </div>
+
+    <!-- USUARIO -->
+    <div class="auth-links">
+      @if (isLoggedIn) {
+        <div class="user-info" (click)="toggleUserMenu()">
+          <img [src]="userImage" alt="Perfil" class="user-icon" />
+
+          <div class="user-menu" [class.open]="userMenuOpen">
+            <div class="user-name-header">{{ userName }}</div>
+
+            <button (click)="irPerfil()">
+              <i class="fas fa-user"></i> Mi perfil
+            </button>
+
+            <button (click)="irVender()">
+              <i class="fas fa-tag"></i> Vender
+            </button>
+
+            <button (click)="irConfiguracion()">
+              <i class="fas fa-cog"></i> Configuración
+            </button>
+
+            <div class="divider"></div>
+
+            <button class="logout-btn" (click)="logout()">
+              <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <div class="carrito-content">
+    
+    <!-- LOADING -->
+    @if (cargando) {
+      <div class="loading">
+        <i class="fas fa-spinner fa-spin fa-3x"></i>
+        <p>Cargando carrito...</p>
+      </div>
+    }
+
+    <!-- CARRITO CON PRODUCTOS -->
+    @else if (carrito && carrito.items.length > 0) {
+      <div class="carrito-grid">
+        
+        <!-- COLUMNA IZQUIERDA: ITEMS -->
+        <div class="items-section">
+          <div class="section-header">
+            <h2>
+              <i class="fas fa-shopping-basket"></i>
+              Productos en tu carrito
+            </h2>
+            <button class="btn-vaciar" (click)="vaciarCarrito()">
+              <i class="fas fa-trash"></i>
+              Vaciar carrito
+            </button>
+          </div>
+
+          <!-- LISTA DE ITEMS -->
+          <div class="items-lista">
+            @for (item of carrito.items; track item.id_carrito) {
+              <div class="item-card" [class.no-disponible]="!item.producto_disponible">
+                
+                <!-- Imagen -->
+                <div class="item-imagen" (click)="irAProducto(item.id_producto)">
+                  <img [src]="construirUrlImagen(item.producto_imagen)" [alt]="item.producto_nombre" />
+                  @if (!item.producto_disponible) {
+                    <div class="badge-no-disponible">No disponible</div>
+                  }
+                </div>
+
+                <!-- Información -->
+                <div class="item-info">
+                  <h3 class="item-nombre" (click)="irAProducto(item.id_producto)">
+                    {{ item.producto_nombre }}
+                  </h3>
+
+                  <!-- Color y Talla -->
+                  @if (item.color || item.talla) {
+                    <div class="item-variantes">
+                      @if (item.color) {
+                        <span class="variante">
+                          <i class="fas fa-circle" [style.color]="item.color"></i>
+                          Color: {{ item.color }}
+                        </span>
+                      }
+                      @if (item.talla) {
+                        <span class="variante">
+                          <i class="fas fa-ruler"></i>
+                          Talla: {{ item.talla }}
+                        </span>
+                      }
+                    </div>
+                  }
+
+                  <!-- Stock -->
+                  <div class="item-stock">
+                    @if (item.producto_disponible) {
+                      @if (item.producto_cantidad_disponible <= 5) {
+                        <span class="stock-bajo">
+                          <i class="fas fa-exclamation-triangle"></i>
+                          Solo quedan {{ item.producto_cantidad_disponible }} disponibles
+                        </span>
+                      } @else {
+                        <span class="stock-ok">
+                          <i class="fas fa-check-circle"></i>
+                          En stock
+                        </span>
+                      }
+                    } @else {
+                      <span class="stock-no-disponible">
+                        <i class="fas fa-times-circle"></i>
+                        Producto no disponible
+                      </span>
+                    }
+                  </div>
+
+                  <!-- Precio -->
+                  <div class="item-precio">
+                    <span class="precio-unitario">
+                      ${{ item.precio_unitario | number:'1.0-0' }} c/u
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Controles -->
+                <div class="item-controles">
+                  <!-- Cantidad -->
+                  <div class="cantidad-control">
+                    <button 
+                      class="btn-cantidad" 
+                      (click)="decrementarCantidad(item)"
+                      [disabled]="item.cantidad <= 1"
+                    >
+                      <i class="fas fa-minus"></i>
+                    </button>
+                    <span class="cantidad-numero">{{ item.cantidad }}</span>
+                    <button 
+                      class="btn-cantidad" 
+                      (click)="incrementarCantidad(item)"
+                      [disabled]="item.cantidad >= item.producto_cantidad_disponible || !item.producto_disponible"
+                    >
+                      <i class="fas fa-plus"></i>
+                    </button>
+                  </div>
+
+                  <!-- Subtotal -->
+                  <div class="item-subtotal">
+                    ${{ item.subtotal | number:'1.0-0' }}
+                  </div>
+
+                  <!-- Eliminar -->
+                  <button class="btn-eliminar" (click)="eliminarItem(item)">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- COLUMNA DERECHA: RESUMEN -->
+        <div class="resumen-section">
+          <div class="resumen-card">
+            <h3>
+              <i class="fas fa-receipt"></i>
+              Resumen de compra
+            </h3>
+
+            <!-- Desglose -->
+            <div class="resumen-desglose">
+              <div class="resumen-item">
+                <span>Productos ({{ carrito.total_productos }})</span>
+                <span>${{ carrito.subtotal | number:'1.0-0' }}</span>
+              </div>
+
+              <div class="resumen-item">
+                <span>Envío</span>
+                <span class="envio-gratis">GRATIS</span>
+              </div>
+
+              <div class="resumen-divider"></div>
+
+              <div class="resumen-total">
+                <span>Total</span>
+                <span>${{ carrito.subtotal | number:'1.0-0' }}</span>
+              </div>
+            </div>
+
+            <!-- Botón Proceder -->
+            <button class="btn-proceder" (click)="procederAlPago()">
+              <i class="fas fa-lock"></i>
+              Proceder al pago
+            </button>
+
+            <!-- Botón Continuar -->
+            <button class="btn-continuar" (click)="continuarComprando()">
+              <i class="fas fa-arrow-left"></i>
+              Continuar comprando
+            </button>
+
+            <!-- Info de seguridad -->
+            <div class="info-seguridad">
+              <div class="seguridad-item">
+                <i class="fas fa-shield-alt"></i>
+                <span>Compra 100% segura</span>
+              </div>
+              <div class="seguridad-item">
+                <i class="fas fa-truck"></i>
+                <span>Envío gratis</span>
+              </div>
+              <div class="seguridad-item">
+                <i class="fas fa-undo"></i>
+                <span>Devolución gratis</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- CARRITO VACÍO -->
+    @else {
+      <div class="carrito-vacio">
+        <div class="vacio-icon">
+          <i class="fas fa-shopping-cart"></i>
+        </div>
+        <h2>Tu carrito está vacío</h2>
+        <p>¡Descubre miles de productos y comienza a agregar!</p>
+        <button class="btn-explorar" (click)="continuarComprando()">
+          <i class="fas fa-search"></i>
+          Explorar productos
+        </button>
+      </div>
+    }
+  </div>
+</div>

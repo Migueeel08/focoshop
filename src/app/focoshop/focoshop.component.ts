@@ -17,6 +17,9 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
   // ===== API =====
   private apiUrl = 'http://localhost:8000/api';
 
+  // ===== CARRITO =====
+  contadorCarrito: number = 0;
+
   // ===== CATEGORÍAS =====
   categorias: any[] = [];
   categoriasCargadas = false;
@@ -27,7 +30,7 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
   productosFiltrados: any[] = [];
 
   categoriaSeleccionada = 0;
-  subcategoriaSeleccionada: string | null = null; // ✅ NUEVO
+  subcategoriaSeleccionada: string | null = null;
   busqueda = '';
   menuAbierto = false;
 
@@ -52,6 +55,7 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
 
   // ===== USUARIO =====
   isLoggedIn = false;
+  userId: number = 0;
   userName = '';
   userImage = 'assets/img/user-icon.png';
   userMenuOpen = false;
@@ -68,6 +72,12 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     this.cargarUsuario();
     this.cargarCategorias();
     this.cargarProductos();
+    
+    // Cargar contador del carrito si está logueado
+    if (this.isLoggedIn) {
+      this.cargarContadorCarrito();
+    }
+    
     window.addEventListener('storage', this.storageListener);
   }
 
@@ -77,6 +87,32 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
 
   ngAfterViewInit() {
     this.scrollCategoriaCentrada(this.categoriaSeleccionada);
+  }
+
+  // ===== CARGAR CONTADOR DEL CARRITO =====
+  cargarContadorCarrito() {
+    if (!this.userId) return;
+    
+    this.http.get<any>(`${this.apiUrl}/carrito/count?id_usuario=${this.userId}`).subscribe({
+      next: (data) => {
+        this.contadorCarrito = data.total_productos || 0;
+        console.log('🛒 Contador carrito:', this.contadorCarrito);
+      },
+      error: (error) => {
+        console.error('Error al cargar contador:', error);
+        this.contadorCarrito = 0;
+      }
+    });
+  }
+
+  // ===== IR AL CARRITO =====
+  irAlCarrito() {
+    if (!this.isLoggedIn) {
+      alert('Debes iniciar sesión para ver tu carrito');
+      this.router.navigate(['/login']);
+      return;
+    }
+    this.router.navigate(['/carrito']);
   }
 
   // ===== CARGAR CATEGORÍAS =====
@@ -175,9 +211,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     });
   }
 
-  /**
-   * Construir URL completa para las imágenes
-   */
   construirUrlImagen(imagen: string | null): string {
     if (!imagen) {
       return 'assets/img/producto-default.jpg';
@@ -197,9 +230,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     return 'assets/img/producto-default.jpg';
   }
 
-  /**
-   * Extraer marcas únicas de los productos
-   */
   extraerMarcas() {
     const marcas = this.productos
       .map(p => p.marca)
@@ -208,9 +238,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     this.marcasDisponibles = [...new Set(marcas)].sort();
   }
 
-  /**
-   * Toggle marca en filtros
-   */
   toggleMarca(marca: string) {
     const index = this.filtros.marcas.indexOf(marca);
     if (index > -1) {
@@ -221,17 +248,11 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     this.aplicarFiltros();
   }
 
-  /**
-   * Normalizar texto (quitar acentos)
-   */
   normalizarTexto(texto: string): string {
     if (!texto) return '';
     return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
   }
 
-  /**
-   * ===== FILTRAR Y ORDENAR PRODUCTOS =====
-   */
   filtrarProductos() {
     if (!this.categoriasCargadas || this.categorias.length === 0) {
       this.productosFiltrados = [];
@@ -240,11 +261,9 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
 
     const busquedaNormalizada = this.normalizarTexto(this.busqueda);
     
-    // ✅ SI HAY BÚSQUEDA: Buscar en TODAS las categorías
     let filtrados: any[];
     
     if (busquedaNormalizada.trim() !== '') {
-      // MODO BÚSQUEDA GLOBAL: Buscar en todos los productos
       filtrados = this.productos.filter(p => {
         const nombreNormalizado = this.normalizarTexto(p.nombre);
         const descripcionNormalizada = this.normalizarTexto(p.descripcion || '');
@@ -259,7 +278,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
           subcategoriaNormalizada.includes(busquedaNormalizada) ||
           marcaNormalizada.includes(busquedaNormalizada);
 
-        // Verificar disponibilidad
         const tieneStock = p.cantidad_disponible > 0;
         const estaActivo = !p.estado || 
                           p.estado.toLowerCase() === 'activo' || 
@@ -269,7 +287,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
         return coincideBusqueda && estaDisponible;
       });
     } else {
-      // MODO NORMAL: Filtrar por categoría seleccionada
       const categoriaActual = this.categorias[this.categoriaSeleccionada];
       if (!categoriaActual) {
         this.productosFiltrados = [];
@@ -279,11 +296,9 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
       const categoriaNormalizada = this.normalizarTexto(categoriaActual.nombre);
 
       filtrados = this.productos.filter(p => {
-        // 1. Filtro de categoría
         const productoCategoriaNormalizada = this.normalizarTexto(p.categoria);
         const coincideCategoria = productoCategoriaNormalizada === categoriaNormalizada;
 
-        // 2. Filtro de subcategoría (si está seleccionada)
         let coincideSubcategoria = true;
         if (this.subcategoriaSeleccionada) {
           const subcategoriaNormalizada = this.normalizarTexto(this.subcategoriaSeleccionada);
@@ -291,7 +306,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
           coincideSubcategoria = productoSubcategoriaNormalizada === subcategoriaNormalizada;
         }
 
-        // 3. Filtro de disponibilidad
         const tieneStock = p.cantidad_disponible > 0;
         const estaActivo = !p.estado || 
                           p.estado.toLowerCase() === 'activo' || 
@@ -302,23 +316,16 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
       });
     }
 
-    // Aplicar filtros adicionales (condición, precio, marca, calificación)
     filtrados = this.aplicarFiltrosAdicionales(filtrados);
-
-    // Aplicar ordenamiento
     filtrados = this.ordenarProductosArray(filtrados);
 
     this.productosFiltrados = filtrados;
     console.log('✅ Productos filtrados:', filtrados.length, 'Búsqueda:', this.busqueda);
   }
 
-  /**
-   * Aplicar filtros adicionales (precio, marca, calificación, condición)
-   */
   aplicarFiltrosAdicionales(productos: any[]): any[] {
     let filtrados = [...productos];
 
-    // Filtro de condición (nuevo/usado)
     if (this.filtros.nuevo || this.filtros.usado) {
       filtrados = filtrados.filter(p => 
         (this.filtros.nuevo && p.condicion === 'nuevo') ||
@@ -326,7 +333,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
       );
     }
 
-    // Filtro de precio
     if (this.filtros.precioMin !== null) {
       filtrados = filtrados.filter(p => p.precio >= this.filtros.precioMin!);
     }
@@ -334,12 +340,10 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
       filtrados = filtrados.filter(p => p.precio <= this.filtros.precioMax!);
     }
 
-    // Filtro de marca
     if (this.filtros.marcas.length > 0) {
       filtrados = filtrados.filter(p => this.filtros.marcas.includes(p.marca));
     }
 
-    // Filtro de calificación
     if (this.filtros.calificacion !== null) {
       const minCalificacion = parseInt(this.filtros.calificacion);
       filtrados = filtrados.filter(p => p.calificacion >= minCalificacion);
@@ -348,16 +352,10 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     return filtrados;
   }
 
-  /**
-   * Aplicar filtros (llama a filtrarProductos)
-   */
   aplicarFiltros() {
     this.filtrarProductos();
   }
 
-  /**
-   * Limpiar todos los filtros
-   */
   limpiarFiltros() {
     this.filtros = {
       nuevo: false,
@@ -367,20 +365,14 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
       marcas: [],
       calificacion: null
     };
-    this.subcategoriaSeleccionada = null; // ✅ NUEVO
+    this.subcategoriaSeleccionada = null;
     this.aplicarFiltros();
   }
 
-  /**
-   * Ordenar productos
-   */
   ordenarProductos() {
     this.productosFiltrados = this.ordenarProductosArray(this.productosFiltrados);
   }
 
-  /**
-   * Ordenar array de productos según el criterio seleccionado
-   */
   ordenarProductosArray(productos: any[]): any[] {
     const copia = [...productos];
 
@@ -404,10 +396,9 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     }
   }
 
-  // ===== NAVEGACIÓN DE CATEGORÍAS =====
   seleccionarCategoria(index: number) {
     this.categoriaSeleccionada = index;
-    this.subcategoriaSeleccionada = null; // ✅ NUEVO: Resetear subcategoría
+    this.subcategoriaSeleccionada = null;
     this.scrollCategoriaCentrada(index);
     this.limpiarFiltros();
     this.filtrarProductos();
@@ -415,14 +406,13 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
 
   seleccionarDesdeCarrusel(index: number) {
     this.categoriaSeleccionada = index;
-    this.subcategoriaSeleccionada = null; // ✅ NUEVO: Resetear subcategoría
+    this.subcategoriaSeleccionada = null;
     this.scrollCategoriaCentrada(index);
     this.menuAbierto = false;
     this.limpiarFiltros();
     this.filtrarProductos();
   }
 
-  // ✅ NUEVO MÉTODO: Seleccionar subcategoría
   seleccionarSubcategoria(subcategoria: string | null) {
     this.subcategoriaSeleccionada = subcategoria;
     console.log('Subcategoría seleccionada:', subcategoria);
@@ -432,7 +422,7 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
   anterior() {
     this.categoriaSeleccionada =
       (this.categoriaSeleccionada - 1 + this.categorias.length) % this.categorias.length;
-    this.subcategoriaSeleccionada = null; // ✅ NUEVO
+    this.subcategoriaSeleccionada = null;
     this.scrollCategoriaCentrada(this.categoriaSeleccionada);
     this.limpiarFiltros();
     this.filtrarProductos();
@@ -440,7 +430,7 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
 
   siguiente() {
     this.categoriaSeleccionada = (this.categoriaSeleccionada + 1) % this.categorias.length;
-    this.subcategoriaSeleccionada = null; // ✅ NUEVO
+    this.subcategoriaSeleccionada = null;
     this.scrollCategoriaCentrada(this.categoriaSeleccionada);
     this.limpiarFiltros();
     this.filtrarProductos();
@@ -462,12 +452,10 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     this.filtrarProductos();
   }
 
-  // ===== VER DETALLES DEL PRODUCTO =====
   verDetalleProducto(producto: any) {
     this.router.navigate(['/producto', producto.id_producto]);
   }
 
-  // ===== MENÚ Y NAVEGACIÓN =====
   toggleMenu() {
     this.menuAbierto = !this.menuAbierto;
   }
@@ -495,13 +483,13 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     this.router.navigate(['/vender']);
   }
 
-  // ===== USUARIO =====
   cargarUsuario() {
     const userData = localStorage.getItem('user');
     if (userData) {
       try {
         const parsed = JSON.parse(userData);
         this.isLoggedIn = true;
+        this.userId = parsed.id;
 
         this.userName =
           parsed.nombre ||
@@ -513,6 +501,9 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
           parsed.imagen && parsed.imagen.trim() !== ''
             ? parsed.imagen
             : 'assets/img/profile.jpeg';
+            
+        // Cargar contador del carrito
+        this.cargarContadorCarrito();
       } catch (error) {
         console.error('Error al cargar usuario:', error);
         this.logout();
@@ -526,9 +517,11 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     localStorage.removeItem('user');
     window.dispatchEvent(new Event('storage'));
     this.isLoggedIn = false;
+    this.userId = 0;
     this.userName = '';
     this.userImage = 'assets/img/profile.jpeg';
     this.userMenuOpen = false;
+    this.contadorCarrito = 0;
     this.router.navigate(['/']);
   }
 

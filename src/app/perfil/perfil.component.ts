@@ -2,11 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-perfil',
   standalone: true,
-  imports: [CommonModule, RouterModule, HttpClientModule],
+  imports: [CommonModule, RouterModule, HttpClientModule, FormsModule],
   templateUrl: './perfil.component.html',
   styleUrls: ['./perfil.component.css']
 })
@@ -27,6 +28,29 @@ export class PerfilComponent implements OnInit {
   tabSeleccionado: 'vendiendo' | 'vendidos' | 'compras' = 'vendiendo';
   cargando = false;
 
+  // ✅ Modal de gestión de producto
+  modalGestionVisible = false;
+  productoSeleccionado: any = null;
+  
+  // ✅ Modal de editar stock
+  modalStockVisible = false;
+  nuevoStock = 0;
+
+  // ✅ NUEVO: Modal de editar información del producto
+  modalEditarVisible = false;
+  formularioEdicion = {
+    nombre: '',
+    descripcion: '',
+    precio: 0,
+    categoria: '',
+    condicion: 'nuevo',
+    color: '',
+    talla: '',
+    marca: ''
+  };
+
+  categorias: any[] = [];
+
   constructor(
     private router: Router,
     private http: HttpClient
@@ -35,8 +59,8 @@ export class PerfilComponent implements OnInit {
   ngOnInit() {
     this.cargarUsuario();
     this.cargarProductosDelUsuario();
+    this.cargarCategorias();
     
-    // ✅ Escuchar cambios en localStorage
     window.addEventListener('storage', () => {
       this.cargarUsuario();
       this.cargarProductosDelUsuario();
@@ -64,6 +88,17 @@ export class PerfilComponent implements OnInit {
     }
   }
 
+  cargarCategorias() {
+    this.http.get<any[]>(`${this.apiUrl}/categorias`).subscribe({
+      next: (categorias) => {
+        this.categorias = categorias;
+      },
+      error: (error) => {
+        console.error('Error cargando categorías:', error);
+      }
+    });
+  }
+
   cargarProductosDelUsuario() {
     if (!this.user.id) {
       console.warn('No hay ID de usuario disponible');
@@ -72,7 +107,6 @@ export class PerfilComponent implements OnInit {
 
     this.cargando = true;
 
-    // Cargar productos en venta
     this.http.get<any[]>(`${this.apiUrl}/productos/usuario/${this.user.id}/vendiendo`)
       .subscribe({
         next: (productos) => {
@@ -85,7 +119,6 @@ export class PerfilComponent implements OnInit {
         }
       });
 
-    // Cargar productos vendidos
     this.http.get<any[]>(`${this.apiUrl}/productos/usuario/${this.user.id}/vendidos`)
       .subscribe({
         next: (productos) => {
@@ -98,7 +131,6 @@ export class PerfilComponent implements OnInit {
         }
       });
 
-    // Cargar compras
     this.http.get<any[]>(`${this.apiUrl}/productos/usuario/${this.user.id}/compras`)
       .subscribe({
         next: (productos) => {
@@ -116,14 +148,22 @@ export class PerfilComponent implements OnInit {
 
   normalizarProducto(producto: any): any {
     return {
-      id: producto.id,
+      id: producto.id_producto || producto.id,
+      id_producto: producto.id_producto || producto.id,
       nombre: producto.nombre,
       precio: producto.precio,
       imagen: this.obtenerUrlImagenProducto(producto.imagen),
       categoria: producto.categoria,
+      id_categoria: producto.id_categoria,
       vendedor: producto.vendedor || producto.usuario?.nombre,
       estado: producto.estado,
-      fecha_venta: producto.fecha_venta
+      fecha_venta: producto.fecha_venta || producto.fecha_vendido,
+      cantidad_disponible: producto.cantidad_disponible || 0,
+      descripcion: producto.descripcion || '',
+      condicion: producto.condicion || 'nuevo',
+      color: producto.color || '',
+      talla: producto.talla || '',
+      marca: producto.marca || ''
     };
   }
 
@@ -131,25 +171,11 @@ export class PerfilComponent implements OnInit {
     const apiUrl = 'http://localhost:8000';
     const defaultImage = 'assets/img/producto-default.jpg';
     
-    if (!imagenPath || imagenPath.trim() === '') {
-      return defaultImage;
-    }
-    
-    if (imagenPath.startsWith('http://') || imagenPath.startsWith('https://')) {
-      return imagenPath;
-    }
-    
-    if (imagenPath.startsWith('assets/')) {
-      return imagenPath;
-    }
-    
-    if (imagenPath.startsWith('/uploads')) {
-      return `${apiUrl}${imagenPath}`;
-    }
-    
-    if (imagenPath.startsWith('data:image')) {
-      return imagenPath;
-    }
+    if (!imagenPath || imagenPath.trim() === '') return defaultImage;
+    if (imagenPath.startsWith('http://') || imagenPath.startsWith('https://')) return imagenPath;
+    if (imagenPath.startsWith('assets/')) return imagenPath;
+    if (imagenPath.startsWith('/uploads')) return `${apiUrl}${imagenPath}`;
+    if (imagenPath.startsWith('data:image')) return imagenPath;
     
     return defaultImage;
   }
@@ -158,25 +184,11 @@ export class PerfilComponent implements OnInit {
     const apiUrl = 'http://localhost:8000';
     const defaultImage = 'assets/img/profile.jpeg';
     
-    if (!imagenPath || imagenPath.trim() === '') {
-      return defaultImage;
-    }
-    
-    if (imagenPath.startsWith('http://') || imagenPath.startsWith('https://')) {
-      return imagenPath;
-    }
-    
-    if (imagenPath.startsWith('assets/')) {
-      return imagenPath;
-    }
-    
-    if (imagenPath.startsWith('/uploads')) {
-      return `${apiUrl}${imagenPath}`;
-    }
-    
-    if (imagenPath.startsWith('data:image')) {
-      return imagenPath;
-    }
+    if (!imagenPath || imagenPath.trim() === '') return defaultImage;
+    if (imagenPath.startsWith('http://') || imagenPath.startsWith('https://')) return imagenPath;
+    if (imagenPath.startsWith('assets/')) return imagenPath;
+    if (imagenPath.startsWith('/uploads')) return `${apiUrl}${imagenPath}`;
+    if (imagenPath.startsWith('data:image')) return imagenPath;
     
     return defaultImage;
   }
@@ -203,7 +215,11 @@ export class PerfilComponent implements OnInit {
   }
 
   verDetalleProducto(producto: any) {
-    this.router.navigate(['/producto', producto.id]);
+    if (this.tabSeleccionado === 'vendiendo') {
+      this.abrirModalGestion(producto);
+    } else {
+      this.router.navigate(['/producto', producto.id]);
+    }
   }
 
   irAVender() {
@@ -212,5 +228,146 @@ export class PerfilComponent implements OnInit {
 
   explorarProductos() {
     this.router.navigate(['/']);
+  }
+
+  // ========================================
+  // GESTIÓN DE PRODUCTOS EN VENTA
+  // ========================================
+
+  abrirModalGestion(producto: any) {
+    this.productoSeleccionado = producto;
+    this.modalGestionVisible = true;
+  }
+
+  cerrarModalGestion() {
+    this.modalGestionVisible = false;
+    this.productoSeleccionado = null;
+  }
+
+  abrirModalStock() {
+    this.nuevoStock = this.productoSeleccionado?.cantidad_disponible || 0;
+    this.modalStockVisible = true;
+    this.modalGestionVisible = false;
+  }
+
+  cerrarModalStock() {
+    this.modalStockVisible = false;
+    this.modalGestionVisible = true;
+  }
+
+  guardarStock() {
+    if (!this.productoSeleccionado) return;
+
+    const actualizacion = {
+      cantidad_disponible: this.nuevoStock
+    };
+
+    this.http.put(
+      `${this.apiUrl}/productos/${this.productoSeleccionado.id_producto}`,
+      actualizacion
+    ).subscribe({
+      next: () => {
+        alert('Stock actualizado correctamente');
+        this.cerrarModalStock();
+        this.cerrarModalGestion();
+        this.cargarProductosDelUsuario();
+      },
+      error: (error) => {
+        console.error('Error actualizando stock:', error);
+        alert('Error al actualizar el stock');
+      }
+    });
+  }
+
+  editarProducto() {
+    if (!this.productoSeleccionado) return;
+    
+    // Llenar formulario con datos actuales
+    this.formularioEdicion = {
+      nombre: this.productoSeleccionado.nombre || '',
+      descripcion: this.productoSeleccionado.descripcion || '',
+      precio: this.productoSeleccionado.precio || 0,
+      categoria: this.productoSeleccionado.id_categoria || '',
+      condicion: this.productoSeleccionado.condicion || 'nuevo',
+      color: this.productoSeleccionado.color || '',
+      talla: this.productoSeleccionado.talla || '',
+      marca: this.productoSeleccionado.marca || ''
+    };
+    
+    this.modalEditarVisible = true;
+    this.modalGestionVisible = false;
+  }
+
+  /**
+   * Cerrar modal de editar producto
+   */
+  cerrarModalEditar() {
+    this.modalEditarVisible = false;
+    this.modalGestionVisible = true;
+  }
+
+  /**
+   * Guardar cambios del producto
+   */
+  guardarCambiosProducto() {
+    if (!this.productoSeleccionado) return;
+
+    if (!this.formularioEdicion.nombre.trim()) {
+      alert('El nombre del producto es obligatorio');
+      return;
+    }
+
+    if (this.formularioEdicion.precio <= 0) {
+      alert('El precio debe ser mayor a 0');
+      return;
+    }
+
+    const actualizacion = {
+      nombre: this.formularioEdicion.nombre,
+      descripcion: this.formularioEdicion.descripcion,
+      precio: this.formularioEdicion.precio,
+      id_categoria: this.formularioEdicion.categoria,
+      condicion: this.formularioEdicion.condicion,
+      color: this.formularioEdicion.color,
+      talla: this.formularioEdicion.talla,
+      marca: this.formularioEdicion.marca
+    };
+
+    this.http.put(
+      `${this.apiUrl}/productos/${this.productoSeleccionado.id_producto}`,
+      actualizacion
+    ).subscribe({
+      next: () => {
+        alert('Producto actualizado correctamente');
+        this.cerrarModalEditar();
+        this.cerrarModalGestion();
+        this.cargarProductosDelUsuario();
+      },
+      error: (error) => {
+        console.error('Error actualizando producto:', error);
+        alert('Error al actualizar el producto');
+      }
+    });
+  }
+
+  eliminarProducto() {
+    if (!this.productoSeleccionado) return;
+
+    if (!confirm(`¿Estás seguro de eliminar "${this.productoSeleccionado.nombre}"?`)) {
+      return;
+    }
+
+    this.http.delete(`${this.apiUrl}/productos/${this.productoSeleccionado.id_producto}`)
+      .subscribe({
+        next: () => {
+          alert('Producto eliminado correctamente');
+          this.cerrarModalGestion();
+          this.cargarProductosDelUsuario();
+        },
+        error: (error) => {
+          console.error('Error eliminando producto:', error);
+          alert('Error al eliminar el producto');
+        }
+      });
   }
 }

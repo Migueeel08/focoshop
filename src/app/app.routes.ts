@@ -8,12 +8,13 @@ import { EditDireccionComponent } from './perfil/editdireccion/editdireccion.com
 import { EditPagoComponent } from './perfil/editpago/editpago.component';
 import { VenderComponent } from './vender/vender.component';
 import { DetalleProductoComponent } from './detalle-producto/detalle-producto.component';
-import { AdminPanelComponent } from './admin/admin-panel/admin-panel.component'; // ✅ NUEVO
-import { AdminUsuariosComponent } from './admin/admin-usuarios/admin-usuarios.component'; // ✅ NUEVO
-import { AdminProductosComponent } from './admin/admin-productos/admin-productos.component'; // ✅ NUEVO
-import { AdminCategoriasComponent } from './admin/admin-categorias/admin-categorias.component'; // ✅ NUEVO
-import { adminGuard } from './guards/admin.guard'; // ✅ NUEVO
-import { authGuard } from './guards/auth.guard'; // ✅ NUEVO
+import { CarritoComponent } from './carrito/carrito.component'; // ✅ NUEVO - Importar componente del carrito
+import { AdminPanelComponent } from './admin/admin-panel/admin-panel.component';
+import { AdminUsuariosComponent } from './admin/admin-usuarios/admin-usuarios.component';
+import { AdminProductosComponent } from './admin/admin-productos/admin-productos.component';
+import { AdminCategoriasComponent } from './admin/admin-categorias/admin-categorias.component';
+import { adminGuard } from './guards/admin.guard';
+import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   // Rutas públicas
@@ -21,39 +22,46 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'producto/:id', component: DetalleProductoComponent },
   
+  // ✅ NUEVA RUTA - Carrito (solo usuarios autenticados)
+  { 
+    path: 'carrito', 
+    component: CarritoComponent,
+    canActivate: [authGuard] // Solo usuarios autenticados pueden ver el carrito
+  },
+  
   // Rutas protegidas (usuarios autenticados)
   { 
     path: 'vender', 
     component: VenderComponent,
-    canActivate: [authGuard] // ✅ Solo usuarios autenticados
+    canActivate: [authGuard]
   },
   { 
     path: 'configuracion', 
     component: ConfiguracionComponent,
-    canActivate: [authGuard] // ✅ Solo usuarios autenticados
+    canActivate: [authGuard]
   },
   { 
     path: 'perfil', 
     component: PerfilComponent,
-    canActivate: [authGuard] // ✅ Solo usuarios autenticados
+    canActivate: [authGuard]
   },
   { 
     path: 'perfil/editar', 
     component: EditPerfilComponent,
-    canActivate: [authGuard] // ✅ Solo usuarios autenticados
+    canActivate: [authGuard]
   },
   { 
     path: 'perfil/editar-direccion', 
     component: EditDireccionComponent,
-    canActivate: [authGuard] // ✅ Solo usuarios autenticados
+    canActivate: [authGuard]
   },
   { 
     path: 'perfil/editar-pago', 
     component: EditPagoComponent,
-    canActivate: [authGuard] // ✅ Solo usuarios autenticados
+    canActivate: [authGuard]
   },
   
-  // ✅ RUTAS ADMIN (solo administradores)
+  // Rutas admin (solo administradores)
   { 
     path: 'admin', 
     component: AdminPanelComponent,

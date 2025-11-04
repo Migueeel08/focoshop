@@ -33,9 +33,18 @@ export class DetalleProductoComponent implements OnInit {
   userName: string = '';
   userImage: string = 'assets/img/user-icon.png';
   userMenuOpen: boolean = false;
+  userId: number = 0;
 
   // ===== BÚSQUEDA =====
   busqueda: string = '';
+
+  // ===== MODAL DE CHECKOUT =====
+  modalCheckoutVisible: boolean = false;
+  direcciones: any[] = [];
+  metodosPago: any[] = [];
+  direccionSeleccionada: any = null;
+  metodoPagoSeleccionado: any = null;
+  procesandoPago: boolean = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -44,7 +53,6 @@ export class DetalleProductoComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Obtener ID del producto de la URL
     this.route.params.subscribe(params => {
       this.productId = +params['id'];
       if (this.productId) {
@@ -76,6 +84,7 @@ export class DetalleProductoComponent implements OnInit {
           disponible: data.disponible,
           cantidad_disponible: data.cantidad_disponible,
           vendedor: data.vendedor_nombre || 'Vendedor',
+          id_vendedor: data.id_vendedor,
           vistas: data.vistas || 0,
           estado: data.estado,
           reviews: data.reviews || 0,
@@ -88,7 +97,6 @@ export class DetalleProductoComponent implements OnInit {
           talla: data.talla || null
         };
 
-        // Inicializar selecciones
         this.colorSeleccionado = this.producto.color;
         this.tallaSeleccionada = this.producto.talla;
 
@@ -102,31 +110,15 @@ export class DetalleProductoComponent implements OnInit {
     });
   }
 
-  /**
-   * Construir URL completa para las imágenes
-   */
   construirUrlImagen(imagen: string | null): string {
-    if (!imagen) {
-      return 'assets/img/producto-default.jpg';
-    }
-    if (imagen.startsWith('http')) {
-      return imagen;
-    }
-    if (imagen.startsWith('assets/')) {
-      return imagen;
-    }
-    if (imagen.startsWith('data:image')) {
-      return imagen;
-    }
-    if (imagen.startsWith('/uploads/')) {
-      return `http://localhost:8000${imagen}`;
-    }
+    if (!imagen) return 'assets/img/producto-default.jpg';
+    if (imagen.startsWith('http')) return imagen;
+    if (imagen.startsWith('assets/')) return imagen;
+    if (imagen.startsWith('data:image')) return imagen;
+    if (imagen.startsWith('/uploads/')) return `http://localhost:8000${imagen}`;
     return 'assets/img/producto-default.jpg';
   }
 
-  /**
-   * Obtener color hexadecimal
-   */
   getColorHex(colorNombre: string): string {
     const colores: any = {
       'negro': '#000000',
@@ -221,7 +213,7 @@ export class DetalleProductoComponent implements OnInit {
     }
   }
 
-  // ===== COMPRAR =====
+  // ===== COMPRAR AHORA - ABRE MODAL =====
   comprarAhora() {
     if (!this.isLoggedIn) {
       alert('Debes iniciar sesión para comprar');
@@ -229,65 +221,222 @@ export class DetalleProductoComponent implements OnInit {
       return;
     }
 
-    // Crear orden de compra directa
-    const ordenCompra = {
-      producto: this.producto,
-      cantidad: this.cantidadComprar,
-      color: this.colorSeleccionado,
-      talla: this.tallaSeleccionada,
-      total: this.producto.precio * this.cantidadComprar
-    };
-
-    // Guardar en sessionStorage para el checkout
-    sessionStorage.setItem('ordenCompra', JSON.stringify(ordenCompra));
-
-    // Navegar a checkout
-    this.router.navigate(['/checkout']);
-    
-    console.log('🛒 Compra directa:', ordenCompra);
+    this.modalCheckoutVisible = true;
+    this.cargarDireccionesUsuario();
+    this.cargarMetodosPagoUsuario();
   }
 
-  agregarAlCarrito() {
-    if (!this.isLoggedIn) {
-      alert('Debes iniciar sesión para agregar al carrito');
-      this.router.navigate(['/login']);
+  // ===== CARGAR DIRECCIONES DEL USUARIO =====
+  cargarDireccionesUsuario() {
+    console.log('🔍 Cargando direcciones para usuario:', this.userId);
+    
+    this.http.get<any[]>(`${this.apiUrl}/direcciones/usuario/${this.userId}`).subscribe({
+      next: (direcciones) => {
+        console.log('✅ Direcciones recibidas:', direcciones);
+        console.log('📊 Cantidad de direcciones:', direcciones.length);
+        
+        this.direcciones = direcciones;
+        
+        if (direcciones.length > 0) {
+          this.direccionSeleccionada = direcciones[0];
+          console.log('✅ Dirección seleccionada por defecto:', this.direccionSeleccionada);
+        } else {
+          console.warn('⚠️ No hay direcciones disponibles');
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error cargando direcciones:', error);
+        console.error('📝 Detalles del error:', error.error);
+        console.error('🔗 URL llamada:', `${this.apiUrl}/direcciones/usuario/${this.userId}`);
+        this.direcciones = [];
+      }
+    });
+  }
+
+  // ===== CARGAR MÉTODOS DE PAGO DEL USUARIO =====
+  cargarMetodosPagoUsuario() {
+    console.log('🔍 Cargando métodos de pago para usuario:', this.userId);
+    
+    this.http.get<any[]>(`${this.apiUrl}/metodos-pago/usuario/${this.userId}`).subscribe({
+      next: (metodos) => {
+        console.log('✅ Métodos de pago recibidos:', metodos);
+        console.log('📊 Cantidad de métodos:', metodos.length);
+        
+        this.metodosPago = metodos;
+        
+        if (metodos.length > 0) {
+          this.metodoPagoSeleccionado = metodos[0];
+          console.log('✅ Método seleccionado por defecto:', this.metodoPagoSeleccionado);
+        } else {
+          console.warn('⚠️ No hay métodos de pago disponibles');
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error cargando métodos de pago:', error);
+        console.error('📝 Detalles del error:', error.error);
+        console.error('🔗 URL llamada:', `${this.apiUrl}/metodos-pago/usuario/${this.userId}`);
+        this.metodosPago = [];
+      }
+    });
+  }
+
+  // ===== CERRAR MODAL =====
+  cerrarModalCheckout() {
+    this.modalCheckoutVisible = false;
+    this.direccionSeleccionada = null;
+    this.metodoPagoSeleccionado = null;
+  }
+
+  // ===== SELECCIONAR DIRECCIÓN =====
+  seleccionarDireccion(direccion: any) {
+    this.direccionSeleccionada = direccion;
+  }
+
+  // ===== SELECCIONAR MÉTODO DE PAGO =====
+  seleccionarMetodoPago(metodo: any) {
+    this.metodoPagoSeleccionado = metodo;
+  }
+
+  // ===== DETECTAR MARCA DE TARJETA POR BANCO =====
+  detectarMarcaTarjeta(banco: string): string {
+    if (!banco) return 'generic';
+    
+    const bancoLower = banco.toLowerCase();
+    
+    // Detectar por nombre del banco
+    const marcasPorBanco: { [key: string]: string } = {
+      'visa': 'visa',
+      'mastercard': 'mastercard',
+      'master card': 'mastercard',
+      'american express': 'amex',
+      'amex': 'amex',
+      'discover': 'discover',
+      'diners': 'diners',
+      'jcb': 'jcb',
+      'unionpay': 'unionpay',
+      'maestro': 'maestro'
+    };
+
+    // Buscar coincidencias
+    for (const [key, marca] of Object.entries(marcasPorBanco)) {
+      if (bancoLower.includes(key)) {
+        return marca;
+      }
+    }
+
+    return 'generic';
+  }
+
+  // ===== OBTENER LOGO DE TARJETA =====
+  obtenerLogoTarjeta(metodo: any): string {
+    let marca = 'generic';
+
+    // Intentar detectar marca por banco
+    if (metodo.banco) {
+      marca = this.detectarMarcaTarjeta(metodo.banco);
+    }
+
+    const logos: { [key: string]: string } = {
+      'visa': 'https://cdn.jsdelivr.net/gh/aaronfagan/svg-credit-card-payment-icons/flat/visa.svg',
+      'mastercard': 'https://cdn.jsdelivr.net/gh/aaronfagan/svg-credit-card-payment-icons/flat/mastercard.svg',
+      'amex': 'https://cdn.jsdelivr.net/gh/aaronfagan/svg-credit-card-payment-icons/flat/amex.svg',
+      'discover': 'https://cdn.jsdelivr.net/gh/aaronfagan/svg-credit-card-payment-icons/flat/discover.svg',
+      'diners': 'https://cdn.jsdelivr.net/gh/aaronfagan/svg-credit-card-payment-icons/flat/diners.svg',
+      'jcb': 'https://cdn.jsdelivr.net/gh/aaronfagan/svg-credit-card-payment-icons/flat/jcb.svg',
+      'unionpay': 'https://cdn.jsdelivr.net/gh/aaronfagan/svg-credit-card-payment-icons/flat/unionpay.svg',
+      'maestro': 'https://cdn.jsdelivr.net/gh/aaronfagan/svg-credit-card-payment-icons/flat/maestro.svg',
+      'generic': 'https://cdn.jsdelivr.net/gh/aaronfagan/svg-credit-card-payment-icons/flat/generic.svg'
+    };
+
+    return logos[marca] || logos['generic'];
+  }
+
+  // ===== OBTENER NOMBRE DE MARCA =====
+  obtenerNombreMarca(metodo: any): string {
+    if (!metodo.banco) return 'Tarjeta';
+    
+    const marca = this.detectarMarcaTarjeta(metodo.banco);
+    
+    const nombres: { [key: string]: string } = {
+      'visa': 'Visa',
+      'mastercard': 'Mastercard',
+      'amex': 'American Express',
+      'discover': 'Discover',
+      'diners': 'Diners Club',
+      'jcb': 'JCB',
+      'unionpay': 'UnionPay',
+      'maestro': 'Maestro',
+      'generic': metodo.banco || 'Tarjeta'
+    };
+
+    return nombres[marca] || metodo.banco;
+  }
+
+  // ===== CALCULAR TOTAL =====
+  calcularTotal(): number {
+    return this.producto.precio * this.cantidadComprar;
+  }
+
+  // ===== CONFIRMAR COMPRA =====
+  confirmarCompra() {
+    if (!this.direccionSeleccionada) {
+      alert('Debes seleccionar una dirección de envío');
       return;
     }
 
-    // Obtener carrito actual
-    let carrito = [];
-    const carritoStr = localStorage.getItem('carrito');
-    
-    if (carritoStr) {
-      carrito = JSON.parse(carritoStr);
+    if (!this.metodoPagoSeleccionado) {
+      alert('Debes seleccionar un método de pago');
+      return;
     }
 
-    // Buscar si el producto ya está en el carrito
-    const index = carrito.findIndex((item: any) => 
-      item.producto.id_producto === this.producto.id_producto &&
-      item.color === this.colorSeleccionado &&
-      item.talla === this.tallaSeleccionada
-    );
+    this.procesandoPago = true;
 
-    if (index > -1) {
-      // Actualizar cantidad
-      carrito[index].cantidad += this.cantidadComprar;
-    } else {
-      // Agregar nuevo item
-      carrito.push({
-        producto: this.producto,
+    setTimeout(() => {
+      const venta = {
+        id_producto: this.producto.id_producto,
+        id_comprador: this.userId,
+        id_vendedor: this.producto.id_vendedor,
         cantidad: this.cantidadComprar,
+        precio_total: this.calcularTotal(),
+        direccion: this.direccionSeleccionada,
+        metodo_pago: this.metodoPagoSeleccionado,
         color: this.colorSeleccionado,
-        talla: this.tallaSeleccionada
-      });
-    }
+        talla: this.tallaSeleccionada,
+        fecha: new Date()
+      };
 
-    // Guardar carrito actualizado
-    localStorage.setItem('carrito', JSON.stringify(carrito));
+      console.log('✅ Venta confirmada:', venta);
 
-    alert('✅ Producto agregado al carrito');
-    console.log('🛒 Carrito actualizado:', carrito);
+      this.procesandoPago = false;
+      this.cerrarModalCheckout();
+      alert('¡Compra realizada exitosamente! 🎉');
+      this.router.navigate(['/perfil']);
+    }, 2000);
   }
+
+  // ===== AGREGAR AL CARRITO =====
+agregarAlCarrito() {
+  const carritoData = {
+    id_producto: this.producto.id_producto,
+    cantidad: this.cantidadComprar,
+    color: this.colorSeleccionado || null,
+    talla: this.tallaSeleccionada || null,
+    precio_unitario: this.producto.precio
+  };
+
+  this.http.post(
+    `${this.apiUrl}/carrito?id_usuario=${this.userId}`,
+    carritoData
+  ).subscribe({
+    next: (response) => {
+      alert('✅ Producto agregado al carrito');
+      window.dispatchEvent(new CustomEvent('carritoActualizado'));
+    },
+    error: (error) => {
+      alert('Error al agregar al carrito');
+    }
+  });
+}
 
   // ===== USUARIO =====
   cargarUsuario() {
@@ -296,6 +445,7 @@ export class DetalleProductoComponent implements OnInit {
       try {
         const parsed = JSON.parse(userData);
         this.isLoggedIn = true;
+        this.userId = parsed.id;
 
         this.userName =
           parsed.nombre ||
