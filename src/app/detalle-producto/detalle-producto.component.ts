@@ -414,29 +414,52 @@ export class DetalleProductoComponent implements OnInit {
     }, 2000);
   }
 
-  // ===== AGREGAR AL CARRITO =====
-agregarAlCarrito() {
-  const carritoData = {
-    id_producto: this.producto.id_producto,
-    cantidad: this.cantidadComprar,
-    color: this.colorSeleccionado || null,
-    talla: this.tallaSeleccionada || null,
-    precio_unitario: this.producto.precio
-  };
-
-  this.http.post(
-    `${this.apiUrl}/carrito?id_usuario=${this.userId}`,
-    carritoData
-  ).subscribe({
-    next: (response) => {
-      alert('✅ Producto agregado al carrito');
-      window.dispatchEvent(new CustomEvent('carritoActualizado'));
-    },
-    error: (error) => {
-      alert('Error al agregar al carrito');
+  // ===== AGREGAR AL CARRITO ===== ✅ CORREGIDO
+  agregarAlCarrito() {
+    if (!this.isLoggedIn) {
+      alert('Debes iniciar sesión para agregar productos al carrito');
+      this.router.navigate(['/login']);
+      return;
     }
-  });
-}
+
+    const carritoData = {
+      id_producto: this.producto.id_producto,
+      cantidad: this.cantidadComprar,
+      color: this.colorSeleccionado || null,
+      talla: this.tallaSeleccionada || null,
+      precio_unitario: this.producto.precio
+    };
+
+    console.log('🛒 Enviando al carrito:', carritoData);
+    console.log('👤 Usuario ID:', this.userId);
+
+    // ✅ CORREGIDO: Agregado / antes de ?
+    this.http.post(
+      `${this.apiUrl}/carrito/?id_usuario=${this.userId}`,
+      carritoData
+    ).subscribe({
+      next: (response) => {
+        console.log('✅ Respuesta del servidor:', response);
+        alert('✅ Producto agregado al carrito exitosamente');
+        
+        // Emitir evento para actualizar el contador del carrito
+        window.dispatchEvent(new CustomEvent('carritoActualizado'));
+      },
+      error: (error) => {
+        console.error('❌ Error completo:', error);
+        console.error('Status:', error.status);
+        console.error('Error detail:', error.error);
+        
+        if (error.status === 500) {
+          alert('Error del servidor. Por favor intenta de nuevo.');
+        } else if (error.status === 404) {
+          alert('Producto no encontrado');
+        } else {
+          alert('Error al agregar al carrito: ' + (error.error?.detail || 'Error desconocido'));
+        }
+      }
+    });
+  }
 
   // ===== USUARIO =====
   cargarUsuario() {

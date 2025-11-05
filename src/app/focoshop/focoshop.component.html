@@ -300,7 +300,7 @@
       </div>
 
       <div class="productos-grid">
-        @for (prod of productosFiltrados; track prod.id) {
+        @for (prod of productosFiltrados; track prod.id_producto) {
           <div class="producto-card-grid" (click)="verDetalleProducto(prod)">
             <div class="producto-imagen-container">
               <img [src]="prod.imagen" [alt]="prod.nombre" />

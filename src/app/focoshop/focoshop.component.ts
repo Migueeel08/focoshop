@@ -66,6 +66,13 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     }
   };
 
+  // ✅ LISTENER PARA ACTUALIZAR CARRITO
+  private carritoListener = () => {
+    if (this.isLoggedIn) {
+      this.cargarContadorCarrito();
+    }
+  };
+
   constructor(private router: Router, private http: HttpClient) {}
 
   ngOnInit() {
@@ -79,14 +86,24 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     }
     
     window.addEventListener('storage', this.storageListener);
+    
+    // ✅ ESCUCHAR EVENTO DE CARRITO ACTUALIZADO
+    window.addEventListener('carritoActualizado', this.carritoListener as EventListener);
   }
 
   ngOnDestroy() {
     window.removeEventListener('storage', this.storageListener);
+    // ✅ REMOVER LISTENER DEL CARRITO
+    window.removeEventListener('carritoActualizado', this.carritoListener as EventListener);
   }
 
   ngAfterViewInit() {
     this.scrollCategoriaCentrada(this.categoriaSeleccionada);
+  }
+
+  // ===== FUNCIÓN PARA TRACK BY =====
+  trackByProducto(index: number, producto: any): number {
+    return producto.id_producto || index;
   }
 
   // ===== CARGAR CONTADOR DEL CARRITO =====
