@@ -26,7 +26,11 @@ export class DetalleProductoComponent implements OnInit {
   colorSeleccionado: string = '';
   tallaSeleccionada: string = '';
   cantidadComprar: number = 1;
+  
+  // ✅ FAVORITOS CON BACKEND
   esFavorito: boolean = false;
+  idFavorito: number | null = null;
+  cargandoFavorito: boolean = false;
 
   // ===== USUARIO =====
   isLoggedIn: boolean = false;
@@ -53,15 +57,19 @@ export class DetalleProductoComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.cargarUsuario();
+    
     this.route.params.subscribe(params => {
       this.productId = +params['id'];
       if (this.productId) {
         this.cargarProducto();
+        
+        // ✅ Verificar favorito después de cargar usuario
+        if (this.userId) {
+          this.verificarFavorito();
+        }
       }
     });
-
-    this.cargarUsuario();
-    this.verificarFavorito();
   }
 
   // ===== CARGAR PRODUCTO =====
@@ -155,49 +163,102 @@ export class DetalleProductoComponent implements OnInit {
     this.imagenSeleccionada = index;
   }
 
-  // ===== FAVORITOS =====
-  toggleFavorito() {
-    this.esFavorito = !this.esFavorito;
-    
-    if (this.esFavorito) {
-      this.agregarAFavoritos();
-    } else {
-      this.quitarDeFavoritos();
-    }
+  // ===== FAVORITOS CON BACKEND ===== ✅ CORREGIDO
+  
+  verificarFavorito() {
+    if (!this.userId || !this.productId) return;
+
+    this.http.get<any>(
+      `${this.apiUrl}/favoritos/check?id_usuario=${this.userId}&id_producto=${this.productId}`
+    ).subscribe({
+      next: (data) => {
+        this.esFavorito = data.en_favoritos;
+        this.idFavorito = data.id_favorito || null;
+        console.log('✅ Estado favorito:', this.esFavorito);
+      },
+      error: (error) => {
+        console.error('Error al verificar favorito:', error);
+        this.esFavorito = false;
+      }
+    });
   }
 
-  verificarFavorito() {
-    const favoritos = localStorage.getItem('favoritos');
-    if (favoritos) {
-      const listaFavoritos = JSON.parse(favoritos);
-      this.esFavorito = listaFavoritos.includes(this.productId);
+  toggleFavorito() {
+    if (!this.isLoggedIn) {
+      alert('Debes iniciar sesión para agregar a favoritos');
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    if (!this.producto?.id_producto) {
+      alert('Error: Producto no válido');
+      return;
+    }
+
+    if (this.cargandoFavorito) return;
+
+    this.cargandoFavorito = true;
+
+    if (this.esFavorito) {
+      // ELIMINAR de favoritos
+      this.quitarDeFavoritos();
+    } else {
+      // AGREGAR a favoritos
+      this.agregarAFavoritos();
     }
   }
 
   agregarAFavoritos() {
-    let favoritos = [];
-    const favoritosStr = localStorage.getItem('favoritos');
-    
-    if (favoritosStr) {
-      favoritos = JSON.parse(favoritosStr);
-    }
-    
-    if (!favoritos.includes(this.productId)) {
-      favoritos.push(this.productId);
-      localStorage.setItem('favoritos', JSON.stringify(favoritos));
-      console.log('✅ Producto agregado a favoritos');
-    }
+    const favorito = {
+      id_usuario: this.userId,
+      id_producto: this.producto.id_producto
+    };
+
+    this.http.post<any>(`${this.apiUrl}/favoritos`, favorito).subscribe({
+      next: (response) => {
+        console.log('✅ Agregado a favoritos:', response);
+        this.esFavorito = true;
+        this.idFavorito = response.id_favorito;
+        this.cargandoFavorito = false;
+        
+        // Disparar evento para actualizar contador
+        window.dispatchEvent(new Event('favoritosActualizado'));
+      },
+      error: (error) => {
+        console.error('Error al agregar a favoritos:', error);
+        this.cargandoFavorito = false;
+        
+        if (error.status === 400) {
+          alert('Este producto ya está en tus favoritos');
+        } else {
+          alert('Error al agregar a favoritos. Intenta de nuevo.');
+        }
+      }
+    });
   }
 
   quitarDeFavoritos() {
-    const favoritosStr = localStorage.getItem('favoritos');
-    
-    if (favoritosStr) {
-      let favoritos = JSON.parse(favoritosStr);
-      favoritos = favoritos.filter((id: number) => id !== this.productId);
-      localStorage.setItem('favoritos', JSON.stringify(favoritos));
-      console.log('❌ Producto quitado de favoritos');
+    if (!this.idFavorito) {
+      this.cargandoFavorito = false;
+      return;
     }
+
+    this.http.delete(`${this.apiUrl}/favoritos/${this.idFavorito}`).subscribe({
+      next: () => {
+        console.log('✅ Eliminado de favoritos');
+        this.esFavorito = false;
+        this.idFavorito = null;
+        this.cargandoFavorito = false;
+        
+        // Disparar evento para actualizar contador
+        window.dispatchEvent(new Event('favoritosActualizado'));
+      },
+      error: (error) => {
+        console.error('Error al eliminar de favoritos:', error);
+        this.cargandoFavorito = false;
+        alert('Error al eliminar de favoritos. Intenta de nuevo.');
+      }
+    });
   }
 
   // ===== CANTIDAD =====
@@ -303,7 +364,6 @@ export class DetalleProductoComponent implements OnInit {
     
     const bancoLower = banco.toLowerCase();
     
-    // Detectar por nombre del banco
     const marcasPorBanco: { [key: string]: string } = {
       'visa': 'visa',
       'mastercard': 'mastercard',
@@ -317,7 +377,6 @@ export class DetalleProductoComponent implements OnInit {
       'maestro': 'maestro'
     };
 
-    // Buscar coincidencias
     for (const [key, marca] of Object.entries(marcasPorBanco)) {
       if (bancoLower.includes(key)) {
         return marca;
@@ -331,7 +390,6 @@ export class DetalleProductoComponent implements OnInit {
   obtenerLogoTarjeta(metodo: any): string {
     let marca = 'generic';
 
-    // Intentar detectar marca por banco
     if (metodo.banco) {
       marca = this.detectarMarcaTarjeta(metodo.banco);
     }
@@ -414,7 +472,7 @@ export class DetalleProductoComponent implements OnInit {
     }, 2000);
   }
 
-  // ===== AGREGAR AL CARRITO ===== ✅ CORREGIDO
+  // ===== AGREGAR AL CARRITO =====
   agregarAlCarrito() {
     if (!this.isLoggedIn) {
       alert('Debes iniciar sesión para agregar productos al carrito');
@@ -433,7 +491,6 @@ export class DetalleProductoComponent implements OnInit {
     console.log('🛒 Enviando al carrito:', carritoData);
     console.log('👤 Usuario ID:', this.userId);
 
-    // ✅ CORREGIDO: Agregado / antes de ?
     this.http.post(
       `${this.apiUrl}/carrito/?id_usuario=${this.userId}`,
       carritoData
@@ -442,7 +499,6 @@ export class DetalleProductoComponent implements OnInit {
         console.log('✅ Respuesta del servidor:', response);
         alert('✅ Producto agregado al carrito exitosamente');
         
-        // Emitir evento para actualizar el contador del carrito
         window.dispatchEvent(new CustomEvent('carritoActualizado'));
       },
       error: (error) => {

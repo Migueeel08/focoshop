@@ -18,6 +18,16 @@
 
     <!-- LINKS DE AUTENTICACIÓN Y CARRITO -->
     <div class="auth-links">
+      <!-- ÍCONO DE FAVORITOS (solo si está logueado) -->
+      @if (isLoggedIn) {
+        <div class="favoritos-header" (click)="irFavoritos()">
+          <i class="fa fa-heart"></i>
+          @if (contadorFavoritos > 0) {
+            <span class="favoritos-badge">{{ contadorFavoritos }}</span>
+          }
+        </div>
+      }
+
       <!-- ÍCONO DEL CARRITO (solo si está logueado) -->
       @if (isLoggedIn) {
         <div class="carrito-header" (click)="irAlCarrito()">
@@ -36,7 +46,7 @@
           <div class="user-menu" [class.open]="userMenuOpen">
             <div class="user-name-header">{{ userName }}</div>
 
-            <!-- ✅ OPCIONES CON HOVER MORADO -->
+            <!-- OPCIONES CON HOVER MORADO -->
             <button (click)="irPerfil()">
               <i class="fa fa-user"></i> Mi perfil
             </button>
@@ -51,7 +61,7 @@
 
             <div class="divider"></div>
 
-            <!-- ✅ CERRAR SESIÓN CON HOVER ROJO -->
+            <!-- CERRAR SESIÓN CON HOVER ROJO -->
             <button class="logout-btn" (click)="logout()">
               <i class="fa fa-sign-out-alt"></i> Cerrar sesión
             </button>
@@ -66,12 +76,12 @@
   <!-- OVERLAY OSCURO -->
   <div class="menu-overlay" [class.active]="menuAbierto" (click)="toggleMenu()"></div>
 
-  <!-- MENÚ LATERAL -->
+  <!-- MENÚ LATERAL MEJORADO CON SUBCATEGORÍAS -->
   <aside class="menu-categorias" [class.open]="menuAbierto">
     <div class="menu-header">
       <div class="menu-titulo">
         <i class="fa fa-th-large"></i>
-        <h3>Categorías</h3>
+        <h3>Todas las Categorías</h3>
       </div>
       <button class="btn-cerrar-menu" (click)="toggleMenu()">
         <i class="fa fa-times"></i>
@@ -80,21 +90,26 @@
 
     <ul class="categorias-list">
       @for (cat of categorias; track cat.nombre; let i = $index) {
-        <li class="categoria-item" [class.active]="i === categoriaSeleccionada">
-          <div class="categoria-principal" (click)="seleccionarCategoria(i)">
+        <li class="categoria-item">
+          <div class="categoria-principal" (click)="toggleCategoriaMenu(i)">
             <div class="categoria-info">
-              <i class="fa fa-folder"></i>
+              <i [class]="getIconoCategoria(cat.nombre)"></i>
               <span>{{ cat.nombre }}</span>
             </div>
             @if (cat.subcategorias?.length) {
-              <i class="fa fa-chevron-right arrow-icon" [class.rotate]="i === categoriaSeleccionada"></i>
+              <i class="fa fa-chevron-down arrow-icon" [class.rotate]="categoriaMenuAbierta === i"></i>
             }
           </div>
 
-          @if (cat.subcategorias?.length && i === categoriaSeleccionada) {
+          <!-- SUBCATEGORÍAS EXPANDIBLES -->
+          @if (cat.subcategorias?.length && categoriaMenuAbierta === i) {
             <ul class="subcategorias">
+              <li class="subcategoria-item subcategoria-todas" (click)="seleccionarCategoriaCompleta(i)">
+                <i class="fa fa-th"></i>
+                Ver todas en {{ cat.nombre }}
+              </li>
               @for (sub of cat.subcategorias; track sub) {
-                <li class="subcategoria-item" (click)="seleccionarSubcategoria(sub)">
+                <li class="subcategoria-item" (click)="seleccionarSubcategoriaDesdeMenu(i, sub)">
                   <i class="fa fa-angle-right"></i>
                   {{ sub }}
                 </li>
@@ -107,8 +122,8 @@
 
     <div class="menu-footer">
       <button class="btn-ver-todas" (click)="toggleMenu()">
-        <i class="fa fa-grip-horizontal"></i>
-        Ver todas las categorías
+        <i class="fa fa-times-circle"></i>
+        Cerrar menú
       </button>
     </div>
   </aside>
@@ -119,7 +134,7 @@
     <span>CATEGORÍAS</span>
   </button>
 
-  <!-- CARRUSEL DE CATEGORÍAS - ✅ SIN IMÁGENES -->
+  <!-- CARRUSEL DE CATEGORÍAS MEJORADO -->
   <div class="carrusel-container">
     <button (click)="anterior()" class="arrow-btn left">
       <i class="fa fa-chevron-left"></i>
@@ -128,10 +143,13 @@
     <div class="categoria-grid" #categoriaGrid>
       @for (cat of categorias; track cat.nombre; let i = $index) {
         <div class="categoria-card" [class.active]="i === categoriaSeleccionada" (click)="seleccionarCategoria(i)">
-          <div class="categoria-icon">
-            <i class="fa fa-tag"></i>
+          <div class="categoria-icon-wrapper">
+            <i [class]="getIconoCategoria(cat.nombre)"></i>
           </div>
-          <p>{{ cat.nombre }}</p>
+          <p class="categoria-nombre">{{ cat.nombre }}</p>
+          @if (cat.subcategorias?.length > 0) {
+            <span class="categoria-count">{{ cat.subcategorias.length }} items</span>
+          }
         </div>
       }
     </div>
@@ -216,29 +234,32 @@
         </label>
       </div>
 
+      <!-- FILTROS DE PRECIO MEJORADOS CON VALIDACIÓN -->
       <div class="filtro-seccion">
-  <h4 class="filtro-subtitulo">Precio</h4>
-  <div class="precio-inputs">
-    <input 
-      type="number" 
-      placeholder="Mínimo" 
-      [(ngModel)]="filtros.precioMin" 
-      (change)="aplicarFiltros()" 
-      min="0" 
-      step="100"
-    />
-    <span>-</span>
-    <input 
-      type="number" 
-      placeholder="Máximo" 
-      [(ngModel)]="filtros.precioMax" 
-      (change)="aplicarFiltros()" 
-      min="0" 
-      step="100"
-    />
-  </div>
-</div>
-
+        <h4 class="filtro-subtitulo">Precio</h4>
+        <div class="precio-inputs">
+          <input 
+            type="number" 
+            placeholder="Mínimo" 
+            [(ngModel)]="filtros.precioMin" 
+            (ngModelChange)="validarPrecioMinimo()" 
+            min="0" 
+            step="100"
+          />
+          <span>-</span>
+          <input 
+            type="number" 
+            placeholder="Máximo" 
+            [(ngModel)]="filtros.precioMax" 
+            (ngModelChange)="validarPrecioMaximo()" 
+            min="0" 
+            step="100"
+          />
+        </div>
+        @if (errorPrecio) {
+          <p class="error-precio">{{ errorPrecio }}</p>
+        }
+      </div>
 
       @if (marcasDisponibles.length > 0) {
         <div class="filtro-seccion">
