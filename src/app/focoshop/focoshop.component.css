@@ -281,29 +281,6 @@ body {
   transform: rotate(90deg);
 }
 
-.menu-search {
-  padding: 20px;
-  background: #f8f9fa;
-  position: relative;
-}
-
-.menu-search input {
-  width: 100%;
-  padding: 12px 15px 12px 45px;
-  border: 2px solid #e9ecef;
-  border-radius: 12px;
-  outline: none;
-  font-size: 14px;
-}
-
-.menu-search i {
-  position: absolute;
-  left: 35px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #667eea;
-}
-
 .categorias-list {
   list-style: none;
   padding: 10px 0;
@@ -320,6 +297,11 @@ body {
   justify-content: space-between;
   padding: 16px 20px;
   cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.categoria-principal:hover {
+  background: rgba(102, 126, 234, 0.05);
 }
 
 .categoria-info {
@@ -335,6 +317,15 @@ body {
   border-left: 4px solid #667eea;
 }
 
+.arrow-icon {
+  transition: transform 0.3s ease;
+  color: #667eea;
+}
+
+.arrow-icon.rotate {
+  transform: rotate(90deg);
+}
+
 .subcategorias {
   list-style: none;
   padding: 0;
@@ -347,6 +338,21 @@ body {
   font-size: 14px;
   color: #495057;
   cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.subcategoria-item:hover {
+  background: #e9ecef;
+  color: #667eea;
+  padding-left: 60px;
+}
+
+.subcategoria-item i {
+  font-size: 12px;
+  color: #667eea;
 }
 
 .menu-footer {
@@ -364,6 +370,12 @@ body {
   border-radius: 12px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-ver-todas:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 /* ======= CARRUSEL DE CATEGORÍAS ======= */
@@ -982,12 +994,81 @@ body {
   align-items: center;
   gap: 12px;
   margin: 5px 0;
-  border-radius: 12px;
+  border-radius: 0;
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.user-menu button:hover {
-  background: #3a3a3a;
+/* ✅ HOVER MORADO TRASLÚCIDO PARA LAS 3 PRIMERAS OPCIONES */
+.user-menu button:not(.logout-btn):hover {
+  background: rgba(125, 95, 255, 0.3);
+  color: #fff;
+  padding-left: 25px;
+}
+
+.user-menu button:not(.logout-btn):hover::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 4px;
+  background: linear-gradient(135deg, #7d5fff, #6b44ff);
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    height: 0;
+  }
+  to {
+    height: 100%;
+  }
+}
+
+/* ✅ HOVER ROJO TRASLÚCIDO PARA CERRAR SESIÓN */
+.user-menu .logout-btn {
+  background: #2c2c2c;
+  border: none;
+  color: #fff;
+  padding: 15px 20px;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 5px 0;
+  border-radius: 0;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.user-menu .logout-btn:hover {
+  background: rgba(255, 71, 87, 0.3);
+  color: #fff;
+  padding-left: 25px;
+}
+
+.user-menu .logout-btn:hover::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 4px;
+  background: linear-gradient(135deg, #ff4757, #ff6348);
+  animation: slideIn 0.3s ease;
+}
+
+/* Efecto de brillo al hover */
+.user-menu button:hover i {
+  transform: scale(1.2);
+  transition: transform 0.3s ease;
 }
 
 .user-menu .divider {
@@ -1002,6 +1083,7 @@ body {
   color: #fff;
   padding: 10px 20px;
   border-bottom: 1px solid rgba(255,255,255,0.1);
+  background: linear-gradient(135deg, rgba(125, 95, 255, 0.2), rgba(107, 68, 255, 0.2));
 }
 
 /* ======= RESPONSIVE ======= */
@@ -1054,7 +1136,7 @@ body {
   }
 
   .btn-menu-categorias {
-    top: 10px;
+    top: 90px;
     left: 10px;
     padding: 10px 16px;
     font-size: 14px;
@@ -1062,6 +1144,7 @@ body {
 
   .carrusel-container {
     margin-left: 0;
+    margin-top: 10px;
   }
 
   .subcategorias-container {
@@ -1081,7 +1164,6 @@ body {
     font-size: 13px;
   }
 
-  /* Responsive Carrito */
   .carrito-header {
     padding: 6px 10px;
     margin-right: 10px;
@@ -1122,7 +1204,6 @@ body {
     font-size: 20px;
   }
 
-  /* Responsive Carrito Mobile */
   .carrito-header {
     padding: 5px 8px;
     margin-right: 8px;

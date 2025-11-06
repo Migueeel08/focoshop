@@ -184,7 +184,7 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     return imagenes[nombre.toUpperCase()] || 'assets/img/tecnologia.jpeg';
   }
 
-  // ===== CARGAR PRODUCTOS =====
+  // ===== CARGAR PRODUCTOS ===== ✅ CON FILTRO DE VENDEDOR
   cargarProductos() {
     this.productosCargando = true;
     const url = `${this.apiUrl}/productos`;
@@ -192,7 +192,21 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     this.http.get<any[]>(url).subscribe({
       next: (data) => {
         console.log('✅ Datos recibidos del backend:', data);
-        this.productos = data.map(prod => ({
+        
+        // ✅ FILTRAR: Excluir productos del mismo usuario vendedor
+        const productosFiltradosPorVendedor = data.filter(prod => {
+          // Si el usuario está logueado, excluir sus propios productos
+          if (this.isLoggedIn && this.userId) {
+            return prod.id_vendedor !== this.userId;
+          }
+          // Si no está logueado, mostrar todos
+          return true;
+        });
+        
+        console.log(`📦 Productos totales: ${data.length}`);
+        console.log(`✅ Productos filtrados (sin los del vendedor): ${productosFiltradosPorVendedor.length}`);
+        
+        this.productos = productosFiltradosPorVendedor.map(prod => ({
           id_producto: prod.id_producto,
           nombre: prod.nombre,
           descripcion: prod.descripcion,
@@ -203,6 +217,7 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
           disponible: prod.disponible,
           cantidad_disponible: prod.cantidad_disponible,
           vendedor: prod.vendedor_nombre || 'Vendedor',
+          id_vendedor: prod.id_vendedor, // ✅ IMPORTANTE: Incluir id_vendedor
           vistas: prod.vistas || 0,
           estado: prod.estado,
           reviews: prod.reviews || 0,
@@ -419,6 +434,7 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     this.scrollCategoriaCentrada(index);
     this.limpiarFiltros();
     this.filtrarProductos();
+    this.menuAbierto = false; // ✅ Cerrar menú al seleccionar
   }
 
   seleccionarDesdeCarrusel(index: number) {
@@ -433,6 +449,7 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
   seleccionarSubcategoria(subcategoria: string | null) {
     this.subcategoriaSeleccionada = subcategoria;
     console.log('Subcategoría seleccionada:', subcategoria);
+    this.menuAbierto = false; // ✅ Cerrar menú al seleccionar subcategoría
     this.aplicarFiltros();
   }
 

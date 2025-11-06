@@ -38,7 +38,7 @@ interface CarritoResumen {
 })
 export class CarritoComponent implements OnInit {
   
-  private apiUrl = 'http://localhost:8000/api/carrito';
+  private apiUrl = 'http://localhost:8000/api';
   
   // ===== DATOS DEL CARRITO =====
   carrito: CarritoResumen | null = null;
@@ -50,6 +50,14 @@ export class CarritoComponent implements OnInit {
   userName: string = '';
   userImage: string = 'assets/img/user-icon.png';
   userMenuOpen: boolean = false;
+
+  // ===== MODAL DE CHECKOUT ===== ✅ NUEVO
+  modalCheckoutVisible: boolean = false;
+  direcciones: any[] = [];
+  metodosPago: any[] = [];
+  direccionSeleccionada: any = null;
+  metodoPagoSeleccionado: any = null;
+  procesandoPago: boolean = false;
 
   constructor(
     private router: Router,
@@ -96,7 +104,7 @@ export class CarritoComponent implements OnInit {
   // ===== CARGAR CARRITO =====
   cargarCarrito(): void {
     this.cargando = true;
-    this.http.get<CarritoResumen>(`${this.apiUrl}/usuario/${this.userId}`).subscribe({
+    this.http.get<CarritoResumen>(`${this.apiUrl}/carrito/usuario/${this.userId}`).subscribe({
       next: (carrito: CarritoResumen) => {
         this.carrito = carrito;
         this.cargando = false;
@@ -118,7 +126,7 @@ export class CarritoComponent implements OnInit {
     }
 
     this.http.put(
-      `${this.apiUrl}/${item.id_carrito}?id_usuario=${this.userId}`,
+      `${this.apiUrl}/carrito/${item.id_carrito}?id_usuario=${this.userId}`,
       { cantidad: item.cantidad + 1 }
     ).subscribe({
       next: () => {
@@ -138,7 +146,7 @@ export class CarritoComponent implements OnInit {
     }
 
     this.http.put(
-      `${this.apiUrl}/${item.id_carrito}?id_usuario=${this.userId}`,
+      `${this.apiUrl}/carrito/${item.id_carrito}?id_usuario=${this.userId}`,
       { cantidad: item.cantidad - 1 }
     ).subscribe({
       next: () => {
@@ -157,10 +165,13 @@ export class CarritoComponent implements OnInit {
       return;
     }
 
-    this.http.delete(`${this.apiUrl}/${item.id_carrito}?id_usuario=${this.userId}`).subscribe({
+    this.http.delete(`${this.apiUrl}/carrito/${item.id_carrito}?id_usuario=${this.userId}`).subscribe({
       next: () => {
         this.cargarCarrito();
         console.log('✅ Producto eliminado del carrito');
+        
+        // Emitir evento para actualizar el contador
+        window.dispatchEvent(new CustomEvent('carritoActualizado'));
       },
       error: (error: unknown) => {
         console.error('Error al eliminar item:', error);
@@ -175,10 +186,13 @@ export class CarritoComponent implements OnInit {
       return;
     }
 
-    this.http.delete(`${this.apiUrl}/usuario/${this.userId}`).subscribe({
+    this.http.delete(`${this.apiUrl}/carrito/usuario/${this.userId}`).subscribe({
       next: () => {
         this.cargarCarrito();
         console.log('✅ Carrito vaciado');
+        
+        // Emitir evento para actualizar el contador
+        window.dispatchEvent(new CustomEvent('carritoActualizado'));
       },
       error: (error: unknown) => {
         console.error('Error al vaciar carrito:', error);
@@ -187,33 +201,195 @@ export class CarritoComponent implements OnInit {
     });
   }
 
-  // ===== VERIFICAR DISPONIBILIDAD =====
-  verificarDisponibilidad(): void {
-    this.http.get(`${this.apiUrl}/verificar?id_usuario=${this.userId}`).subscribe({
-      next: (verificacion: any) => {
-        if (!verificacion.todos_disponibles) {
-          if (verificacion.items_no_disponibles.length > 0) {
-            alert('Algunos productos ya no están disponibles. Por favor, elimínalos del carrito.');
-            return;
-          }
-          if (verificacion.items_sin_stock.length > 0) {
-            alert('Algunos productos no tienen suficiente stock. Por favor, ajusta las cantidades.');
-            return;
-          }
+  // ===== PROCEDER AL PAGO ===== ✅ ABRE MODAL
+  procederAlPago(): void {
+    // Verificar que hay items disponibles
+    const itemsDisponibles = this.carrito?.items.filter(item => item.producto_disponible);
+    
+    if (!itemsDisponibles || itemsDisponibles.length === 0) {
+      alert('No hay productos disponibles en el carrito');
+      return;
+    }
+
+    this.modalCheckoutVisible = true;
+    this.cargarDireccionesUsuario();
+    this.cargarMetodosPagoUsuario();
+  }
+
+  // ===== CARGAR DIRECCIONES DEL USUARIO ===== ✅ NUEVO
+  cargarDireccionesUsuario(): void {
+    console.log('🔍 Cargando direcciones para usuario:', this.userId);
+    
+    this.http.get<any[]>(`${this.apiUrl}/direcciones/usuario/${this.userId}`).subscribe({
+      next: (direcciones) => {
+        console.log('✅ Direcciones recibidas:', direcciones);
+        this.direcciones = direcciones;
+        
+        if (direcciones.length > 0) {
+          this.direccionSeleccionada = direcciones[0];
         }
-        // Navegar al checkout
-        this.router.navigate(['/checkout']);
       },
-      error: (error: unknown) => {
-        console.error('Error al verificar disponibilidad:', error);
-        alert('Error al verificar disponibilidad');
+      error: (error) => {
+        console.error('❌ Error cargando direcciones:', error);
+        this.direcciones = [];
       }
     });
   }
 
-  // ===== PROCEDER AL PAGO =====
-  procederAlPago(): void {
-    this.verificarDisponibilidad();
+  // ===== CARGAR MÉTODOS DE PAGO DEL USUARIO ===== ✅ NUEVO
+  cargarMetodosPagoUsuario(): void {
+    console.log('🔍 Cargando métodos de pago para usuario:', this.userId);
+    
+    this.http.get<any[]>(`${this.apiUrl}/metodos-pago/usuario/${this.userId}`).subscribe({
+      next: (metodos) => {
+        console.log('✅ Métodos de pago recibidos:', metodos);
+        this.metodosPago = metodos;
+        
+        if (metodos.length > 0) {
+          this.metodoPagoSeleccionado = metodos[0];
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error cargando métodos de pago:', error);
+        this.metodosPago = [];
+      }
+    });
+  }
+
+  // ===== CERRAR MODAL ===== ✅ NUEVO
+  cerrarModalCheckout(): void {
+    this.modalCheckoutVisible = false;
+    this.direccionSeleccionada = null;
+    this.metodoPagoSeleccionado = null;
+  }
+
+  // ===== SELECCIONAR DIRECCIÓN ===== ✅ NUEVO
+  seleccionarDireccion(direccion: any): void {
+    this.direccionSeleccionada = direccion;
+  }
+
+  // ===== SELECCIONAR MÉTODO DE PAGO ===== ✅ NUEVO
+  seleccionarMetodoPago(metodo: any): void {
+    this.metodoPagoSeleccionado = metodo;
+  }
+
+  // ===== DETECTAR MARCA DE TARJETA ===== ✅ NUEVO
+  detectarMarcaTarjeta(banco: string): string {
+    if (!banco) return 'generic';
+    
+    const bancoLower = banco.toLowerCase();
+    
+    const marcasPorBanco: { [key: string]: string } = {
+      'visa': 'visa',
+      'mastercard': 'mastercard',
+      'master card': 'mastercard',
+      'american express': 'amex',
+      'amex': 'amex',
+      'discover': 'discover',
+      'diners': 'diners',
+      'jcb': 'jcb',
+      'unionpay': 'unionpay',
+      'maestro': 'maestro'
+    };
+
+    for (const [key, marca] of Object.entries(marcasPorBanco)) {
+      if (bancoLower.includes(key)) {
+        return marca;
+      }
+    }
+
+    return 'generic';
+  }
+
+  // ===== OBTENER LOGO DE TARJETA ===== ✅ NUEVO
+  obtenerLogoTarjeta(metodo: any): string {
+    let marca = 'generic';
+
+    if (metodo.banco) {
+      marca = this.detectarMarcaTarjeta(metodo.banco);
+    }
+
+    const logos: { [key: string]: string } = {
+      'visa': 'https://cdn.jsdelivr.net/gh/aaronfagan/svg-credit-card-payment-icons/flat/visa.svg',
+      'mastercard': 'https://cdn.jsdelivr.net/gh/aaronfagan/svg-credit-card-payment-icons/flat/mastercard.svg',
+      'amex': 'https://cdn.jsdelivr.net/gh/aaronfagan/svg-credit-card-payment-icons/flat/amex.svg',
+      'discover': 'https://cdn.jsdelivr.net/gh/aaronfagan/svg-credit-card-payment-icons/flat/discover.svg',
+      'diners': 'https://cdn.jsdelivr.net/gh/aaronfagan/svg-credit-card-payment-icons/flat/diners.svg',
+      'jcb': 'https://cdn.jsdelivr.net/gh/aaronfagan/svg-credit-card-payment-icons/flat/jcb.svg',
+      'unionpay': 'https://cdn.jsdelivr.net/gh/aaronfagan/svg-credit-card-payment-icons/flat/unionpay.svg',
+      'maestro': 'https://cdn.jsdelivr.net/gh/aaronfagan/svg-credit-card-payment-icons/flat/maestro.svg',
+      'generic': 'https://cdn.jsdelivr.net/gh/aaronfagan/svg-credit-card-payment-icons/flat/generic.svg'
+    };
+
+    return logos[marca] || logos['generic'];
+  }
+
+  // ===== OBTENER NOMBRE DE MARCA ===== ✅ NUEVO
+  obtenerNombreMarca(metodo: any): string {
+    if (!metodo.banco) return 'Tarjeta';
+    
+    const marca = this.detectarMarcaTarjeta(metodo.banco);
+    
+    const nombres: { [key: string]: string } = {
+      'visa': 'Visa',
+      'mastercard': 'Mastercard',
+      'amex': 'American Express',
+      'discover': 'Discover',
+      'diners': 'Diners Club',
+      'jcb': 'JCB',
+      'unionpay': 'UnionPay',
+      'maestro': 'Maestro',
+      'generic': metodo.banco || 'Tarjeta'
+    };
+
+    return nombres[marca] || metodo.banco;
+  }
+
+  // ===== CALCULAR TOTAL ===== ✅ NUEVO
+  calcularTotal(): number {
+    return this.carrito?.subtotal || 0;
+  }
+
+  // ===== CONFIRMAR COMPRA ===== ✅ NUEVO
+  confirmarCompra(): void {
+    if (!this.direccionSeleccionada) {
+      alert('Debes seleccionar una dirección de envío');
+      return;
+    }
+
+    if (!this.metodoPagoSeleccionado) {
+      alert('Debes seleccionar un método de pago');
+      return;
+    }
+
+    if (!this.carrito || this.carrito.items.length === 0) {
+      alert('No hay productos en el carrito');
+      return;
+    }
+
+    this.procesandoPago = true;
+
+    // Simular procesamiento de pago
+    setTimeout(() => {
+      const compra = {
+        items: this.carrito!.items,
+        total: this.carrito!.subtotal,
+        direccion: this.direccionSeleccionada,
+        metodo_pago: this.metodoPagoSeleccionado,
+        fecha: new Date()
+      };
+
+      console.log('✅ Compra confirmada:', compra);
+
+      this.procesandoPago = false;
+      this.cerrarModalCheckout();
+      
+      // Vaciar el carrito después de la compra
+      this.vaciarCarrito();
+      
+      alert('¡Compra realizada exitosamente! 🎉');
+      this.router.navigate(['/perfil']);
+    }, 2000);
   }
 
   // ===== CONTINUAR COMPRANDO =====

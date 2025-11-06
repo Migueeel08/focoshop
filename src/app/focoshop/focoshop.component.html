@@ -36,6 +36,7 @@
           <div class="user-menu" [class.open]="userMenuOpen">
             <div class="user-name-header">{{ userName }}</div>
 
+            <!-- ✅ OPCIONES CON HOVER MORADO -->
             <button (click)="irPerfil()">
               <i class="fa fa-user"></i> Mi perfil
             </button>
@@ -50,6 +51,7 @@
 
             <div class="divider"></div>
 
+            <!-- ✅ CERRAR SESIÓN CON HOVER ROJO -->
             <button class="logout-btn" (click)="logout()">
               <i class="fa fa-sign-out-alt"></i> Cerrar sesión
             </button>
@@ -76,11 +78,6 @@
       </button>
     </div>
 
-    <div class="menu-search">
-      <i class="fa fa-search"></i>
-      <input type="text" placeholder="Buscar categoría..." />
-    </div>
-
     <ul class="categorias-list">
       @for (cat of categorias; track cat.nombre; let i = $index) {
         <li class="categoria-item" [class.active]="i === categoriaSeleccionada">
@@ -97,7 +94,7 @@
           @if (cat.subcategorias?.length && i === categoriaSeleccionada) {
             <ul class="subcategorias">
               @for (sub of cat.subcategorias; track sub) {
-                <li class="subcategoria-item">
+                <li class="subcategoria-item" (click)="seleccionarSubcategoria(sub)">
                   <i class="fa fa-angle-right"></i>
                   {{ sub }}
                 </li>
@@ -109,7 +106,7 @@
     </ul>
 
     <div class="menu-footer">
-      <button class="btn-ver-todas">
+      <button class="btn-ver-todas" (click)="toggleMenu()">
         <i class="fa fa-grip-horizontal"></i>
         Ver todas las categorías
       </button>
@@ -122,7 +119,7 @@
     <span>CATEGORÍAS</span>
   </button>
 
-  <!-- CARRUSEL DE CATEGORÍAS -->
+  <!-- CARRUSEL DE CATEGORÍAS - ✅ SIN IMÁGENES -->
   <div class="carrusel-container">
     <button (click)="anterior()" class="arrow-btn left">
       <i class="fa fa-chevron-left"></i>
@@ -131,7 +128,9 @@
     <div class="categoria-grid" #categoriaGrid>
       @for (cat of categorias; track cat.nombre; let i = $index) {
         <div class="categoria-card" [class.active]="i === categoriaSeleccionada" (click)="seleccionarCategoria(i)">
-          <img [src]="cat.imagen" [alt]="cat.nombre" />
+          <div class="categoria-icon">
+            <i class="fa fa-tag"></i>
+          </div>
           <p>{{ cat.nombre }}</p>
         </div>
       }
@@ -218,13 +217,28 @@
       </div>
 
       <div class="filtro-seccion">
-        <h4 class="filtro-subtitulo">Precio</h4>
-        <div class="precio-inputs">
-          <input type="number" placeholder="Mínimo" [(ngModel)]="filtros.precioMin" (change)="aplicarFiltros()" />
-          <span>-</span>
-          <input type="number" placeholder="Máximo" [(ngModel)]="filtros.precioMax" (change)="aplicarFiltros()" />
-        </div>
-      </div>
+  <h4 class="filtro-subtitulo">Precio</h4>
+  <div class="precio-inputs">
+    <input 
+      type="number" 
+      placeholder="Mínimo" 
+      [(ngModel)]="filtros.precioMin" 
+      (change)="aplicarFiltros()" 
+      min="0" 
+      step="100"
+    />
+    <span>-</span>
+    <input 
+      type="number" 
+      placeholder="Máximo" 
+      [(ngModel)]="filtros.precioMax" 
+      (change)="aplicarFiltros()" 
+      min="0" 
+      step="100"
+    />
+  </div>
+</div>
+
 
       @if (marcasDisponibles.length > 0) {
         <div class="filtro-seccion">
