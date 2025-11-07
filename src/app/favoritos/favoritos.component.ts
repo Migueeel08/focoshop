@@ -77,19 +77,16 @@ export class FavoritosComponent implements OnInit, OnDestroy {
   };
 
   constructor(private router: Router, private http: HttpClient) {
-    console.log('🔧 Constructor de FavoritosComponent ejecutado');
+    console.log('🔧 FavoritosComponent Constructor');
   }
 
   ngOnInit() {
-    console.log('🚀 ngOnInit ejecutado');
+    console.log('🚀 FavoritosComponent ngOnInit');
     this.verificarUsuario();
     
     if (this.userId) {
-      console.log('👤 Usuario ID:', this.userId);
       this.cargarFavoritos();
       this.cargarContadorCarrito();
-    } else {
-      console.warn('⚠️ No hay usuario logueado');
     }
 
     window.addEventListener('storage', this.storageListener);
@@ -98,7 +95,6 @@ export class FavoritosComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    console.log('🔚 ngOnDestroy ejecutado');
     window.removeEventListener('storage', this.storageListener);
     window.removeEventListener('favoritosActualizado', this.favoritosListener as EventListener);
     window.removeEventListener('carritoActualizado', this.carritoListener as EventListener);
@@ -106,11 +102,9 @@ export class FavoritosComponent implements OnInit, OnDestroy {
 
   // ===== VERIFICAR USUARIO =====
   verificarUsuario() {
-    console.log('🔍 Verificando usuario...');
     const userData = localStorage.getItem('user');
     
     if (!userData) {
-      console.warn('❌ No hay datos de usuario, redirigiendo a login');
       this.router.navigate(['/login']);
       return;
     }
@@ -123,36 +117,21 @@ export class FavoritosComponent implements OnInit, OnDestroy {
       this.userImage = parsed.imagen && parsed.imagen.trim() !== '' 
         ? parsed.imagen 
         : 'assets/img/profile.jpeg';
-      
-      console.log('✅ Usuario verificado:', {
-        userId: this.userId,
-        userName: this.userName,
-        isLoggedIn: this.isLoggedIn
-      });
     } catch (error) {
-      console.error('❌ Error al parsear usuario:', error);
+      console.error('Error al parsear usuario:', error);
       this.router.navigate(['/login']);
     }
   }
 
   // ===== CARGAR FAVORITOS =====
   cargarFavoritos() {
-    if (!this.userId) {
-      console.warn('⚠️ No se puede cargar favoritos sin userId');
-      return;
-    }
+    if (!this.userId) return;
 
-    console.log('📥 Cargando favoritos para usuario:', this.userId);
     this.cargando = true;
-    
     const url = `${this.apiUrl}/favoritos?id_usuario=${this.userId}`;
-    console.log('🔗 URL:', url);
 
     this.http.get<Favorito[]>(url).subscribe({
       next: (data) => {
-        console.log('✅ Favoritos recibidos:', data);
-        console.log('📊 Cantidad:', data.length);
-        
         this.favoritos = data.map(fav => ({
           ...fav,
           producto: {
@@ -164,15 +143,9 @@ export class FavoritosComponent implements OnInit, OnDestroy {
         this.contadorFavoritos = this.favoritos.length;
         this.aplicarFiltro();
         this.cargando = false;
-        
-        console.log('✅ Favoritos procesados:', this.favoritos);
       },
       error: (error) => {
-        console.error('❌ Error al cargar favoritos:', error);
-        console.error('📝 Status:', error.status);
-        console.error('📝 Message:', error.message);
-        console.error('📝 Error completo:', error);
-        
+        console.error('Error al cargar favoritos:', error);
         this.favoritos = [];
         this.contadorFavoritos = 0;
         this.cargando = false;
@@ -197,7 +170,6 @@ export class FavoritosComponent implements OnInit, OnDestroy {
     this.http.get<any>(`${this.apiUrl}/carrito/count?id_usuario=${this.userId}`).subscribe({
       next: (data) => {
         this.contadorCarrito = data.total_productos || 0;
-        console.log('🛒 Contador carrito:', this.contadorCarrito);
       },
       error: (error) => {
         console.error('Error al cargar contador del carrito:', error);
@@ -208,15 +180,12 @@ export class FavoritosComponent implements OnInit, OnDestroy {
 
   // ===== CAMBIAR FILTRO =====
   cambiarFiltro(filtro: string) {
-    console.log('🔄 Cambiando filtro a:', filtro);
     this.filtroActivo = filtro;
     this.aplicarFiltro();
   }
 
   // ===== APLICAR FILTRO =====
   aplicarFiltro() {
-    console.log('🔍 Aplicando filtro:', this.filtroActivo);
-    
     switch (this.filtroActivo) {
       case 'todos':
         this.favoritosFiltrados = [...this.favoritos];
@@ -244,8 +213,6 @@ export class FavoritosComponent implements OnInit, OnDestroy {
       default:
         this.favoritosFiltrados = [...this.favoritos];
     }
-    
-    console.log('✅ Productos filtrados:', this.favoritosFiltrados.length);
   }
 
   // ===== ELIMINAR FAVORITO =====
@@ -254,19 +221,15 @@ export class FavoritosComponent implements OnInit, OnDestroy {
 
     if (!confirm('¿Eliminar este producto de tus favoritos?')) return;
 
-    console.log('🗑️ Eliminando favorito:', idFavorito);
-
     this.http.delete(`${this.apiUrl}/favoritos/${idFavorito}`).subscribe({
       next: () => {
-        console.log('✅ Favorito eliminado');
         this.favoritos = this.favoritos.filter(fav => fav.id_favorito !== idFavorito);
         this.contadorFavoritos = this.favoritos.length;
         this.aplicarFiltro();
-        
         window.dispatchEvent(new Event('favoritosActualizado'));
       },
       error: (error) => {
-        console.error('❌ Error al eliminar favorito:', error);
+        console.error('Error al eliminar favorito:', error);
         alert('Error al eliminar el favorito. Intenta de nuevo.');
       }
     });
@@ -279,20 +242,16 @@ export class FavoritosComponent implements OnInit, OnDestroy {
 
   // ===== ELIMINAR TODOS LOS FAVORITOS =====
   eliminarTodosFavoritos() {
-    console.log('🗑️ Eliminando todos los favoritos del usuario:', this.userId);
-    
     this.http.delete(`${this.apiUrl}/favoritos/usuario/${this.userId}`).subscribe({
       next: () => {
-        console.log('✅ Todos los favoritos eliminados');
         this.favoritos = [];
         this.favoritosFiltrados = [];
         this.contadorFavoritos = 0;
         this.cerrarModal();
-        
         window.dispatchEvent(new Event('favoritosActualizado'));
       },
       error: (error) => {
-        console.error('❌ Error al eliminar favoritos:', error);
+        console.error('Error al eliminar favoritos:', error);
         alert('Error al eliminar los favoritos. Intenta de nuevo.');
         this.cerrarModal();
       }
@@ -310,23 +269,21 @@ export class FavoritosComponent implements OnInit, OnDestroy {
     }
 
     const item = {
-      id_usuario: this.userId,
       id_producto: producto.id_producto,
-      cantidad: 1
+      cantidad: 1,
+      color: null,
+      talla: null,
+      precio_unitario: producto.precio
     };
 
-    console.log('🛒 Agregando al carrito:', item);
-
-    this.http.post(`${this.apiUrl}/carrito`, item).subscribe({
+    this.http.post(`${this.apiUrl}/carrito/?id_usuario=${this.userId}`, item).subscribe({
       next: () => {
-        console.log('✅ Producto agregado al carrito');
         alert(`${producto.nombre} agregado al carrito`);
-        
         this.cargarContadorCarrito();
         window.dispatchEvent(new Event('carritoActualizado'));
       },
       error: (error) => {
-        console.error('❌ Error al agregar al carrito:', error);
+        console.error('Error al agregar al carrito:', error);
         if (error.status === 400) {
           alert('Este producto ya está en tu carrito');
         } else {
@@ -344,7 +301,6 @@ export class FavoritosComponent implements OnInit, OnDestroy {
 
   // ===== NAVEGACIÓN =====
   verDetalleProducto(idProducto: number) {
-    console.log('🔗 Navegando a producto:', idProducto);
     this.router.navigate(['/producto', idProducto]);
   }
 

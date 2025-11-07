@@ -46,7 +46,6 @@
           <div class="user-menu" [class.open]="userMenuOpen">
             <div class="user-name-header">{{ userName }}</div>
 
-            <!-- OPCIONES CON HOVER MORADO -->
             <button (click)="irPerfil()">
               <i class="fa fa-user"></i> Mi perfil
             </button>
@@ -61,7 +60,6 @@
 
             <div class="divider"></div>
 
-            <!-- CERRAR SESIÓN CON HOVER ROJO -->
             <button class="logout-btn" (click)="logout()">
               <i class="fa fa-sign-out-alt"></i> Cerrar sesión
             </button>
@@ -73,68 +71,7 @@
     </div>
   </header>
 
-  <!-- OVERLAY OSCURO -->
-  <div class="menu-overlay" [class.active]="menuAbierto" (click)="toggleMenu()"></div>
-
-  <!-- MENÚ LATERAL MEJORADO CON SUBCATEGORÍAS -->
-  <aside class="menu-categorias" [class.open]="menuAbierto">
-    <div class="menu-header">
-      <div class="menu-titulo">
-        <i class="fa fa-th-large"></i>
-        <h3>Todas las Categorías</h3>
-      </div>
-      <button class="btn-cerrar-menu" (click)="toggleMenu()">
-        <i class="fa fa-times"></i>
-      </button>
-    </div>
-
-    <ul class="categorias-list">
-      @for (cat of categorias; track cat.nombre; let i = $index) {
-        <li class="categoria-item">
-          <div class="categoria-principal" (click)="toggleCategoriaMenu(i)">
-            <div class="categoria-info">
-              <i [class]="getIconoCategoria(cat.nombre)"></i>
-              <span>{{ cat.nombre }}</span>
-            </div>
-            @if (cat.subcategorias?.length) {
-              <i class="fa fa-chevron-down arrow-icon" [class.rotate]="categoriaMenuAbierta === i"></i>
-            }
-          </div>
-
-          <!-- SUBCATEGORÍAS EXPANDIBLES -->
-          @if (cat.subcategorias?.length && categoriaMenuAbierta === i) {
-            <ul class="subcategorias">
-              <li class="subcategoria-item subcategoria-todas" (click)="seleccionarCategoriaCompleta(i)">
-                <i class="fa fa-th"></i>
-                Ver todas en {{ cat.nombre }}
-              </li>
-              @for (sub of cat.subcategorias; track sub) {
-                <li class="subcategoria-item" (click)="seleccionarSubcategoriaDesdeMenu(i, sub)">
-                  <i class="fa fa-angle-right"></i>
-                  {{ sub }}
-                </li>
-              }
-            </ul>
-          }
-        </li>
-      }
-    </ul>
-
-    <div class="menu-footer">
-      <button class="btn-ver-todas" (click)="toggleMenu()">
-        <i class="fa fa-times-circle"></i>
-        Cerrar menú
-      </button>
-    </div>
-  </aside>
-
-  <!-- BOTÓN DE MENÚ DE CATEGORÍAS -->
-  <button class="btn-menu-categorias" (click)="toggleMenu()">
-    <i class="fa fa-bars"></i> 
-    <span>CATEGORÍAS</span>
-  </button>
-
-  <!-- CARRUSEL DE CATEGORÍAS MEJORADO -->
+  <!-- CARRUSEL DE CATEGORÍAS -->
   <div class="carrusel-container">
     <button (click)="anterior()" class="arrow-btn left">
       <i class="fa fa-chevron-left"></i>
@@ -159,7 +96,7 @@
     </button>
   </div>
 
-  <!-- SUBCATEGORÍAS -->
+  <!-- SUBCATEGORÍAS (SE DESPLIEGA CUANDO SE SELECCIONA UNA CATEGORÍA) -->
   @if (categorias[categoriaSeleccionada]?.subcategorias?.length) {
     <div class="subcategorias-container">
       <h3 class="subcategorias-titulo">
@@ -167,6 +104,14 @@
         Subcategorías de {{ categorias[categoriaSeleccionada].nombre }}
       </h3>
       <div class="subcategorias-grid">
+        <button 
+          class="subcategoria-btn todas"
+          [class.active]="!subcategoriaSeleccionada"
+          (click)="seleccionarSubcategoria(null)"
+        >
+          <i class="fa fa-th"></i>
+          Ver todas
+        </button>
         @for (sub of categorias[categoriaSeleccionada].subcategorias; track sub) {
           <button 
             class="subcategoria-btn"
@@ -177,14 +122,6 @@
             {{ sub }}
           </button>
         }
-        <button 
-          class="subcategoria-btn todas"
-          [class.active]="!subcategoriaSeleccionada"
-          (click)="seleccionarSubcategoria(null)"
-        >
-          <i class="fa fa-th"></i>
-          Ver todas
-        </button>
       </div>
     </div>
   }
@@ -234,7 +171,6 @@
         </label>
       </div>
 
-      <!-- FILTROS DE PRECIO MEJORADOS CON VALIDACIÓN -->
       <div class="filtro-seccion">
         <h4 class="filtro-subtitulo">Precio</h4>
         <div class="precio-inputs">

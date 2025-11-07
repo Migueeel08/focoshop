@@ -24,7 +24,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
   // ===== CATEGORÍAS =====
   categorias: any[] = [];
   categoriasCargadas = false;
-  categoriaMenuAbierta: number | null = null;
 
   // ===== PRODUCTOS =====
   productos: any[] = [];
@@ -34,7 +33,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
   categoriaSeleccionada = 0;
   subcategoriaSeleccionada: string | null = null;
   busqueda = '';
-  menuAbierto = false;
 
   @ViewChild('categoriaGrid') categoriaGrid!: ElementRef;
 
@@ -132,33 +130,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     return iconos[nombreCategoria.toUpperCase()] || 'fa fa-tag';
   }
 
-  toggleCategoriaMenu(index: number) {
-    if (this.categoriaMenuAbierta === index) {
-      this.categoriaMenuAbierta = null;
-    } else {
-      this.categoriaMenuAbierta = index;
-    }
-  }
-
-  seleccionarCategoriaCompleta(index: number) {
-    this.categoriaSeleccionada = index;
-    this.subcategoriaSeleccionada = null;
-    this.menuAbierto = false;
-    this.categoriaMenuAbierta = null;
-    this.scrollCategoriaCentrada(index);
-    this.limpiarFiltros();
-    this.filtrarProductos();
-  }
-
-  seleccionarSubcategoriaDesdeMenu(categoriaIndex: number, subcategoria: string) {
-    this.categoriaSeleccionada = categoriaIndex;
-    this.subcategoriaSeleccionada = subcategoria;
-    this.menuAbierto = false;
-    this.categoriaMenuAbierta = null;
-    this.scrollCategoriaCentrada(categoriaIndex);
-    this.aplicarFiltros();
-  }
-
   validarPrecioMinimo() {
     this.errorPrecio = '';
     
@@ -191,7 +162,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     this.http.get<any>(`${this.apiUrl}/carrito/count?id_usuario=${this.userId}`).subscribe({
       next: (data) => {
         this.contadorCarrito = data.total_productos || 0;
-        console.log('🛒 Contador carrito:', this.contadorCarrito);
       },
       error: (error) => {
         console.error('Error al cargar contador:', error);
@@ -206,7 +176,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     this.http.get<any>(`${this.apiUrl}/favoritos/count?id_usuario=${this.userId}`).subscribe({
       next: (data) => {
         this.contadorFavoritos = data.total_favoritos || 0;
-        console.log('💜 Contador favoritos:', this.contadorFavoritos);
       },
       error: (error) => {
         console.error('Error al cargar contador favoritos:', error);
@@ -215,7 +184,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     });
   }
 
-  // ✅ IR AL CARRITO
   irAlCarrito() {
     if (!this.isLoggedIn) {
       alert('Debes iniciar sesión para ver tu carrito');
@@ -225,7 +193,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     this.router.navigate(['/carrito']);
   }
 
-  // ✅ IR A FAVORITOS - CORREGIDO (SIN CERRAR MENÚ)
   irFavoritos() {
     if (!this.isLoggedIn) {
       alert('Debes iniciar sesión para ver tus favoritos');
@@ -238,6 +205,8 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
   cargarCategorias() {
     this.http.get<any[]>(`${this.apiUrl}/categorias`).subscribe({
       next: (data) => {
+        console.log('📦 Datos RAW del backend:', data);
+        
         this.categorias = data.map(cat => ({
           id_categoria: cat.id_categoria,
           nombre: cat.nombre,
@@ -245,7 +214,11 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
           subcategorias: cat.subcategorias || []
         }));
         this.categoriasCargadas = true;
-        console.log('Categorías cargadas:', this.categorias);
+        
+        console.log('✅ Categorías procesadas:', this.categorias);
+        console.log('🔍 Primera categoría subcategorías:', this.categorias[0]?.subcategorias);
+        console.log('📊 Total categorías:', this.categorias.length);
+        
         this.filtrarProductos();
       },
       error: (error) => {
@@ -292,17 +265,12 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     
     this.http.get<any[]>(url).subscribe({
       next: (data) => {
-        console.log('✅ Datos recibidos del backend:', data);
-        
         const productosFiltradosPorVendedor = data.filter(prod => {
           if (this.isLoggedIn && this.userId) {
             return prod.id_vendedor !== this.userId;
           }
           return true;
         });
-        
-        console.log(`📦 Productos totales: ${data.length}`);
-        console.log(`✅ Productos filtrados (sin los del vendedor): ${productosFiltradosPorVendedor.length}`);
         
         this.productos = productosFiltradosPorVendedor.map(prod => ({
           id_producto: prod.id_producto,
@@ -330,7 +298,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
         this.productosCargando = false;
         this.extraerMarcas();
         this.filtrarProductos();
-        console.log('Productos procesados:', this.productos);
       },
       error: (error) => {
         console.error('Error al cargar productos:', error);
@@ -342,21 +309,11 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   construirUrlImagen(imagen: string | null): string {
-    if (!imagen) {
-      return 'assets/img/producto-default.jpg';
-    }
-    if (imagen.startsWith('http')) {
-      return imagen;
-    }
-    if (imagen.startsWith('assets/')) {
-      return imagen;
-    }
-    if (imagen.startsWith('data:image')) {
-      return imagen;
-    }
-    if (imagen.startsWith('/uploads/')) {
-      return `http://localhost:8000${imagen}`;
-    }
+    if (!imagen) return 'assets/img/producto-default.jpg';
+    if (imagen.startsWith('http')) return imagen;
+    if (imagen.startsWith('assets/')) return imagen;
+    if (imagen.startsWith('data:image')) return imagen;
+    if (imagen.startsWith('/uploads/')) return `http://localhost:8000${imagen}`;
     return 'assets/img/producto-default.jpg';
   }
 
@@ -390,7 +347,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     }
 
     const busquedaNormalizada = this.normalizarTexto(this.busqueda);
-    
     let filtrados: any[];
     
     if (busquedaNormalizada.trim() !== '') {
@@ -450,7 +406,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     filtrados = this.ordenarProductosArray(filtrados);
 
     this.productosFiltrados = filtrados;
-    console.log('✅ Productos filtrados:', filtrados.length, 'Búsqueda:', this.busqueda);
   }
 
   aplicarFiltrosAdicionales(productos: any[]): any[] {
@@ -530,27 +485,20 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   seleccionarCategoria(index: number) {
+    console.log('🎯 Categoría seleccionada:', index);
+    console.log('📂 Categoría:', this.categorias[index]);
+    console.log('📋 Subcategorías disponibles:', this.categorias[index]?.subcategorias);
+    console.log('🔢 Cantidad subcategorías:', this.categorias[index]?.subcategorias?.length);
+    
     this.categoriaSeleccionada = index;
     this.subcategoriaSeleccionada = null;
     this.scrollCategoriaCentrada(index);
-    this.limpiarFiltros();
-    this.filtrarProductos();
-    this.menuAbierto = false;
-  }
-
-  seleccionarDesdeCarrusel(index: number) {
-    this.categoriaSeleccionada = index;
-    this.subcategoriaSeleccionada = null;
-    this.scrollCategoriaCentrada(index);
-    this.menuAbierto = false;
     this.limpiarFiltros();
     this.filtrarProductos();
   }
 
   seleccionarSubcategoria(subcategoria: string | null) {
     this.subcategoriaSeleccionada = subcategoria;
-    console.log('Subcategoría seleccionada:', subcategoria);
-    this.menuAbierto = false;
     this.aplicarFiltros();
   }
 
@@ -591,19 +539,8 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     this.router.navigate(['/producto', producto.id_producto]);
   }
 
-  toggleMenu() {
-    this.menuAbierto = !this.menuAbierto;
-    if (!this.menuAbierto) {
-      this.categoriaMenuAbierta = null;
-    }
-  }
-
   irALogin() {
     this.router.navigate(['/login']);
-  }
-
-  irARegistro() {
-    this.router.navigate(['/register']);
   }
 
   irConfiguracion() {
@@ -672,19 +609,9 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
   clickFuera(event: MouseEvent) {
     const target = event.target as HTMLElement;
     const clickedInsideUserInfo = target.closest('.user-info');
-    const clickedInsideMenu = target.closest('.menu-categorias');
-    const clickedMenuButton = target.closest('.btn-menu-categorias');
     
     if (!clickedInsideUserInfo && this.userMenuOpen) {
       this.userMenuOpen = false;
-    }
-
-    if (!clickedInsideMenu && !clickedMenuButton && this.menuAbierto) {
-      const clickedOverlay = target.closest('.menu-overlay');
-      if (clickedOverlay) {
-        this.menuAbierto = false;
-        this.categoriaMenuAbierta = null;
-      }
     }
   }
 }
