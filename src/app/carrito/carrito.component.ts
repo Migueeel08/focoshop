@@ -1,7 +1,8 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { StripeCheckoutService } from '../services/stripe-checkout.service';
 
 // Interfaces locales
 interface ItemCarrito {
@@ -36,7 +37,7 @@ interface CarritoResumen {
   templateUrl: './carrito.component.html',
   styleUrl: './carrito.component.css'
 })
-export class CarritoComponent implements OnInit {
+export class CarritoComponent implements OnInit, OnDestroy {
   
   private apiUrl = 'http://localhost:8000/api';
   
@@ -51,7 +52,7 @@ export class CarritoComponent implements OnInit {
   userImage: string = 'assets/img/user-icon.png';
   userMenuOpen: boolean = false;
 
-  // ===== MODAL DE CHECKOUT ===== ✅ NUEVO
+  // ===== MODAL DE CHECKOUT =====
   modalCheckoutVisible: boolean = false;
   direcciones: any[] = [];
   metodosPago: any[] = [];
@@ -59,9 +60,16 @@ export class CarritoComponent implements OnInit {
   metodoPagoSeleccionado: any = null;
   procesandoPago: boolean = false;
 
+  // ===== STRIPE =====
+  mostrarFormularioStripe: boolean = false;
+  procesandoStripe: boolean = false;
+  errorStripe: string = '';
+  stripeInicializado: boolean = false;
+
   constructor(
     private router: Router,
-    private http: HttpClient
+    private http: HttpClient,
+    private stripeService: StripeCheckoutService
   ) {}
 
   ngOnInit(): void {
@@ -70,6 +78,12 @@ export class CarritoComponent implements OnInit {
       this.cargarCarrito();
     } else {
       this.router.navigate(['/login']);
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.stripeInicializado) {
+      this.stripeService.destroyElements();
     }
   }
 
@@ -92,7 +106,7 @@ export class CarritoComponent implements OnInit {
           parsed.imagen && parsed.imagen.trim() !== ''
             ? parsed.imagen
             : 'assets/img/profile.jpeg';
-      } catch (error: unknown) {
+      } catch (error) {
         console.error('Error al cargar usuario:', error);
         this.logout();
       }
@@ -105,12 +119,12 @@ export class CarritoComponent implements OnInit {
   cargarCarrito(): void {
     this.cargando = true;
     this.http.get<CarritoResumen>(`${this.apiUrl}/carrito/usuario/${this.userId}`).subscribe({
-      next: (carrito: CarritoResumen) => {
+      next: (carrito) => {
         this.carrito = carrito;
         this.cargando = false;
         console.log('✅ Carrito cargado:', carrito);
       },
-      error: (error: unknown) => {
+      error: (error) => {
         console.error('❌ Error al cargar carrito:', error);
         this.cargando = false;
         this.carrito = null;
@@ -132,7 +146,7 @@ export class CarritoComponent implements OnInit {
       next: () => {
         this.cargarCarrito();
       },
-      error: (error: unknown) => {
+      error: (error) => {
         console.error('Error al actualizar cantidad:', error);
         alert('Error al actualizar cantidad');
       }
@@ -152,7 +166,7 @@ export class CarritoComponent implements OnInit {
       next: () => {
         this.cargarCarrito();
       },
-      error: (error: unknown) => {
+      error: (error) => {
         console.error('Error al actualizar cantidad:', error);
         alert('Error al actualizar cantidad');
       }
@@ -170,10 +184,9 @@ export class CarritoComponent implements OnInit {
         this.cargarCarrito();
         console.log('✅ Producto eliminado del carrito');
         
-        // Emitir evento para actualizar el contador
         window.dispatchEvent(new CustomEvent('carritoActualizado'));
       },
-      error: (error: unknown) => {
+      error: (error) => {
         console.error('Error al eliminar item:', error);
         alert('Error al eliminar producto');
       }
@@ -191,19 +204,17 @@ export class CarritoComponent implements OnInit {
         this.cargarCarrito();
         console.log('✅ Carrito vaciado');
         
-        // Emitir evento para actualizar el contador
         window.dispatchEvent(new CustomEvent('carritoActualizado'));
       },
-      error: (error: unknown) => {
+      error: (error) => {
         console.error('Error al vaciar carrito:', error);
         alert('Error al vaciar carrito');
       }
     });
   }
 
-  // ===== PROCEDER AL PAGO ===== ✅ ABRE MODAL
+  // ===== PROCEDER AL PAGO =====
   procederAlPago(): void {
-    // Verificar que hay items disponibles
     const itemsDisponibles = this.carrito?.items.filter(item => item.producto_disponible);
     
     if (!itemsDisponibles || itemsDisponibles.length === 0) {
@@ -216,7 +227,7 @@ export class CarritoComponent implements OnInit {
     this.cargarMetodosPagoUsuario();
   }
 
-  // ===== CARGAR DIRECCIONES DEL USUARIO ===== ✅ NUEVO
+  // ===== CARGAR DIRECCIONES DEL USUARIO =====
   cargarDireccionesUsuario(): void {
     console.log('🔍 Cargando direcciones para usuario:', this.userId);
     
@@ -236,7 +247,7 @@ export class CarritoComponent implements OnInit {
     });
   }
 
-  // ===== CARGAR MÉTODOS DE PAGO DEL USUARIO ===== ✅ NUEVO
+  // ===== CARGAR MÉTODOS DE PAGO DEL USUARIO =====
   cargarMetodosPagoUsuario(): void {
     console.log('🔍 Cargando métodos de pago para usuario:', this.userId);
     
@@ -244,10 +255,6 @@ export class CarritoComponent implements OnInit {
       next: (metodos) => {
         console.log('✅ Métodos de pago recibidos:', metodos);
         this.metodosPago = metodos;
-        
-        if (metodos.length > 0) {
-          this.metodoPagoSeleccionado = metodos[0];
-        }
       },
       error: (error) => {
         console.error('❌ Error cargando métodos de pago:', error);
@@ -256,24 +263,141 @@ export class CarritoComponent implements OnInit {
     });
   }
 
-  // ===== CERRAR MODAL ===== ✅ NUEVO
+  // ===== CERRAR MODAL =====
   cerrarModalCheckout(): void {
     this.modalCheckoutVisible = false;
     this.direccionSeleccionada = null;
     this.metodoPagoSeleccionado = null;
+    this.mostrarFormularioStripe = false;
+    this.errorStripe = '';
+    if (this.stripeInicializado) {
+      this.stripeService.destroyElements();
+      this.stripeInicializado = false;
+    }
   }
 
-  // ===== SELECCIONAR DIRECCIÓN ===== ✅ NUEVO
+  // ===== SELECCIONAR DIRECCIÓN =====
   seleccionarDireccion(direccion: any): void {
     this.direccionSeleccionada = direccion;
   }
 
-  // ===== SELECCIONAR MÉTODO DE PAGO ===== ✅ NUEVO
+  // ===== SELECCIONAR MÉTODO DE PAGO =====
   seleccionarMetodoPago(metodo: any): void {
     this.metodoPagoSeleccionado = metodo;
+    if (this.mostrarFormularioStripe) {
+      this.mostrarFormularioStripe = false;
+      if (this.stripeInicializado) {
+        this.stripeService.destroyElements();
+        this.stripeInicializado = false;
+      }
+    }
   }
 
-  // ===== DETECTAR MARCA DE TARJETA ===== ✅ NUEVO
+  // ===== PAGAR CON NUEVA TARJETA (STRIPE) =====
+  async pagarConNuevaTarjeta() {
+    this.metodoPagoSeleccionado = null;
+    this.mostrarFormularioStripe = true;
+    
+    setTimeout(() => {
+      const stripeSection = document.querySelector('.stripe-payment-section');
+      if (stripeSection) {
+        stripeSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+    
+    setTimeout(async () => {
+      try {
+        await this.stripeService.initializeStripe('card-element-carrito');
+        this.stripeInicializado = true;
+        console.log('✅ Stripe inicializado para nueva tarjeta');
+      } catch (error) {
+        console.error('❌ Error al inicializar Stripe:', error);
+        this.errorStripe = 'Error al cargar el formulario de pago';
+      }
+    }, 300);
+  }
+
+  // ===== PROCESAR PAGO CON STRIPE =====
+  async procesarPagoConStripe() {
+    if (!this.direccionSeleccionada) {
+      alert('Debes seleccionar una dirección de envío');
+      return;
+    }
+
+    if (!this.carrito) {
+      alert('No hay productos en el carrito');
+      return;
+    }
+
+    this.procesandoStripe = true;
+    this.errorStripe = '';
+
+    try {
+      const paymentIntentData = {
+        amount: this.carrito.subtotal,
+        id_usuario: this.userId,
+        id_producto: this.carrito.items[0].id_producto,
+        cantidad: this.carrito.total_productos,
+        descripcion: `Compra de ${this.carrito.total_productos} productos`
+      };
+
+      console.log('📤 Creando PaymentIntent...', paymentIntentData);
+
+      const response = await this.stripeService
+        .createPaymentIntent(paymentIntentData)
+        .toPromise();
+
+      console.log('✅ PaymentIntent creado:', response);
+
+      const paymentIntent = await this.stripeService.confirmCardPayment(
+        response.client_secret
+      );
+
+      console.log('✅ Pago confirmado:', paymentIntent);
+
+      const confirmData = {
+        payment_intent_id: paymentIntent.id,
+        id_usuario: this.userId,
+        id_producto: this.carrito.items[0].id_producto,
+        cantidad: this.carrito.total_productos,
+        precio_total: this.carrito.subtotal,
+        id_direccion: this.direccionSeleccionada.id_direccion
+      };
+
+      const ventaResponse = await this.stripeService
+        .confirmPayment(confirmData)
+        .toPromise();
+
+      console.log('✅ Venta registrada:', ventaResponse);
+
+      this.procesandoStripe = false;
+      this.cerrarModalCheckout();
+      this.stripeService.destroyElements();
+      
+      await this.http.delete(`${this.apiUrl}/carrito/usuario/${this.userId}`).toPromise();
+      window.dispatchEvent(new CustomEvent('carritoActualizado'));
+      
+      alert('¡Pago exitoso! 🎉 Tu compra ha sido procesada.');
+      this.router.navigate(['/perfil']);
+
+    } catch (error: any) {
+      console.error('❌ Error en el pago:', error);
+      this.procesandoStripe = false;
+      this.errorStripe = error.message || 'Error al procesar el pago. Intenta de nuevo.';
+    }
+  }
+
+  // ===== CANCELAR FORMULARIO STRIPE =====
+  cancelarStripe() {
+    this.mostrarFormularioStripe = false;
+    this.errorStripe = '';
+    if (this.stripeInicializado) {
+      this.stripeService.destroyElements();
+      this.stripeInicializado = false;
+    }
+  }
+
+  // ===== DETECTAR MARCA DE TARJETA =====
   detectarMarcaTarjeta(banco: string): string {
     if (!banco) return 'generic';
     
@@ -301,7 +425,7 @@ export class CarritoComponent implements OnInit {
     return 'generic';
   }
 
-  // ===== OBTENER LOGO DE TARJETA ===== ✅ NUEVO
+  // ===== OBTENER LOGO DE TARJETA =====
   obtenerLogoTarjeta(metodo: any): string {
     let marca = 'generic';
 
@@ -324,7 +448,7 @@ export class CarritoComponent implements OnInit {
     return logos[marca] || logos['generic'];
   }
 
-  // ===== OBTENER NOMBRE DE MARCA ===== ✅ NUEVO
+  // ===== OBTENER NOMBRE DE MARCA =====
   obtenerNombreMarca(metodo: any): string {
     if (!metodo.banco) return 'Tarjeta';
     
@@ -345,12 +469,12 @@ export class CarritoComponent implements OnInit {
     return nombres[marca] || metodo.banco;
   }
 
-  // ===== CALCULAR TOTAL ===== ✅ NUEVO
+  // ===== CALCULAR TOTAL =====
   calcularTotal(): number {
     return this.carrito?.subtotal || 0;
   }
 
-  // ===== CONFIRMAR COMPRA ===== ✅ NUEVO
+  // ===== CONFIRMAR COMPRA (con método guardado) =====
   confirmarCompra(): void {
     if (!this.direccionSeleccionada) {
       alert('Debes seleccionar una dirección de envío');
@@ -358,7 +482,7 @@ export class CarritoComponent implements OnInit {
     }
 
     if (!this.metodoPagoSeleccionado) {
-      alert('Debes seleccionar un método de pago');
+      alert('Debes seleccionar un método de pago o usar "Pagar con nueva tarjeta"');
       return;
     }
 
@@ -369,7 +493,6 @@ export class CarritoComponent implements OnInit {
 
     this.procesandoPago = true;
 
-    // Simular procesamiento de pago
     setTimeout(() => {
       const compra = {
         items: this.carrito!.items,
@@ -384,7 +507,6 @@ export class CarritoComponent implements OnInit {
       this.procesandoPago = false;
       this.cerrarModalCheckout();
       
-      // Vaciar el carrito después de la compra
       this.vaciarCarrito();
       
       alert('¡Compra realizada exitosamente! 🎉');

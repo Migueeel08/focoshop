@@ -250,7 +250,7 @@
     }
   </div>
 
-  <!-- ===== MODAL DE CHECKOUT ===== ✅ NUEVO -->
+  <!-- ===== MODAL DE CHECKOUT ===== ✅ CON STRIPE -->
   @if (modalCheckoutVisible) {
     <div class="modal-overlay" (click)="cerrarModalCheckout()">
       <div class="modal-checkout" (click)="$event.stopPropagation()">
@@ -380,17 +380,83 @@
                     </div>
                   </div>
                 }
+                
+                <!-- BOTÓN PAGAR CON NUEVA TARJETA (STRIPE) -->
+                <div class="metodo-card agregar-nuevo-stripe" (click)="pagarConNuevaTarjeta()">
+                  <div class="agregar-icono stripe-icon">
+                    <i class="fas fa-credit-card"></i>
+                  </div>
+                  <div class="agregar-texto">
+                    <p class="agregar-titulo">
+                      <i class="fas fa-bolt"></i> Pagar con nueva tarjeta
+                    </p>
+                    <p class="agregar-descripcion">Procesado de forma segura por Stripe</p>
+                  </div>
+                  <div class="agregar-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                  </div>
+                </div>
+
+                <!-- BOTÓN AGREGAR MÉTODO DE PAGO (guardar para después) -->
+                <div class="metodo-card agregar-nuevo" (click)="irConfiguracion()">
+                  <div class="agregar-icono">
+                    <i class="fas fa-plus-circle"></i>
+                  </div>
+                  <div class="agregar-texto">
+                    <p class="agregar-titulo">Guardar nuevo método de pago</p>
+                    <p class="agregar-descripcion">Añade una tarjeta para usar después</p>
+                  </div>
+                  <div class="agregar-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                  </div>
+                </div>
               </div>
             } @else {
               <div class="sin-datos">
                 <i class="fas fa-credit-card fa-2x"></i>
                 <p>No tienes métodos de pago guardados</p>
-                <button class="btn-agregar-dato" (click)="irConfiguracion()">
-                  <i class="fas fa-plus"></i> Agregar método de pago
+                <button class="btn-agregar-dato" (click)="pagarConNuevaTarjeta()">
+                  <i class="fas fa-credit-card"></i> Pagar con nueva tarjeta
                 </button>
               </div>
             }
           </div>
+
+          <!-- ============================================
+               💳 FORMULARIO DE PAGO CON STRIPE
+               ============================================ -->
+          @if (mostrarFormularioStripe) {
+            <div class="seccion-checkout stripe-payment-section">
+              <h3><i class="fas fa-credit-card"></i> Ingresa los datos de tu tarjeta</h3>
+              
+              <div class="stripe-form-container">
+                <!-- Elemento de Stripe (se monta automáticamente) -->
+                <div id="card-element-carrito" class="stripe-card-element"></div>
+                
+                <!-- Mensajes de error -->
+                @if (errorStripe) {
+                  <div class="stripe-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    {{ errorStripe }}
+                  </div>
+                }
+                
+                <!-- Información de seguridad -->
+                <div class="stripe-security-info">
+                  <i class="fas fa-lock"></i>
+                  <span>Pago seguro procesado por Stripe</span>
+                </div>
+                
+                <!-- Tarjetas aceptadas -->
+                <div class="tarjetas-aceptadas">
+                  <span class="texto-tarjetas">Aceptamos:</span>
+                  <img src="https://cdn.jsdelivr.net/gh/aaronfagan/svg-credit-card-payment-icons/flat/visa.svg" alt="Visa">
+                  <img src="https://cdn.jsdelivr.net/gh/aaronfagan/svg-credit-card-payment-icons/flat/mastercard.svg" alt="Mastercard">
+                  <img src="https://cdn.jsdelivr.net/gh/aaronfagan/svg-credit-card-payment-icons/flat/amex.svg" alt="American Express">
+                </div>
+              </div>
+            </div>
+          }
 
           <!-- TOTAL -->
           <div class="seccion-total">
@@ -412,20 +478,39 @@
         </div>
 
         <div class="modal-footer-checkout">
-          <button class="btn-cancelar" (click)="cerrarModalCheckout()">
-            <i class="fas fa-times"></i> Cancelar
-          </button>
-          <button 
-            class="btn-confirmar-compra" 
-            (click)="confirmarCompra()"
-            [disabled]="procesandoPago || !direccionSeleccionada || !metodoPagoSeleccionado"
-          >
-            @if (procesandoPago) {
-              <i class="fas fa-spinner fa-spin"></i> Procesando...
-            } @else {
-              <i class="fas fa-lock"></i> Confirmar Compra
-            }
-          </button>
+          @if (mostrarFormularioStripe) {
+            <!-- Botones cuando se muestra formulario de Stripe -->
+            <button class="btn-cancelar" (click)="cancelarStripe()" [disabled]="procesandoStripe">
+              <i class="fas fa-times"></i> Cancelar
+            </button>
+            <button 
+              class="btn-confirmar-compra" 
+              (click)="procesarPagoConStripe()"
+              [disabled]="procesandoStripe || !direccionSeleccionada"
+            >
+              @if (procesandoStripe) {
+                <i class="fas fa-spinner fa-spin"></i> Procesando pago...
+              } @else {
+                <i class="fas fa-lock"></i> Pagar ${{ carrito!.subtotal | number:'1.0-0' }}
+              }
+            </button>
+          } @else {
+            <!-- Botones normales -->
+            <button class="btn-cancelar" (click)="cerrarModalCheckout()">
+              <i class="fas fa-times"></i> Cancelar
+            </button>
+            <button 
+              class="btn-confirmar-compra" 
+              (click)="confirmarCompra()"
+              [disabled]="procesandoPago || !direccionSeleccionada"
+            >
+              @if (procesandoPago) {
+                <i class="fas fa-spinner fa-spin"></i> Procesando...
+              } @else {
+                <i class="fas fa-lock"></i> Confirmar Compra
+              }
+            </button>
+          }
         </div>
       </div>
     </div>
