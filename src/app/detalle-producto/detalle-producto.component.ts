@@ -16,6 +16,7 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
   
   // ===== API =====
   private apiUrl = 'http://localhost:8000/api';
+  baseUrl = 'http://localhost:8000'; // ✅ Hacer público para usar en template
 
   // ===== PRODUCTO =====
   producto: any = null;
@@ -134,6 +135,7 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
 
         this.cargando = false;
         
+        // ✅ Cargar recomendaciones después de cargar el producto
         this.cargarRecomendaciones();
       },
       error: (error) => {
@@ -366,7 +368,6 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
   // ===== SELECCIONAR MÉTODO DE PAGO =====
   seleccionarMetodoPago(metodo: any) {
     this.metodoPagoSeleccionado = metodo;
-    // Ocultar formulario de Stripe si estaba visible
     if (this.mostrarFormularioStripe) {
       this.mostrarFormularioStripe = false;
       if (this.stripeInicializado) {
@@ -465,19 +466,14 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Si tiene método seleccionado, procesar con ese método
     this.procesarPagoConMetodoGuardado();
   }
 
   // ===== PAGAR CON NUEVA TARJETA (STRIPE) =====
   async pagarConNuevaTarjeta() {
-    // Deseleccionar método actual
     this.metodoPagoSeleccionado = null;
-    
-    // Mostrar formulario de Stripe
     this.mostrarFormularioStripe = true;
     
-    // Scroll hacia abajo para ver el formulario
     setTimeout(() => {
       const stripeSection = document.querySelector('.stripe-payment-section');
       if (stripeSection) {
@@ -485,7 +481,6 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
       }
     }, 100);
     
-    // Inicializar Stripe Elements
     setTimeout(async () => {
       try {
         await this.stripeService.initializeStripe('card-element');
@@ -504,7 +499,6 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
     this.errorStripe = '';
 
     try {
-      // 1. Crear PaymentIntent en el backend
       const paymentIntentData = {
         amount: this.calcularTotal(),
         id_usuario: this.userId,
@@ -521,14 +515,12 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
 
       console.log('✅ PaymentIntent creado:', response);
 
-      // 2. Confirmar el pago con la tarjeta ingresada
       const paymentIntent = await this.stripeService.confirmCardPayment(
         response.client_secret
       );
 
       console.log('✅ Pago confirmado:', paymentIntent);
 
-      // 3. Registrar la venta en el backend
       const confirmData = {
         payment_intent_id: paymentIntent.id,
         id_usuario: this.userId,
@@ -544,12 +536,10 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
 
       console.log('✅ Venta registrada:', ventaResponse);
 
-      // 4. Mostrar modal de éxito
       this.procesandoStripe = false;
       this.cerrarModalCheckout();
       this.stripeService.destroyElements();
       
-      // Mostrar modal de compra exitosa
       this.modalCompraExitosaVisible = true;
 
     } catch (error: any) {
@@ -573,13 +563,11 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
   async procesarPagoConMetodoGuardado() {
     this.procesandoPago = true;
 
-    // Simular procesamiento
     setTimeout(() => {
       console.log('✅ Pago procesado con método guardado');
       this.procesandoPago = false;
       this.cerrarModalCheckout();
       
-      // Mostrar modal de compra exitosa
       this.modalCompraExitosaVisible = true;
     }, 2000);
   }
@@ -676,13 +664,14 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
     
     this.cargandoRecomendaciones = true;
     
-    const url = `${this.apiUrl}/recomendaciones/productos/${this.productId}/recomendaciones?limite=4${this.userId ? '&id_usuario=' + this.userId : ''}`;
+    const url = `${this.apiUrl}/recomendaciones/productos/${this.productId}/recomendaciones?limite=6`;
     
-    this.http.get<any>(url).subscribe({
-      next: (response) => {
-        console.log('🤖 Recomendaciones IA:', response);
+    this.http.get<any[]>(url).subscribe({
+      next: (recomendaciones) => {
+        console.log('🤖 Recomendaciones IA recibidas:', recomendaciones);
         
-        this.productosRecomendados = response.recomendaciones.map((prod: any) => ({
+        // Construir URLs de imágenes
+        this.productosRecomendados = recomendaciones.map((prod: any) => ({
           ...prod,
           imagen: this.construirUrlImagen(prod.imagen)
         }));
@@ -690,7 +679,7 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
         this.cargandoRecomendaciones = false;
       },
       error: (error) => {
-        console.error('Error al cargar recomendaciones:', error);
+        console.error('❌ Error al cargar recomendaciones:', error);
         this.cargandoRecomendaciones = false;
         this.productosRecomendados = [];
       }
@@ -701,6 +690,12 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
   verProductoRecomendado(productoId: number) {
     this.router.navigate(['/producto', productoId]).then(() => {
       window.scrollTo(0, 0);
+      // Recargar datos del nuevo producto
+      this.productId = productoId;
+      this.cargarProducto();
+      if (this.userId) {
+        this.verificarFavorito();
+      }
     });
   }
 

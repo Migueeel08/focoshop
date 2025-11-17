@@ -273,19 +273,22 @@
   }
 
   <!-- ============================================
-       ✨ SECCIÓN DE PRODUCTOS RECOMENDADOS
+       ✨ SECCIÓN DE PRODUCTOS RECOMENDADOS CON IA
        ============================================ -->
   @if (producto && !cargando) {
     <div class="recomendaciones-section">
       <div class="recomendaciones-header">
-        <h2>También te podría interesar</h2>
-        <p>Productos seleccionados especialmente para ti</p>
+        <h2>
+          <i class="fas fa-brain"></i>
+          También te podría interesar
+        </h2>
+        <p>Productos seleccionados especialmente para ti con Inteligencia Artificial</p>
       </div>
 
       @if (cargandoRecomendaciones) {
         <div class="recomendaciones-loading">
           <i class="fas fa-spinner fa-spin fa-2x"></i>
-          <p>Cargando productos...</p>
+          <p>Analizando productos similares...</p>
         </div>
       }
 
@@ -294,27 +297,37 @@
           @for (prod of productosRecomendados; track prod.id_producto) {
             <div class="producto-recomendado-card" (click)="verProductoRecomendado(prod.id_producto)">
               <div class="producto-rec-imagen">
-                <img [src]="prod.imagen" [alt]="prod.nombre" />
+                <img [src]="prod.imagen" [alt]="prod.nombre" onerror="this.src='assets/img/producto-default.jpg'" />
+                
+                <!-- Badge de similitud alta -->
+                @if (prod.similitud >= 0.8) {
+                  <div class="badge-similitud">
+                    <i class="fas fa-fire"></i>
+                    {{ (prod.similitud * 100) | number:'1.0-0' }}% Similar
+                  </div>
+                }
               </div>
               
               <div class="producto-rec-info">
+                <p class="categoria-rec">{{ prod.categoria }}</p>
                 <h3>{{ prod.nombre }}</h3>
                 
                 @if (prod.marca) {
-                  <p class="marca-rec">{{ prod.marca }}</p>
+                  <p class="marca-rec">
+                    <i class="fas fa-tag"></i>
+                    {{ prod.marca }}
+                  </p>
                 }
                 
                 <div class="precio-rec">
                   <span class="precio">${{ prod.precio | number:'1.0-0' }}</span>
                 </div>
                 
-                <div class="rating-rec">
-                  <div class="estrellas-rec">
-                    @for (star of [1,2,3,4,5]; track star) {
-                      <i [class]="star <= prod.calificacion ? 'fas fa-star' : 'far fa-star'"></i>
-                    }
-                  </div>
-                  <span class="ventas-rec">{{ prod.ventas }} vendidos</span>
+                <div class="stock-rec">
+                  <i class="fas fa-box"></i>
+                  <span [class.bajo-stock]="prod.stock < 5">
+                    {{ prod.stock }} disponibles
+                  </span>
                 </div>
               </div>
             </div>
@@ -324,8 +337,9 @@
 
       @if (!cargandoRecomendaciones && productosRecomendados.length === 0) {
         <div class="sin-recomendaciones">
-          <i class="fas fa-box-open fa-3x"></i>
+          <i class="fas fa-robot fa-3x"></i>
           <p>No hay recomendaciones disponibles en este momento</p>
+          <span class="texto-secundario">Estamos trabajando en encontrar productos perfectos para ti</span>
         </div>
       }
     </div>
@@ -625,18 +639,14 @@
             }
           </div>
 
-          <!-- ============================================
-               💳 FORMULARIO DE PAGO CON STRIPE
-               ============================================ -->
+          <!-- FORMULARIO DE PAGO CON STRIPE -->
           @if (mostrarFormularioStripe) {
             <div class="seccion-checkout stripe-payment-section">
               <h3><i class="fas fa-credit-card"></i> Ingresa los datos de tu tarjeta</h3>
               
               <div class="stripe-form-container">
-                <!-- Elemento de Stripe (se monta automáticamente) -->
                 <div id="card-element" class="stripe-card-element"></div>
                 
-                <!-- Mensajes de error -->
                 @if (errorStripe) {
                   <div class="stripe-error">
                     <i class="fas fa-exclamation-circle"></i>
@@ -644,13 +654,11 @@
                   </div>
                 }
                 
-                <!-- Información de seguridad -->
                 <div class="stripe-security-info">
                   <i class="fas fa-lock"></i>
                   <span>Pago seguro procesado por Stripe</span>
                 </div>
                 
-                <!-- Tarjetas aceptadas -->
                 <div class="tarjetas-aceptadas">
                   <span class="texto-tarjetas">Aceptamos:</span>
                   <img src="https://cdn.jsdelivr.net/gh/aaronfagan/svg-credit-card-payment-icons/flat/visa.svg" alt="Visa">
@@ -682,7 +690,6 @@
 
         <div class="modal-footer-checkout">
           @if (mostrarFormularioStripe) {
-            <!-- Botones cuando se muestra formulario de Stripe -->
             <button class="btn-cancelar" (click)="cancelarStripe()" [disabled]="procesandoStripe">
               <i class="fas fa-times"></i> Cancelar
             </button>
@@ -698,7 +705,6 @@
               }
             </button>
           } @else {
-            <!-- Botones normales -->
             <button class="btn-cancelar" (click)="cerrarModalCheckout()">
               <i class="fas fa-times"></i> Cancelar
             </button>
