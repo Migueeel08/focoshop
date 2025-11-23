@@ -79,7 +79,7 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
   // ===== MODAL DE CALIFICACIÓN =====
   mostrarModalReview: boolean = false;
   pedidoIdParaReview: number | null = null;
-  usuarioYaCalificó: boolean = false;  // ✅ NUEVO
+  usuarioYaCalificó: boolean = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -98,7 +98,7 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
         
         if (this.userId) {
           this.verificarFavorito();
-          this.verificarSiYaCalificó();  // ✅ NUEVO
+          this.verificarSiYaCalificó();
         }
       }
     });
@@ -110,15 +110,16 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ===== VERIFICAR SI YA CALIFICÓ =====
+  // ===== VERIFICAR SI YA CALIFICÓ ===== ✅ CORREGIDO
   verificarSiYaCalificó() {
     if (!this.userId || !this.productId) return;
 
-    this.http.get<any>(
-      `${this.apiUrl}/reviews/check/${this.productId}/${this.userId}`
+    this.http.get<any[]>(
+      `${this.apiUrl}/reviews/producto/${this.productId}`
     ).subscribe({
-      next: (response) => {
-        this.usuarioYaCalificó = response.ya_califico;
+      next: (reviews) => {
+        // Verificar si alguna review es del usuario actual
+        this.usuarioYaCalificó = reviews.some(review => review.id_usuario === this.userId);
         console.log('✅ Usuario ya calificó:', this.usuarioYaCalificó);
       },
       error: (error) => {
@@ -656,12 +657,15 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
     console.log('✅ Review creada:', review);
     this.mostrarModalReview = false;
     this.pedidoIdParaReview = null;
-    this.usuarioYaCalificó = true;  // ✅ Marcar que ya calificó
+    this.usuarioYaCalificó = true;
     
     // ✅ Actualizar la calificación del producto en la vista
     if (this.producto) {
-      this.producto.calificacion = review.calificacion || this.producto.calificacion;
       this.producto.reviews = (this.producto.reviews || 0) + 1;
+      
+      // Recalcular calificación promedio
+      const nuevaCalificacion = ((this.producto.calificacion * (this.producto.reviews - 1)) + review.calificacion) / this.producto.reviews;
+      this.producto.calificacion = nuevaCalificacion;
     }
     
     alert('¡Gracias por tu calificación! Tu opinión es muy importante para nosotros.');
@@ -783,7 +787,7 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
       this.cargarProducto();
       if (this.userId) {
         this.verificarFavorito();
-        this.verificarSiYaCalificó();  // ✅ También verificar al cambiar de producto
+        this.verificarSiYaCalificó();
       }
     });
   }
