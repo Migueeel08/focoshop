@@ -1,8 +1,14 @@
 <div class="login-container">
   <!-- 🔹 ALERTA MODAL CENTRADO -->
-  <div *ngIf="alertaVisible" class="alerta-modal">
-    <div class="alerta-card" [ngClass]="tipoAlerta">
+  <div *ngIf="alertaVisible" class="alerta-modal" (click)="cerrarAlerta()">
+    <div class="alerta-card" [ngClass]="tipoAlerta" (click)="$event.stopPropagation()">
+      <div class="alerta-icon">
+        <i [class]="tipoAlerta === 'exito' ? 'fas fa-check-circle' : tipoAlerta === 'error' ? 'fas fa-times-circle' : 'fas fa-info-circle'"></i>
+      </div>
       <h3>{{ mensajeAlerta }}</h3>
+      <button class="btn-cerrar-alerta" (click)="cerrarAlerta()">
+        <i class="fas fa-times"></i>
+      </button>
     </div>
   </div>
 
@@ -13,8 +19,13 @@
     <div class="login-card">
       <!-- LOGO -->
       <div class="logo-section">
-        <h1 class="logo-text">FOCOSHOP</h1>
-        <i class="fa fa-shopping-cart"></i>
+        <div class="logo-icon">
+          <i class="fas fa-shopping-cart"></i>
+        </div>
+        <div class="logo-info">
+          <h1 class="logo-text">FOCOSHOP</h1>
+          <p class="logo-subtitle">Tu tienda favorita</p>
+        </div>
       </div>
 
       <!-- TABS DE LOGIN Y REGISTRO -->
@@ -24,6 +35,7 @@
           [class.active]="!isRegisterMode"
           (click)="switchToLogin()"
           type="button">
+          <i class="fas fa-sign-in-alt"></i>
           Iniciar Sesión
         </button>
         <button 
@@ -31,6 +43,7 @@
           [class.active]="isRegisterMode"
           (click)="switchToRegister()"
           type="button">
+          <i class="fas fa-user-plus"></i>
           Registrarse
         </button>
       </div>
@@ -44,34 +57,227 @@
       </div>
 
       <!-- FORMULARIO -->
-      <form (ngSubmit)="onSubmit()">
-        <!-- Campos solo para registro -->
-        <div *ngIf="isRegisterMode" class="input-group">
-          <label>Nombre</label>
-          <input type="text" [(ngModel)]="nombre" name="nombre" required />
-        </div>
+      <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+        
+        <!-- ===== CAMPOS DE REGISTRO ===== -->
+        <div *ngIf="isRegisterMode" class="input-row">
+          <!-- Nombre -->
+          <div class="input-group half">
+            <label>
+              <i class="fas fa-user"></i>
+              Nombre
+            </label>
+            <input 
+              type="text" 
+              [(ngModel)]="nombre" 
+              name="nombre" 
+              placeholder="Juan"
+              [class.error]="nombreInvalido"
+              (blur)="validarNombre()"
+              required 
+            />
+            <span *ngIf="nombreInvalido" class="error-message">
+              <i class="fas fa-exclamation-circle"></i>
+              El nombre es obligatorio
+            </span>
+          </div>
 
-        <div *ngIf="isRegisterMode" class="input-group">
-          <label>Apellido</label>
-          <input type="text" [(ngModel)]="apellido" name="apellido" required />
+          <!-- Apellido -->
+          <div class="input-group half">
+            <label>
+              <i class="fas fa-user"></i>
+              Apellido
+            </label>
+            <input 
+              type="text" 
+              [(ngModel)]="apellido" 
+              name="apellido" 
+              placeholder="Pérez"
+              [class.error]="apellidoInvalido"
+              (blur)="validarApellido()"
+              required 
+            />
+            <span *ngIf="apellidoInvalido" class="error-message">
+              <i class="fas fa-exclamation-circle"></i>
+              El apellido es obligatorio
+            </span>
+          </div>
         </div>
 
         <!-- Correo electrónico -->
         <div class="input-group">
-          <label>Correo Electrónico</label>
-          <input type="email" [(ngModel)]="email" name="email" required />
+          <label>
+            <i class="fas fa-envelope"></i>
+            Correo Electrónico
+          </label>
+          <input 
+            type="email" 
+            [(ngModel)]="email" 
+            name="email" 
+            placeholder="ejemplo@correo.com"
+            [class.error]="emailInvalido"
+            [class.success]="emailValido"
+            (input)="validarEmail()"
+            (blur)="validarEmail()"
+            required 
+          />
+          <span *ngIf="emailInvalido" class="error-message">
+            <i class="fas fa-exclamation-circle"></i>
+            {{ emailMensaje }}
+          </span>
+          <span *ngIf="emailValido && email" class="success-message">
+            <i class="fas fa-check-circle"></i>
+            Email válido
+          </span>
         </div>
 
         <!-- Contraseña -->
         <div class="input-group">
-          <label>Contraseña</label>
-          <input type="password" [(ngModel)]="contrasena" name="contrasena" required />
+          <label>
+            <i class="fas fa-lock"></i>
+            Contraseña
+          </label>
+          <div class="password-wrapper">
+            <input 
+              [type]="mostrarContrasena ? 'text' : 'password'" 
+              [(ngModel)]="contrasena" 
+              name="contrasena" 
+              placeholder="••••••••"
+              [class.error]="contrasenaInvalida"
+              [class.success]="contrasenaValida"
+              (input)="validarContrasena()"
+              (blur)="validarContrasena()"
+              required 
+            />
+            <button 
+              type="button" 
+              class="btn-toggle-password" 
+              (click)="toggleMostrarContrasena()"
+              tabindex="-1"
+            >
+              <i [class]="mostrarContrasena ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            </button>
+          </div>
+
+          <!-- BARRA DE SEGURIDAD (Solo en registro) -->
+          <div *ngIf="isRegisterMode && contrasena" class="password-strength">
+            <div class="strength-bar">
+              <div 
+                class="strength-fill" 
+                [style.width.%]="fuerzaContrasena"
+                [class.weak]="nivelSeguridad === 'débil'"
+                [class.medium]="nivelSeguridad === 'media'"
+                [class.strong]="nivelSeguridad === 'fuerte'"
+              ></div>
+            </div>
+            <div class="strength-text">
+              <span 
+                [class.weak]="nivelSeguridad === 'débil'"
+                [class.medium]="nivelSeguridad === 'media'"
+                [class.strong]="nivelSeguridad === 'fuerte'"
+              >
+                <i 
+                  [class]="nivelSeguridad === 'débil' ? 'fas fa-exclamation-triangle' : 
+                           nivelSeguridad === 'media' ? 'fas fa-shield-alt' : 
+                           'fas fa-shield-virus'"
+                ></i>
+                Seguridad: {{ nivelSeguridad }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Requisitos de contraseña (Solo en registro) -->
+          <div *ngIf="isRegisterMode && contrasena" class="password-requirements">
+            <div class="requirement" [class.met]="requisitos.longitud">
+              <i [class]="requisitos.longitud ? 'fas fa-check-circle' : 'fas fa-circle'"></i>
+              Mínimo 8 caracteres
+            </div>
+            <div class="requirement" [class.met]="requisitos.mayuscula">
+              <i [class]="requisitos.mayuscula ? 'fas fa-check-circle' : 'fas fa-circle'"></i>
+              Una mayúscula
+            </div>
+            <div class="requirement" [class.met]="requisitos.minuscula">
+              <i [class]="requisitos.minuscula ? 'fas fa-check-circle' : 'fas fa-circle'"></i>
+              Una minúscula
+            </div>
+            <div class="requirement" [class.met]="requisitos.numero">
+              <i [class]="requisitos.numero ? 'fas fa-check-circle' : 'fas fa-circle'"></i>
+              Un número
+            </div>
+            <div class="requirement" [class.met]="requisitos.especial">
+              <i [class]="requisitos.especial ? 'fas fa-check-circle' : 'fas fa-circle'"></i>
+              Un carácter especial (!@#$%^&*)
+            </div>
+          </div>
+
+          <span *ngIf="contrasenaInvalida && !isRegisterMode" class="error-message">
+            <i class="fas fa-exclamation-circle"></i>
+            La contraseña debe tener al menos 6 caracteres
+          </span>
+        </div>
+
+        <!-- Confirmar contraseña (Solo en registro) -->
+        <div *ngIf="isRegisterMode" class="input-group">
+          <label>
+            <i class="fas fa-lock"></i>
+            Confirmar Contraseña
+          </label>
+          <div class="password-wrapper">
+            <input 
+              [type]="mostrarConfirmarContrasena ? 'text' : 'password'" 
+              [(ngModel)]="confirmarContrasena" 
+              name="confirmarContrasena" 
+              placeholder="••••••••"
+              [class.error]="confirmarContrasenaInvalida"
+              [class.success]="confirmarContrasenaValida"
+              (input)="validarConfirmarContrasena()"
+              (blur)="validarConfirmarContrasena()"
+              required 
+            />
+            <button 
+              type="button" 
+              class="btn-toggle-password" 
+              (click)="toggleMostrarConfirmarContrasena()"
+              tabindex="-1"
+            >
+              <i [class]="mostrarConfirmarContrasena ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            </button>
+          </div>
+          <span *ngIf="confirmarContrasenaInvalida" class="error-message">
+            <i class="fas fa-exclamation-circle"></i>
+            Las contraseñas no coinciden
+          </span>
+          <span *ngIf="confirmarContrasenaValida && confirmarContrasena" class="success-message">
+            <i class="fas fa-check-circle"></i>
+            Las contraseñas coinciden
+          </span>
+        </div>
+
+        <!-- Recordarme (Solo en login) -->
+        <div *ngIf="!isRegisterMode" class="options-row">
+          <label class="checkbox-container">
+            <input type="checkbox" [(ngModel)]="recordarme" name="recordarme" />
+            <span class="checkmark"></span>
+            Recordarme
+          </label>
+          <a class="forgot-password">¿Olvidaste tu contraseña?</a>
         </div>
 
         <!-- BOTÓN PRINCIPAL -->
-        <button type="submit" class="btn-login">
-          {{ isRegisterMode ? 'REGISTRARME' : 'INICIAR SESIÓN' }}
-          <i class="fa fa-arrow-right"></i>
+        <button 
+          type="submit" 
+          class="btn-login"
+          [disabled]="!formularioValido()"
+          [class.disabled]="!formularioValido()"
+        >
+          <span *ngIf="!cargando">
+            {{ isRegisterMode ? 'CREAR CUENTA' : 'INICIAR SESIÓN' }}
+          </span>
+          <span *ngIf="cargando" class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            Procesando...
+          </span>
+          <i *ngIf="!cargando" class="fas fa-arrow-right"></i>
         </button>
       </form>
 
@@ -87,17 +293,61 @@
           Registrarse con Google
         </button>
       </div>
+
+      <!-- Footer -->
+      <div class="form-footer">
+        <p *ngIf="!isRegisterMode">
+          ¿No tienes cuenta? 
+          <a (click)="switchToRegister()">Regístrate aquí</a>
+        </p>
+        <p *ngIf="isRegisterMode">
+          ¿Ya tienes cuenta? 
+          <a (click)="switchToLogin()">Inicia sesión aquí</a>
+        </p>
+      </div>
     </div>
 
     <!-- COLUMNA DERECHA: ILUSTRACIÓN -->
     <div class="illustration-section">
       <div class="illustration-content">
+        <div class="welcome-text">
+          <h2 *ngIf="!isRegisterMode">¡Bienvenido de vuelta!</h2>
+          <h2 *ngIf="isRegisterMode">¡Únete a nosotros!</h2>
+          <p *ngIf="!isRegisterMode">Inicia sesión para continuar con tus compras</p>
+          <p *ngIf="isRegisterMode">Crea tu cuenta y descubre increíbles ofertas</p>
+        </div>
         <img src="assets/img/delivery-character.png" alt="Delivery" class="character-img" />
+        
+        <!-- Características -->
+        <div class="features">
+          <div class="feature">
+            <i class="fas fa-shipping-fast"></i>
+            <span>Envío rápido</span>
+          </div>
+          <div class="feature">
+            <i class="fas fa-shield-alt"></i>
+            <span>Compra segura</span>
+          </div>
+          <div class="feature">
+            <i class="fas fa-percent"></i>
+            <span>Mejores precios</span>
+          </div>
+        </div>
+
+        <!-- Iconos flotantes -->
         <div class="floating-icons">
-          <div class="icon-circle" style="--delay: 0s; --x: 50px; --y: 30px;">📦</div>
-          <div class="icon-circle" style="--delay: 1s; --x: -40px; --y: 60px;">🎁</div>
-          <div class="icon-circle" style="--delay: 2s; --x: 70px; --y: -20px;">⭐</div>
-          <div class="icon-circle" style="--delay: 1.5s; --x: -60px; --y: -40px;">💡</div>
+          <div class="icon-float" style="--delay: 0s; --x: 10%; --y: 20%;">
+            <i class="fas fa-shopping-bag"></i>
+          </div>
+          <div class="icon-float" style="--delay: 1s; --x: 80%; --y: 15%;">
+            <i class="fas fa-gift"></i>
+          </div>
+          <div class="icon-float" style="--delay: 2s; --x: 15%; --y: 75%;">
+            <i class="fas fa-star"></i>
+          </div>
+          <div class="icon-float" style="--delay: 1.5s; --x: 85%; --y: 70%;">
+            <i class="fas fa-heart"></i>
+          </div>
         </div>
       </div>
     </div>

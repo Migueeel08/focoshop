@@ -1,5 +1,5 @@
 <div class="detalle-container">
-  <!-- HEADER PRINCIPAL (mismo de FocoShop) -->
+  <!-- HEADER PRINCIPAL -->
   <header class="header">
     <div class="logo" (click)="volverInicio()">
       <span class="logo-text">FOCOSHOP</span>
@@ -64,7 +64,6 @@
     <div class="detalle-content">
       <!-- COLUMNA IZQUIERDA: IMÁGENES -->
       <div class="imagenes-seccion">
-        <!-- Miniaturas laterales -->
         <div class="miniaturas">
           <div 
             class="miniatura" 
@@ -75,30 +74,25 @@
           </div>
         </div>
 
-        <!-- Imagen principal -->
         <div class="imagen-principal">
           <img [src]="producto.imagen" [alt]="producto.nombre" />
           
-          <!-- Botón favorito -->
           <button class="btn-favorito" (click)="toggleFavorito()">
             <i [class]="esFavorito ? 'fas fa-heart filled' : 'far fa-heart'"></i>
           </button>
         </div>
       </div>
 
-      <!-- COLUMNA CENTRAL: INFORMACIÓN DEL PRODUCTO -->
+      <!-- COLUMNA CENTRAL: INFORMACIÓN -->
       <div class="info-seccion">
-        <!-- Condición y vendidos -->
         <div class="condicion-vendidos">
           <span class="condicion">{{ producto.condicion }}</span>
           <span class="separador">|</span>
           <span class="vendidos">+{{ producto.reviews || 0 }} vendidos</span>
         </div>
 
-        <!-- Nombre del producto -->
         <h1 class="producto-titulo">{{ producto.nombre }}</h1>
 
-        <!-- Rating -->
         <div class="rating-section">
           <span class="rating-numero">{{ producto.calificacion || 0 }}</span>
           <div class="estrellas">
@@ -109,7 +103,6 @@
           <span class="reviews-count">({{ producto.reviews || 0 }})</span>
         </div>
 
-        <!-- Precio -->
         <div class="precio-section">
           @if (producto.precio_anterior) {
             <span class="precio-anterior">
@@ -119,14 +112,11 @@
           <div class="precio-actual-container">
             <span class="precio-actual">${{ producto.precio | number:'1.0-0' }}</span>
             @if (producto.descuento) {
-              <span class="descuento">
-                {{ producto.descuento }}% OFF
-              </span>
+              <span class="descuento">{{ producto.descuento }}% OFF</span>
             }
           </div>
         </div>
 
-        <!-- Color (si aplica) -->
         @if (producto.color) {
           <div class="selector-color">
             <label>Color: <strong>{{ colorSeleccionado || producto.color }}</strong></label>
@@ -141,7 +131,6 @@
           </div>
         }
 
-        <!-- Talla (si aplica) -->
         @if (producto.talla) {
           <div class="selector-talla">
             <label>Talla: <strong>{{ tallaSeleccionada || producto.talla }}</strong></label>
@@ -157,7 +146,6 @@
           </div>
         }
 
-        <!-- Marca (si aplica) -->
         @if (producto.marca) {
           <div class="marca-info">
             <label>Marca:</label>
@@ -168,7 +156,6 @@
           </div>
         }
 
-        <!-- Descripción -->
         <div class="descripcion-section">
           <h3>Lo que tienes que saber de este producto</h3>
           <ul class="caracteristicas-lista">
@@ -194,59 +181,37 @@
       <!-- COLUMNA DERECHA: COMPRA -->
       <div class="compra-seccion">
         <div class="compra-card">
-          <!-- Stock disponible -->
           <div class="stock-info">
             <h3>Stock disponible</h3>
             <p class="stock-cantidad">
-              Cantidad: 
-              <strong>{{ producto.cantidad_disponible }}</strong>
+              Cantidad: <strong>{{ producto.cantidad_disponible }}</strong>
               @if (producto.cantidad_disponible <= 5) {
-                <span class="stock-bajo">
-                  ({{ producto.cantidad_disponible }} disponibles)
-                </span>
+                <span class="stock-bajo">({{ producto.cantidad_disponible }} disponibles)</span>
               }
             </p>
           </div>
 
-          <!-- Selector de cantidad -->
           <div class="cantidad-selector">
             <label>Cantidad:</label>
             <div class="cantidad-control">
-              <button 
-                class="btn-cantidad" 
-                (click)="decrementarCantidad()"
-                [disabled]="cantidadComprar <= 1"
-              >
+              <button class="btn-cantidad" (click)="decrementarCantidad()" [disabled]="cantidadComprar <= 1">
                 <i class="fas fa-minus"></i>
               </button>
-              <input 
-                type="number" 
-                [(ngModel)]="cantidadComprar" 
-                min="1" 
-                [max]="producto.cantidad_disponible"
-              />
-              <button 
-                class="btn-cantidad" 
-                (click)="incrementarCantidad()"
-                [disabled]="cantidadComprar >= producto.cantidad_disponible"
-              >
+              <input type="number" [(ngModel)]="cantidadComprar" min="1" [max]="producto.cantidad_disponible" />
+              <button class="btn-cantidad" (click)="incrementarCantidad()" [disabled]="cantidadComprar >= producto.cantidad_disponible">
                 <i class="fas fa-plus"></i>
               </button>
             </div>
             <span class="disponibles-text">(+{{ producto.cantidad_disponible }} disponibles)</span>
           </div>
 
-          <!-- Botones de acción -->
-          <button class="btn-comprar" (click)="comprarAhora()">
-            Comprar ahora
-          </button>
+          <button class="btn-comprar" (click)="comprarAhora()">Comprar ahora</button>
 
           <button class="btn-agregar-carrito" (click)="agregarAlCarrito()">
             <i class="fas fa-shopping-cart"></i>
             Agregar al carrito
           </button>
 
-          <!-- Info del vendedor -->
           <div class="vendedor-info">
             <div class="vendedor-header">
               <i class="fas fa-store"></i>
@@ -257,7 +222,6 @@
             </div>
           </div>
 
-          <!-- Garantías -->
           <div class="garantias-section">
             <div class="garantia-item">
               <i class="fas fa-shield-alt"></i>
@@ -272,9 +236,7 @@
     </div>
   }
 
-  <!-- ============================================
-       ✨ SECCIÓN DE PRODUCTOS RECOMENDADOS CON IA
-       ============================================ -->
+  <!-- RECOMENDACIONES IA -->
   @if (producto && !cargando) {
     <div class="recomendaciones-section">
       <div class="recomendaciones-header">
@@ -299,7 +261,6 @@
               <div class="producto-rec-imagen">
                 <img [src]="prod.imagen" [alt]="prod.nombre" onerror="this.src='assets/img/producto-default.jpg'" />
                 
-                <!-- Badge de similitud alta -->
                 @if (prod.similitud >= 0.8) {
                   <div class="badge-similitud">
                     <i class="fas fa-fire"></i>
@@ -325,9 +286,7 @@
                 
                 <div class="stock-rec">
                   <i class="fas fa-box"></i>
-                  <span [class.bajo-stock]="prod.stock < 5">
-                    {{ prod.stock }} disponibles
-                  </span>
+                  <span [class.bajo-stock]="prod.stock < 5">{{ prod.stock }} disponibles</span>
                 </div>
               </div>
             </div>
@@ -366,7 +325,7 @@
     </div>
   }
 
-  <!-- ===== MODAL PRODUCTO AGREGADO AL CARRITO ===== -->
+  <!-- MODAL PRODUCTO AGREGADO AL CARRITO -->
   @if (modalCarritoVisible && productoAgregado) {
     <div class="modal-overlay" (click)="cerrarModalCarrito()">
       <div class="modal-carrito-agregado" (click)="$event.stopPropagation()">
@@ -405,7 +364,7 @@
     </div>
   }
 
-  <!-- ===== MODAL DE COMPRA EXITOSA ===== -->
+  <!-- MODAL DE COMPRA EXITOSA -->
   @if (modalCompraExitosaVisible) {
     <div class="modal-overlay" (click)="cerrarModalCompraExitosa()">
       <div class="modal-compra-exitosa" (click)="$event.stopPropagation()">
@@ -473,7 +432,7 @@
     </div>
   }
 
-  <!-- ===== MODAL DE CHECKOUT ===== -->
+  <!-- MODAL DE CHECKOUT -->
   @if (modalCheckoutVisible) {
     <div class="modal-overlay" (click)="cerrarModalCheckout()">
       <div class="modal-checkout" (click)="$event.stopPropagation()">
@@ -510,7 +469,7 @@
             </div>
           </div>
 
-          <!-- INFORMACIÓN DEL COMPRADOR -->
+          <!-- INFO COMPRADOR -->
           <div class="seccion-checkout">
             <h3><i class="fas fa-user"></i> Información del comprador</h3>
             <div class="info-comprador">
@@ -524,7 +483,7 @@
             </div>
           </div>
 
-          <!-- DIRECCIÓN DE ENVÍO -->
+          <!-- DIRECCIÓN -->
           <div class="seccion-checkout">
             <h3><i class="fas fa-map-marker-alt"></i> Dirección de envío</h3>
             @if (direcciones.length > 0) {
@@ -576,13 +535,8 @@
                       <i [class]="metodoPagoSeleccionado?.id_metodo_pago === metodo.id_metodo_pago ? 'fas fa-check-circle' : 'far fa-circle'"></i>
                     </div>
                     
-                    <!-- Logo de la marca de tarjeta -->
                     <div class="tarjeta-logo">
-                      <img 
-                        [src]="obtenerLogoTarjeta(metodo)" 
-                        [alt]="obtenerNombreMarca(metodo)"
-                        class="logo-marca-tarjeta"
-                      />
+                      <img [src]="obtenerLogoTarjeta(metodo)" [alt]="obtenerNombreMarca(metodo)" class="logo-marca-tarjeta" />
                     </div>
                     
                     <div class="metodo-info">
@@ -598,7 +552,7 @@
                   </div>
                 }
                 
-                <!-- BOTÓN PAGAR CON NUEVA TARJETA (STRIPE) -->
+                <!-- PAGAR CON NUEVA TARJETA -->
                 <div class="metodo-card agregar-nuevo-stripe" (click)="pagarConNuevaTarjeta()">
                   <div class="agregar-icono stripe-icon">
                     <i class="fas fa-credit-card"></i>
@@ -614,7 +568,7 @@
                   </div>
                 </div>
 
-                <!-- BOTÓN AGREGAR MÉTODO DE PAGO (guardar para después) -->
+                <!-- AGREGAR MÉTODO -->
                 <div class="metodo-card agregar-nuevo" (click)="agregarMetodoPago()">
                   <div class="agregar-icono">
                     <i class="fas fa-plus-circle"></i>
@@ -639,7 +593,7 @@
             }
           </div>
 
-          <!-- FORMULARIO DE PAGO CON STRIPE -->
+          <!-- FORMULARIO STRIPE -->
           @if (mostrarFormularioStripe) {
             <div class="seccion-checkout stripe-payment-section">
               <h3><i class="fas fa-credit-card"></i> Ingresa los datos de tu tarjeta</h3>
@@ -693,11 +647,7 @@
             <button class="btn-cancelar" (click)="cancelarStripe()" [disabled]="procesandoStripe">
               <i class="fas fa-times"></i> Cancelar
             </button>
-            <button 
-              class="btn-confirmar-compra" 
-              (click)="procesarPagoConStripe()"
-              [disabled]="procesandoStripe"
-            >
+            <button class="btn-confirmar-compra" (click)="procesarPagoConStripe()" [disabled]="procesandoStripe">
               @if (procesandoStripe) {
                 <i class="fas fa-spinner fa-spin"></i> Procesando pago...
               } @else {
@@ -708,11 +658,7 @@
             <button class="btn-cancelar" (click)="cerrarModalCheckout()">
               <i class="fas fa-times"></i> Cancelar
             </button>
-            <button 
-              class="btn-confirmar-compra" 
-              (click)="confirmarCompra()"
-              [disabled]="procesandoPago || !direccionSeleccionada"
-            >
+            <button class="btn-confirmar-compra" (click)="confirmarCompra()" [disabled]="procesandoPago || !direccionSeleccionada">
               @if (procesandoPago) {
                 <i class="fas fa-spinner fa-spin"></i> Procesando...
               } @else {
@@ -723,5 +669,19 @@
         </div>
       </div>
     </div>
+  }
+
+  <!-- MODAL DE CALIFICACIÓN POST-COMPRA -->
+  @if (mostrarModalReview && producto) {
+    <app-review-modal
+      [visible]="mostrarModalReview"
+      [idProducto]="producto.id_producto"
+      [idUsuario]="userId"
+      [idPedido]="pedidoIdParaReview"
+      [nombreProducto]="producto.nombre"
+      [imagenProducto]="producto.imagen"
+      (cerrar)="onCerrarModalReview()"
+      (reviewCreada)="onReviewCreada($event)"
+    ></app-review-modal>
   }
 </div>

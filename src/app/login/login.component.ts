@@ -2,7 +2,7 @@ import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 
 declare var google: any;
 
@@ -14,29 +14,62 @@ declare var google: any;
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnInit, AfterViewInit {
+  // ===== MODOS =====
   isRegisterMode = false;
+  
+  // ===== CAMPOS DEL FORMULARIO =====
   nombre = '';
   apellido = '';
   email = '';
   contrasena = '';
-
+  confirmarContrasena = '';
+  recordarme = false;
+  
+  // ===== CONTROL DE VISIBILIDAD DE CONTRASEÑAS =====
+  mostrarContrasena = false;
+  mostrarConfirmarContrasena = false;
+  
+  // ===== VALIDACIONES =====
+  nombreInvalido = false;
+  apellidoInvalido = false;
+  emailInvalido = false;
+  emailValido = false;
+  emailMensaje = '';
+  contrasenaInvalida = false;
+  contrasenaValida = false;
+  confirmarContrasenaInvalida = false;
+  confirmarContrasenaValida = false;
+  
+  // ===== SEGURIDAD DE CONTRASEÑA =====
+  fuerzaContrasena = 0;
+  nivelSeguridad: 'débil' | 'media' | 'fuerte' = 'débil';
+  requisitos = {
+    longitud: false,
+    mayuscula: false,
+    minuscula: false,
+    numero: false,
+    especial: false
+  };
+  
+  // ===== ALERTA =====
   alertaVisible = false;
   mensajeAlerta = '';
   tipoAlerta: 'exito' | 'error' | 'info' = 'info';
+  
+  // ===== CARGANDO =====
+  cargando = false;
 
-  // 🔹 URL base del backend
+  // ===== API =====
   private apiUrl = 'http://localhost:8000/api';
-  private baseUrl = 'http://localhost:8000'; // URL base para imágenes
+  private baseUrl = 'http://localhost:8000';
 
   constructor(public router: Router, private http: HttpClient) {}
 
   ngOnInit(): void {
-    // Cargar el script de Google
     this.loadGoogleScript();
   }
 
   ngAfterViewInit(): void {
-    // Inicializar Google Sign-In después de que la vista esté lista
     setTimeout(() => {
       this.initializeGoogleSignIn();
     }, 500);
@@ -75,12 +108,10 @@ export class LoginComponent implements OnInit, AfterViewInit {
   }
 
   handleCredentialResponse(response: any): void {
-    // Decodificar el JWT token que Google nos envía
     const payload = this.parseJwt(response.credential);
     
     console.log('📦 Payload completo de Google:', payload);
 
-    // Enviar datos al backend
     const userData = {
       email: payload.email,
       nombre: payload.given_name || payload.name || 'Usuario',
@@ -97,7 +128,6 @@ export class LoginComponent implements OnInit, AfterViewInit {
         next: (response) => {
           console.log('✅ Login con Google exitoso:', response);
 
-          // Construir URL completa de la imagen
           let imagenUrl = response.imagen;
           
           if (response.imagen && !response.imagen.startsWith('http')) {
@@ -112,8 +142,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
             }
           }
 
-          // Guardar usuario completo CON ROL
-          const userData = {
+          const userDataFinal = {
             id: response.id_usuario,
             id_usuario: response.id_usuario,
             nombre: response.nombre,
@@ -124,28 +153,26 @@ export class LoginComponent implements OnInit, AfterViewInit {
             rol: response.rol
           };
 
-          console.log('💾 Guardando en localStorage:', userData);
+          console.log('💾 Guardando en localStorage:', userDataFinal);
 
-          localStorage.setItem('user', JSON.stringify(userData));
+          localStorage.setItem('user', JSON.stringify(userDataFinal));
           localStorage.setItem('email', response.email);
           localStorage.setItem('userId', response.id_usuario.toString());
           
-          // Emitir evento para actualizar el header
           window.dispatchEvent(new Event('storage'));
 
-          // Redirigir según el rol
           if (response.rol === 'admin') {
             console.log('🔐 Usuario ADMIN detectado, redirigiendo al panel admin...');
             this.mostrarAlerta(`¡Bienvenido Admin ${response.nombre}! 👑`, 'exito');
             setTimeout(() => {
               this.router.navigate(['/admin']);
-            }, 1000);
+            }, 1500);
           } else {
             console.log('👤 Usuario NORMAL detectado, redirigiendo a la tienda...');
-            this.mostrarAlerta(`¡Hola ${response.nombre}! Inicio de sesión correcto 🔥`, 'exito');
+            this.mostrarAlerta(`¡Hola ${response.nombre}! Bienvenido 🎉`, 'exito');
             setTimeout(() => {
               this.router.navigate(['/']);
-            }, 1000);
+            }, 1500);
           }
         },
         error: (error) => {
@@ -170,7 +197,123 @@ export class LoginComponent implements OnInit, AfterViewInit {
   }
 
   // ===========================
-  // Cambiar entre Login y Registro
+  // VALIDACIONES
+  // ===========================
+  validarNombre() {
+    this.nombreInvalido = this.nombre.trim() === '';
+  }
+
+  validarApellido() {
+    this.apellidoInvalido = this.apellido.trim() === '';
+  }
+
+  validarEmail() {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (this.email.trim() === '') {
+      this.emailInvalido = true;
+      this.emailValido = false;
+      this.emailMensaje = 'El email es obligatorio';
+    } else if (!emailRegex.test(this.email)) {
+      this.emailInvalido = true;
+      this.emailValido = false;
+      this.emailMensaje = 'Formato de email inválido';
+    } else {
+      this.emailInvalido = false;
+      this.emailValido = true;
+      this.emailMensaje = '';
+    }
+  }
+
+  validarContrasena() {
+    if (this.isRegisterMode) {
+      // Validación completa para registro
+      this.requisitos.longitud = this.contrasena.length >= 8;
+      this.requisitos.mayuscula = /[A-Z]/.test(this.contrasena);
+      this.requisitos.minuscula = /[a-z]/.test(this.contrasena);
+      this.requisitos.numero = /[0-9]/.test(this.contrasena);
+      this.requisitos.especial = /[!@#$%^&*(),.?":{}|<>]/.test(this.contrasena);
+      
+      // Calcular fuerza
+      let fuerza = 0;
+      if (this.requisitos.longitud) fuerza += 20;
+      if (this.requisitos.mayuscula) fuerza += 20;
+      if (this.requisitos.minuscula) fuerza += 20;
+      if (this.requisitos.numero) fuerza += 20;
+      if (this.requisitos.especial) fuerza += 20;
+      
+      this.fuerzaContrasena = fuerza;
+      
+      // Determinar nivel
+      if (fuerza <= 40) {
+        this.nivelSeguridad = 'débil';
+      } else if (fuerza <= 80) {
+        this.nivelSeguridad = 'media';
+      } else {
+        this.nivelSeguridad = 'fuerte';
+      }
+      
+      // Validación general
+      const todosRequisitos = Object.values(this.requisitos).every(r => r);
+      this.contrasenaInvalida = !todosRequisitos;
+      this.contrasenaValida = todosRequisitos;
+      
+      // Revalidar confirmación si ya se ingresó
+      if (this.confirmarContrasena) {
+        this.validarConfirmarContrasena();
+      }
+    } else {
+      // Validación simple para login
+      this.contrasenaInvalida = this.contrasena.length < 6;
+      this.contrasenaValida = this.contrasena.length >= 6;
+    }
+  }
+
+  validarConfirmarContrasena() {
+    if (this.confirmarContrasena === '') {
+      this.confirmarContrasenaInvalida = false;
+      this.confirmarContrasenaValida = false;
+    } else if (this.contrasena !== this.confirmarContrasena) {
+      this.confirmarContrasenaInvalida = true;
+      this.confirmarContrasenaValida = false;
+    } else {
+      this.confirmarContrasenaInvalida = false;
+      this.confirmarContrasenaValida = true;
+    }
+  }
+
+  formularioValido(): boolean {
+    if (this.isRegisterMode) {
+      return (
+        this.nombre.trim() !== '' &&
+        this.apellido.trim() !== '' &&
+        this.emailValido &&
+        this.contrasenaValida &&
+        this.confirmarContrasenaValida &&
+        !this.cargando
+      );
+    } else {
+      return (
+        this.emailValido &&
+        this.contrasena.length >= 6 &&
+        !this.cargando
+      );
+    }
+  }
+
+  // ===========================
+  // TOGGLE PASSWORD VISIBILITY
+  // ===========================
+  toggleMostrarContrasena() {
+    this.mostrarContrasena = !this.mostrarContrasena;
+  }
+
+  toggleMostrarConfirmarContrasena() {
+    this.mostrarConfirmarContrasena = !this.mostrarConfirmarContrasena;
+  }
+
+  // ===========================
+  // CAMBIAR MODO
   // ===========================
   toggleMode() {
     this.isRegisterMode = !this.isRegisterMode;
@@ -192,10 +335,33 @@ export class LoginComponent implements OnInit, AfterViewInit {
     this.apellido = '';
     this.email = '';
     this.contrasena = '';
+    this.confirmarContrasena = '';
+    this.recordarme = false;
+    
+    // Reset validaciones
+    this.nombreInvalido = false;
+    this.apellidoInvalido = false;
+    this.emailInvalido = false;
+    this.emailValido = false;
+    this.contrasenaInvalida = false;
+    this.contrasenaValida = false;
+    this.confirmarContrasenaInvalida = false;
+    this.confirmarContrasenaValida = false;
+    
+    // Reset seguridad
+    this.fuerzaContrasena = 0;
+    this.nivelSeguridad = 'débil';
+    this.requisitos = {
+      longitud: false,
+      mayuscula: false,
+      minuscula: false,
+      numero: false,
+      especial: false
+    };
   }
 
   // ===========================
-  // Mostrar alerta
+  // ALERTA
   // ===========================
   mostrarAlerta(mensaje: string, tipo: 'exito' | 'error' | 'info' = 'info') {
     this.mensajeAlerta = mensaje;
@@ -204,10 +370,19 @@ export class LoginComponent implements OnInit, AfterViewInit {
     setTimeout(() => this.alertaVisible = false, 3000);
   }
 
+  cerrarAlerta() {
+    this.alertaVisible = false;
+  }
+
   // ===========================
-  // Submit del formulario
+  // SUBMIT
   // ===========================
   onSubmit() {
+    if (!this.formularioValido()) {
+      this.mostrarAlerta('Por favor completa todos los campos correctamente', 'error');
+      return;
+    }
+
     if (this.isRegisterMode) {
       this.register();
     } else {
@@ -216,19 +391,10 @@ export class LoginComponent implements OnInit, AfterViewInit {
   }
 
   // ===========================
-  // Registro de usuario
+  // REGISTRO
   // ===========================
   register() {
-    // Validación básica
-    if (!this.nombre || !this.apellido || !this.email || !this.contrasena) {
-      this.mostrarAlerta('Por favor completa todos los campos', 'error');
-      return;
-    }
-
-    if (this.contrasena.length < 6) {
-      this.mostrarAlerta('La contraseña debe tener al menos 6 caracteres', 'error');
-      return;
-    }
+    this.cargando = true;
 
     const user = {
       nombre: this.nombre,
@@ -240,28 +406,26 @@ export class LoginComponent implements OnInit, AfterViewInit {
     this.http.post(`${this.apiUrl}/usuarios/register`, user).subscribe({
       next: (res) => {
         console.log('Usuario registrado:', res);
-        this.mostrarAlerta('Registro exitoso 🎉', 'exito');
+        this.cargando = false;
+        this.mostrarAlerta('¡Registro exitoso! Ahora puedes iniciar sesión 🎉', 'exito');
         setTimeout(() => {
           this.switchToLogin();
-        }, 1000);
+        }, 2000);
       },
       error: (err) => {
         console.error('Error al registrar:', err);
-        const mensaje = err.error?.detail || 'Error al registrarte 😢';
+        this.cargando = false;
+        const mensaje = err.error?.detail || 'Error al registrarte. Intenta de nuevo';
         this.mostrarAlerta(mensaje, 'error');
       }
     });
   }
 
   // ===========================
-  // Login - ACTUALIZADO CON ROLES
+  // LOGIN
   // ===========================
   login() {
-    // Validación básica
-    if (!this.email || !this.contrasena) {
-      this.mostrarAlerta('Por favor completa todos los campos', 'error');
-      return;
-    }
+    this.cargando = true;
 
     const credentials = {
       email: this.email,
@@ -275,8 +439,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
         console.log('✅ Login exitoso:', response);
         console.log('✅ Rol del usuario:', response.rol);
 
-        // Construir URL completa de la imagen
-        let imagenUrl = 'assets/img/profile.jpeg'; // Imagen por defecto
+        let imagenUrl = 'assets/img/profile.jpeg';
         
         if (response.imagen && response.imagen.trim() !== '') {
           if (response.imagen.startsWith('/uploads')) {
@@ -294,7 +457,6 @@ export class LoginComponent implements OnInit, AfterViewInit {
           }
         }
 
-        // Guardar usuario completo CON ROL
         const userData = {
           id: response.id_usuario,
           id_usuario: response.id_usuario,
@@ -312,27 +474,28 @@ export class LoginComponent implements OnInit, AfterViewInit {
         localStorage.setItem('email', response.email);
         localStorage.setItem('userId', response.id_usuario.toString());
         
-        // Emitir evento para actualizar el header
         window.dispatchEvent(new Event('storage'));
 
-        // Redirigir según el rol
+        this.cargando = false;
+
         if (response.rol === 'admin') {
           console.log('🔐 Usuario ADMIN detectado, redirigiendo al panel admin...');
           this.mostrarAlerta(`¡Bienvenido Admin ${response.nombre}! 👑`, 'exito');
           setTimeout(() => {
             this.router.navigate(['/admin']);
-          }, 1000);
+          }, 1500);
         } else {
           console.log('👤 Usuario NORMAL detectado, redirigiendo a la tienda...');
-          this.mostrarAlerta(`¡Hola ${response.nombre}! Inicio de sesión correcto 🔥`, 'exito');
+          this.mostrarAlerta(`¡Hola ${response.nombre}! Bienvenido 🎉`, 'exito');
           setTimeout(() => {
             this.router.navigate(['/']);
-          }, 1000);
+          }, 1500);
         }
       },
       error: (err) => {
         console.error('❌ Error al iniciar sesión:', err);
-        const mensaje = err.error?.detail || 'Credenciales incorrectas ❌';
+        this.cargando = false;
+        const mensaje = err.error?.detail || 'Credenciales incorrectas. Verifica tu email y contraseña';
         this.mostrarAlerta(mensaje, 'error');
       }
     });

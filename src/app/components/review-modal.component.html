@@ -1,0 +1,104 @@
+@if (visible) {
+  <div class="review-modal-overlay" (click)="cerrarModal()">
+    <div class="review-modal-container" (click)="$event.stopPropagation()">
+      
+      <!-- Header -->
+      <div class="review-modal-header">
+        <div class="review-success-icon">
+          <i class="fas fa-star"></i>
+        </div>
+        <h2>¡Califica tu compra! ⭐</h2>
+        <p class="review-subtitle">Tu opinión nos ayuda a mejorar</p>
+      </div>
+
+      <!-- Producto Info -->
+      @if (nombreProducto) {
+        <div class="review-producto-info">
+          <img [src]="imagenProducto" [alt]="nombreProducto" class="review-producto-imagen" />
+          <div class="review-producto-detalles">
+            <h3>{{ nombreProducto }}</h3>
+            <p>¿Qué te pareció este producto?</p>
+          </div>
+        </div>
+      }
+
+      <!-- Calificación con Estrellas -->
+      <div class="review-calificacion-section">
+        <p class="review-calificacion-label">Selecciona tu calificación:</p>
+        <div class="review-estrellas-container">
+          @for (estrella of estrellas; track estrella) {
+            <button
+              type="button"
+              class="review-estrella-btn"
+              [class.filled]="estrella <= getEstrellasMostrar()"
+              (click)="setCalificacion(estrella)"
+              (mouseenter)="setHoverCalificacion(estrella)"
+              (mouseleave)="resetHoverCalificacion()"
+            >
+              <i class="fas fa-star"></i>
+            </button>
+          }
+        </div>
+        @if (calificacion > 0) {
+          <p class="review-calificacion-texto">{{ getTextoCalificacion() }}</p>
+        }
+      </div>
+
+      <!-- Comentario Opcional -->
+      <div class="review-comentario-section">
+        <label>
+          <i class="fas fa-comment"></i>
+          Cuéntanos más (opcional)
+        </label>
+        <textarea
+          [(ngModel)]="comentario"
+          placeholder="Comparte tu experiencia con este producto..."
+          rows="4"
+          maxlength="1000"
+          [disabled]="enviando"
+        ></textarea>
+        <span class="review-char-count">{{ comentario.length }}/1000</span>
+      </div>
+
+      <!-- Error Message -->
+      @if (error) {
+        <div class="review-error-message">
+          <i class="fas fa-exclamation-circle"></i>
+          {{ error }}
+        </div>
+      }
+
+      <!-- Botones -->
+      <div class="review-modal-actions">
+        <button
+          type="button"
+          class="review-btn-secundario"
+          (click)="omitirCalificacion()"
+          [disabled]="enviando"
+        >
+          Tal vez después
+        </button>
+        <button
+          type="button"
+          class="review-btn-principal"
+          (click)="enviarReview()"
+          [disabled]="enviando || calificacion === 0"
+        >
+          @if (!enviando) {
+            <i class="fas fa-paper-plane"></i>
+            Enviar Calificación
+          } @else {
+            <i class="fas fa-spinner fa-spin"></i>
+            Enviando...
+          }
+        </button>
+      </div>
+
+      <!-- Botón Cerrar -->
+      <button class="review-btn-cerrar" (click)="cerrarModal()">
+        <i class="fas fa-times"></i>
+      </button>
+
+    </div>
+  </div>
+}

@@ -1,0 +1,423 @@
+/* ==================== OVERLAY ==================== */
+.review-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999999;
+  backdrop-filter: blur(8px);
+  animation: reviewFadeIn 0.3s ease;
+}
+
+@keyframes reviewFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ==================== CONTENEDOR ==================== */
+.review-modal-container {
+  background: white;
+  border-radius: 24px;
+  max-width: 550px;
+  width: 92%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+  animation: reviewSlideUp 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  position: relative;
+}
+
+@keyframes reviewSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(60px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ==================== HEADER ==================== */
+.review-modal-header {
+  text-align: center;
+  padding: 40px 40px 30px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 24px 24px 0 0;
+}
+
+.review-success-icon {
+  width: 90px;
+  height: 90px;
+  margin: 0 auto 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: reviewIconPulse 2s ease-in-out infinite;
+}
+
+@keyframes reviewIconPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.review-success-icon i {
+  font-size: 45px;
+  color: #fbbf24;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+
+.review-modal-header h2 {
+  margin: 0 0 10px;
+  font-size: 28px;
+  font-weight: 700;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.review-subtitle {
+  margin: 0;
+  font-size: 15px;
+  opacity: 0.9;
+}
+
+/* ==================== PRODUCTO INFO ==================== */
+.review-producto-info {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 25px 35px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.review-producto-imagen {
+  width: 85px;
+  height: 85px;
+  object-fit: cover;
+  border-radius: 14px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+  border: 3px solid #667eea;
+}
+
+.review-producto-detalles h3 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 600;
+  color: #1a1a1a;
+  line-height: 1.3;
+}
+
+.review-producto-detalles p {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+/* ==================== CALIFICACIÓN ==================== */
+.review-calificacion-section {
+  padding: 35px 40px;
+  text-align: center;
+}
+
+.review-calificacion-label {
+  margin: 0 0 20px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.review-estrellas-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.review-estrella-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 52px;
+  color: #d1d5db;
+  transition: all 0.2s ease;
+  padding: 0;
+  line-height: 1;
+}
+
+.review-estrella-btn:hover {
+  transform: scale(1.2);
+}
+
+.review-estrella-btn.filled {
+  color: #fbbf24;
+  animation: reviewStarPop 0.3s ease;
+}
+
+.review-estrella-btn.filled i {
+  filter: drop-shadow(0 3px 6px rgba(251, 191, 36, 0.5));
+}
+
+@keyframes reviewStarPop {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+}
+
+.review-calificacion-texto {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #667eea;
+  animation: reviewFadeIn 0.3s ease;
+}
+
+/* ==================== COMENTARIO ==================== */
+.review-comentario-section {
+  padding: 0 40px 30px;
+}
+
+.review-comentario-section label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 14px;
+  font-size: 15px;
+}
+
+.review-comentario-section label i {
+  color: #667eea;
+  font-size: 18px;
+}
+
+.review-comentario-section textarea {
+  width: 100%;
+  padding: 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 14px;
+  font-family: inherit;
+  font-size: 15px;
+  resize: vertical;
+  transition: all 0.3s ease;
+  color: #1a1a1a;
+  min-height: 110px;
+  box-sizing: border-box;
+}
+
+.review-comentario-section textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+}
+
+.review-comentario-section textarea::placeholder {
+  color: #9ca3af;
+}
+
+.review-comentario-section textarea:disabled {
+  background: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.review-char-count {
+  display: block;
+  text-align: right;
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 8px;
+}
+
+/* ==================== ERROR MESSAGE ==================== */
+.review-error-message {
+  margin: 0 40px 20px;
+  padding: 14px 18px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  color: #dc2626;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+}
+
+.review-error-message i {
+  font-size: 18px;
+}
+
+/* ==================== BOTONES ==================== */
+.review-modal-actions {
+  display: flex;
+  gap: 14px;
+  padding: 25px 40px 35px;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  border-radius: 0 0 24px 24px;
+}
+
+.review-btn-principal,
+.review-btn-secundario {
+  flex: 1;
+  padding: 16px 24px;
+  border: none;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.review-btn-principal {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.35);
+}
+
+.review-btn-principal:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.45);
+}
+
+.review-btn-principal:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.review-btn-secundario {
+  background: white;
+  color: #6b7280;
+  border: 2px solid #e5e7eb;
+}
+
+.review-btn-secundario:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #374151;
+}
+
+.review-btn-secundario:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.review-btn-cerrar {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.review-btn-cerrar:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: rotate(90deg);
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 640px) {
+  .review-modal-container {
+    max-width: 96%;
+    border-radius: 20px;
+  }
+
+  .review-modal-header {
+    padding: 30px 25px 25px;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .review-modal-header h2 {
+    font-size: 24px;
+  }
+
+  .review-success-icon {
+    width: 75px;
+    height: 75px;
+  }
+
+  .review-success-icon i {
+    font-size: 38px;
+  }
+
+  .review-producto-info {
+    padding: 20px;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .review-producto-imagen {
+    width: 90px;
+    height: 90px;
+  }
+
+  .review-calificacion-section {
+    padding: 25px 20px;
+  }
+
+  .review-estrellas-container {
+    gap: 6px;
+  }
+
+  .review-estrella-btn {
+    font-size: 42px;
+  }
+
+  .review-comentario-section {
+    padding: 0 20px 25px;
+  }
+
+  .review-modal-actions {
+    flex-direction: column;
+    padding: 20px;
+    border-radius: 0 0 20px 20px;
+  }
+
+  .review-error-message {
+    margin: 0 20px 15px;
+  }
+
+  .review-btn-cerrar {
+    top: 12px;
+    right: 12px;
+    width: 38px;
+    height: 38px;
+  }
+}
+
+@media (max-width: 400px) {
+  .review-estrella-btn {
+    font-size: 36px;
+  }
+
+  .review-modal-header h2 {
+    font-size: 20px;
+  }
+
+  .review-calificacion-texto {
+    font-size: 17px;
+  }
+}

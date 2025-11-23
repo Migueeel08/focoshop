@@ -4,11 +4,18 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { StripeCheckoutService } from '../services/stripe-checkout.service';
+import { ReviewModalComponent } from '../components/review-modal.component';
 
 @Component({
   selector: 'app-detalle-producto',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, HttpClientModule],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    RouterModule, 
+    HttpClientModule,
+    ReviewModalComponent
+  ],
   templateUrl: './detalle-producto.component.html',
   styleUrl: './detalle-producto.component.css'
 })
@@ -16,7 +23,7 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
   
   // ===== API =====
   private apiUrl = 'http://localhost:8000/api';
-  baseUrl = 'http://localhost:8000'; // ✅ Hacer público para usar en template
+  baseUrl = 'http://localhost:8000';
 
   // ===== PRODUCTO =====
   producto: any = null;
@@ -29,7 +36,7 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
   tallaSeleccionada: string = '';
   cantidadComprar: number = 1;
   
-  // ✅ FAVORITOS CON BACKEND
+  // ===== FAVORITOS =====
   esFavorito: boolean = false;
   idFavorito: number | null = null;
   cargandoFavorito: boolean = false;
@@ -69,6 +76,11 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
   errorStripe: string = '';
   stripeInicializado: boolean = false;
 
+  // ===== MODAL DE CALIFICACIÓN =====
+  mostrarModalReview: boolean = false;
+  pedidoIdParaReview: number | null = null;
+  usuarioYaCalificó: boolean = false;  // ✅ NUEVO
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -86,6 +98,7 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
         
         if (this.userId) {
           this.verificarFavorito();
+          this.verificarSiYaCalificó();  // ✅ NUEVO
         }
       }
     });
@@ -95,6 +108,24 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
     if (this.stripeInicializado) {
       this.stripeService.destroyElements();
     }
+  }
+
+  // ===== VERIFICAR SI YA CALIFICÓ =====
+  verificarSiYaCalificó() {
+    if (!this.userId || !this.productId) return;
+
+    this.http.get<any>(
+      `${this.apiUrl}/reviews/check/${this.productId}/${this.userId}`
+    ).subscribe({
+      next: (response) => {
+        this.usuarioYaCalificó = response.ya_califico;
+        console.log('✅ Usuario ya calificó:', this.usuarioYaCalificó);
+      },
+      error: (error) => {
+        console.error('Error verificando review:', error);
+        this.usuarioYaCalificó = false;
+      }
+    });
   }
 
   // ===== CARGAR PRODUCTO =====
@@ -130,12 +161,15 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
           talla: data.talla || null
         };
 
+        // ✅ Log para debug
+        console.log('📊 Calificación del producto:', this.producto.calificacion);
+        console.log('📊 Reviews del producto:', this.producto.reviews);
+
         this.colorSeleccionado = this.producto.color;
         this.tallaSeleccionada = this.producto.talla;
 
         this.cargando = false;
         
-        // ✅ Cargar recomendaciones después de cargar el producto
         this.cargarRecomendaciones();
       },
       error: (error) => {
@@ -191,8 +225,7 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
     this.imagenSeleccionada = index;
   }
 
-  // ===== FAVORITOS CON BACKEND =====
-  
+  // ===== FAVORITOS =====
   verificarFavorito() {
     if (!this.userId || !this.productId) return;
 
@@ -298,7 +331,7 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ===== COMPRAR AHORA - ABRE MODAL =====
+  // ===== COMPRAR AHORA =====
   comprarAhora() {
     if (!this.isLoggedIn) {
       alert('Debes iniciar sesión para comprar');
@@ -311,7 +344,7 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
     this.cargarMetodosPagoUsuario();
   }
 
-  // ===== CARGAR DIRECCIONES DEL USUARIO =====
+  // ===== CARGAR DIRECCIONES =====
   cargarDireccionesUsuario() {
     console.log('🔍 Cargando direcciones para usuario:', this.userId);
     
@@ -331,7 +364,7 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ===== CARGAR MÉTODOS DE PAGO DEL USUARIO =====
+  // ===== CARGAR MÉTODOS DE PAGO =====
   cargarMetodosPagoUsuario() {
     console.log('🔍 Cargando métodos de pago para usuario:', this.userId);
     
@@ -347,7 +380,7 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ===== CERRAR MODAL =====
+  // ===== CERRAR MODAL CHECKOUT =====
   cerrarModalCheckout() {
     this.modalCheckoutVisible = false;
     this.direccionSeleccionada = null;
@@ -377,7 +410,7 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ===== DETECTAR MARCA DE TARJETA POR BANCO =====
+  // ===== DETECTAR MARCA DE TARJETA =====
   detectarMarcaTarjeta(banco: string): string {
     if (!banco) return 'generic';
     
@@ -540,6 +573,8 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
       this.cerrarModalCheckout();
       this.stripeService.destroyElements();
       
+      // Guardar ID del pedido para la calificación
+      this.pedidoIdParaReview = ventaResponse.id_pedido || null;
       this.modalCompraExitosaVisible = true;
 
     } catch (error: any) {
@@ -568,26 +603,81 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
       this.procesandoPago = false;
       this.cerrarModalCheckout();
       
+      // Simular ID de pedido
+      this.pedidoIdParaReview = Math.floor(Math.random() * 10000);
       this.modalCompraExitosaVisible = true;
     }, 2000);
   }
 
-  // ===== MODAL COMPRA EXITOSA =====
+  // ===== CERRAR MODAL COMPRA EXITOSA =====
   cerrarModalCompraExitosa() {
     this.modalCompraExitosaVisible = false;
+    
+    // ✅ Solo mostrar modal de calificación si no ha calificado antes
+    if (!this.usuarioYaCalificó) {
+      setTimeout(() => {
+        this.mostrarModalReview = true;
+      }, 300);
+    } else {
+      this.router.navigate(['/perfil'], { queryParams: { seccion: 'compras' } });
+    }
   }
 
+  // ===== SEGUIR COMPRANDO DESDE ÉXITO =====
   seguirComprandoDesdeExito() {
-    this.cerrarModalCompraExitosa();
-    this.router.navigate(['/']);
+    this.modalCompraExitosaVisible = false;
+    
+    // ✅ Solo mostrar modal de calificación si no ha calificado antes
+    if (!this.usuarioYaCalificó) {
+      setTimeout(() => {
+        this.mostrarModalReview = true;
+      }, 300);
+    } else {
+      this.router.navigate(['/']);
+    }
   }
 
+  // ===== IR A MIS COMPRAS =====
   irAMisCompras() {
-    this.cerrarModalCompraExitosa();
+    this.modalCompraExitosaVisible = false;
+    
+    // ✅ Solo mostrar modal de calificación si no ha calificado antes
+    if (!this.usuarioYaCalificó) {
+      setTimeout(() => {
+        this.mostrarModalReview = true;
+      }, 300);
+    } else {
+      this.router.navigate(['/perfil'], { queryParams: { seccion: 'compras' } });
+    }
+  }
+
+  // ===== MANEJAR REVIEW CREADA =====
+  onReviewCreada(review: any) {
+    console.log('✅ Review creada:', review);
+    this.mostrarModalReview = false;
+    this.pedidoIdParaReview = null;
+    this.usuarioYaCalificó = true;  // ✅ Marcar que ya calificó
+    
+    // ✅ Actualizar la calificación del producto en la vista
+    if (this.producto) {
+      this.producto.calificacion = review.calificacion || this.producto.calificacion;
+      this.producto.reviews = (this.producto.reviews || 0) + 1;
+    }
+    
+    alert('¡Gracias por tu calificación! Tu opinión es muy importante para nosotros.');
+    
     this.router.navigate(['/perfil'], { queryParams: { seccion: 'compras' } });
   }
 
-  // ===== AGREGAR AL CARRITO CON MODAL =====
+  // ===== CERRAR MODAL DE REVIEW =====
+  onCerrarModalReview() {
+    this.mostrarModalReview = false;
+    this.pedidoIdParaReview = null;
+    
+    this.router.navigate(['/perfil'], { queryParams: { seccion: 'compras' } });
+  }
+
+  // ===== AGREGAR AL CARRITO =====
   agregarAlCarrito() {
     if (!this.isLoggedIn) {
       alert('Debes iniciar sesión para agregar productos al carrito');
@@ -640,7 +730,7 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
     this.productoAgregado = null;
   }
 
-  // ===== IR AL CARRITO DESDE MODAL =====
+  // ===== IR AL CARRITO =====
   irAlCarritoDesdeModal() {
     this.cerrarModalCarrito();
     this.router.navigate(['/carrito']);
@@ -658,7 +748,7 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
     this.router.navigate(['/configuracion'], { queryParams: { seccion: 'metodos-pago' } });
   }
 
-  // ===== CARGAR RECOMENDACIONES CON IA =====
+  // ===== CARGAR RECOMENDACIONES IA =====
   cargarRecomendaciones() {
     if (!this.productId) return;
     
@@ -670,7 +760,6 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
       next: (recomendaciones) => {
         console.log('🤖 Recomendaciones IA recibidas:', recomendaciones);
         
-        // Construir URLs de imágenes
         this.productosRecomendados = recomendaciones.map((prod: any) => ({
           ...prod,
           imagen: this.construirUrlImagen(prod.imagen)
@@ -690,11 +779,11 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
   verProductoRecomendado(productoId: number) {
     this.router.navigate(['/producto', productoId]).then(() => {
       window.scrollTo(0, 0);
-      // Recargar datos del nuevo producto
       this.productId = productoId;
       this.cargarProducto();
       if (this.userId) {
         this.verificarFavorito();
+        this.verificarSiYaCalificó();  // ✅ También verificar al cambiar de producto
       }
     });
   }
