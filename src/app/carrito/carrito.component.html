@@ -250,7 +250,7 @@
     }
   </div>
 
-  <!-- ===== MODAL DE CHECKOUT ===== ✅ CON STRIPE -->
+  <!-- ===== MODAL DE CHECKOUT ===== -->
   @if (modalCheckoutVisible) {
     <div class="modal-overlay" (click)="cerrarModalCheckout()">
       <div class="modal-checkout" (click)="$event.stopPropagation()">
@@ -359,13 +359,8 @@
                       <i [class]="metodoPagoSeleccionado?.id_metodo_pago === metodo.id_metodo_pago ? 'fas fa-check-circle' : 'far fa-circle'"></i>
                     </div>
                     
-                    <!-- Logo de la marca de tarjeta -->
                     <div class="tarjeta-logo">
-                      <img 
-                        [src]="obtenerLogoTarjeta(metodo)" 
-                        [alt]="obtenerNombreMarca(metodo)"
-                        class="logo-marca-tarjeta"
-                      />
+                      <img [src]="obtenerLogoTarjeta(metodo)" [alt]="obtenerNombreMarca(metodo)" class="logo-marca-tarjeta" />
                     </div>
                     
                     <div class="metodo-info">
@@ -381,7 +376,6 @@
                   </div>
                 }
                 
-                <!-- BOTÓN PAGAR CON NUEVA TARJETA (STRIPE) -->
                 <div class="metodo-card agregar-nuevo-stripe" (click)="pagarConNuevaTarjeta()">
                   <div class="agregar-icono stripe-icon">
                     <i class="fas fa-credit-card"></i>
@@ -397,7 +391,6 @@
                   </div>
                 </div>
 
-                <!-- BOTÓN AGREGAR MÉTODO DE PAGO (guardar para después) -->
                 <div class="metodo-card agregar-nuevo" (click)="irConfiguracion()">
                   <div class="agregar-icono">
                     <i class="fas fa-plus-circle"></i>
@@ -422,18 +415,13 @@
             }
           </div>
 
-          <!-- ============================================
-               💳 FORMULARIO DE PAGO CON STRIPE
-               ============================================ -->
           @if (mostrarFormularioStripe) {
             <div class="seccion-checkout stripe-payment-section">
               <h3><i class="fas fa-credit-card"></i> Ingresa los datos de tu tarjeta</h3>
               
               <div class="stripe-form-container">
-                <!-- Elemento de Stripe (se monta automáticamente) -->
                 <div id="card-element-carrito" class="stripe-card-element"></div>
                 
-                <!-- Mensajes de error -->
                 @if (errorStripe) {
                   <div class="stripe-error">
                     <i class="fas fa-exclamation-circle"></i>
@@ -441,13 +429,11 @@
                   </div>
                 }
                 
-                <!-- Información de seguridad -->
                 <div class="stripe-security-info">
                   <i class="fas fa-lock"></i>
                   <span>Pago seguro procesado por Stripe</span>
                 </div>
                 
-                <!-- Tarjetas aceptadas -->
                 <div class="tarjetas-aceptadas">
                   <span class="texto-tarjetas">Aceptamos:</span>
                   <img src="https://cdn.jsdelivr.net/gh/aaronfagan/svg-credit-card-payment-icons/flat/visa.svg" alt="Visa">
@@ -479,15 +465,10 @@
 
         <div class="modal-footer-checkout">
           @if (mostrarFormularioStripe) {
-            <!-- Botones cuando se muestra formulario de Stripe -->
             <button class="btn-cancelar" (click)="cancelarStripe()" [disabled]="procesandoStripe">
               <i class="fas fa-times"></i> Cancelar
             </button>
-            <button 
-              class="btn-confirmar-compra" 
-              (click)="procesarPagoConStripe()"
-              [disabled]="procesandoStripe || !direccionSeleccionada"
-            >
+            <button class="btn-confirmar-compra" (click)="procesarPagoConStripe()" [disabled]="procesandoStripe || !direccionSeleccionada">
               @if (procesandoStripe) {
                 <i class="fas fa-spinner fa-spin"></i> Procesando pago...
               } @else {
@@ -495,15 +476,10 @@
               }
             </button>
           } @else {
-            <!-- Botones normales -->
             <button class="btn-cancelar" (click)="cerrarModalCheckout()">
               <i class="fas fa-times"></i> Cancelar
             </button>
-            <button 
-              class="btn-confirmar-compra" 
-              (click)="confirmarCompra()"
-              [disabled]="procesandoPago || !direccionSeleccionada"
-            >
+            <button class="btn-confirmar-compra" (click)="confirmarCompra()" [disabled]="procesandoPago || !direccionSeleccionada">
               @if (procesandoPago) {
                 <i class="fas fa-spinner fa-spin"></i> Procesando...
               } @else {
@@ -514,5 +490,79 @@
         </div>
       </div>
     </div>
+  }
+
+  <!-- ===== MODAL COMPRA EXITOSA ===== -->
+  @if (modalCompraExitosaVisible && productosComprados.length > 0) {
+    <div class="modal-overlay" (click)="cerrarModalCompraExitosa()">
+      <div class="modal-compra-exitosa" (click)="$event.stopPropagation()">
+        <div class="modal-header-compra-exitosa">
+          <div class="success-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <h2>¡Compra realizada con éxito!</h2>
+          <button class="btn-close-modal-x" (click)="cerrarModalCompraExitosa()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="modal-body-compra-exitosa">
+          <div class="compra-info">
+            <div class="info-item">
+              <i class="fas fa-box"></i>
+              <div>
+                <strong>Productos:</strong>
+                <p>{{ totalProductosComprados }} {{ totalProductosComprados === 1 ? 'producto' : 'productos' }}</p>
+              </div>
+            </div>
+
+            <div class="info-item">
+              <i class="fas fa-dollar-sign"></i>
+              <div>
+                <strong>Total pagado:</strong>
+                <p class="total-pagado">${{ totalCompra | number:'1.0-0' }}</p>
+              </div>
+            </div>
+
+            <div class="info-item">
+              <i class="fas fa-truck"></i>
+              <div>
+                <strong>Envío:</strong>
+                <p>Tu pedido llegará en 3-5 días hábiles</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mensaje-agradecimiento">
+            <p><i class="fas fa-heart"></i> Gracias por tu compra en FocoShop</p>
+          </div>
+        </div>
+
+        <div class="modal-footer-compra-exitosa">
+          <button class="btn-seguir-comprando-exitosa" (click)="seguirComprandoDesdeExito()">
+            <i class="fas fa-shopping-bag"></i>
+            Seguir comprando
+          </button>
+          <button class="btn-ver-compras" (click)="irAMisCompras()">
+            <i class="fas fa-receipt"></i>
+            Ver mis compras
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ===== MODAL DE CALIFICACIÓN POST-COMPRA ===== -->
+  @if (mostrarModalReview && productoParaCalificar) {
+    <app-review-modal
+      [visible]="mostrarModalReview"
+      [idProducto]="productoParaCalificar.id_producto"
+      [idUsuario]="userId"
+      [idPedido]="pedidoIdParaReview"
+      [nombreProducto]="productoParaCalificar.nombre"
+      [imagenProducto]="productoParaCalificar.imagen"
+      (cerrar)="onCerrarModalReview()"
+      (reviewCreada)="onReviewCreada($event)"
+    ></app-review-modal>
   }
 </div>

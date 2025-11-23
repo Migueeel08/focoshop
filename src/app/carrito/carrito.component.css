@@ -1519,3 +1519,253 @@ body {
     height: 20px;
   }
 }
+/* ============================================
+   ✅ MODAL COMPRA EXITOSA - VERSION COMPACTA
+   ============================================ */
+
+.modal-compra-exitosa {
+  background: white;
+  border-radius: 20px;
+  max-width: 500px;  /* ✅ Reducido de 650px a 500px */
+  width: 90%;
+  max-height: 85vh;  /* ✅ Limitar altura máxima */
+  overflow-y: auto;  /* ✅ Scroll si es necesario */
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s ease;
+}
+
+.modal-header-compra-exitosa {
+  padding: 30px 25px 20px;  /* ✅ Padding reducido */
+  text-align: center;
+  background: linear-gradient(135deg, #00a650 0%, #00d563 100%);
+  color: white;
+  position: relative;
+}
+
+.success-icon {
+  font-size: 3.5rem;  /* ✅ Reducido de 5rem */
+  color: white;
+  margin-bottom: 15px;  /* ✅ Reducido */
+  animation: successPulse 0.6s ease;
+}
+
+@keyframes successPulse {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.modal-header-compra-exitosa h2 {
+  margin: 0;
+  font-size: 1.5rem;  /* ✅ Reducido de 2rem */
+  font-weight: 700;
+}
+
+.btn-close-modal-x {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  width: 35px;  /* ✅ Más pequeño */
+  height: 35px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  color: white;
+  font-size: 1rem;
+}
+
+.btn-close-modal-x:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.modal-body-compra-exitosa {
+  padding: 25px 20px;  /* ✅ Padding reducido */
+}
+
+.compra-info {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;  /* ✅ Gap reducido */
+  margin-bottom: 20px;
+}
+
+.info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;  /* ✅ Gap reducido */
+  padding: 15px;  /* ✅ Padding reducido */
+  background: #f8f9fa;
+  border-radius: 10px;
+  border-left: 4px solid #00a650;
+}
+
+.info-item i {
+  font-size: 1.5rem;  /* ✅ Reducido de 2rem */
+  color: #00a650;
+  flex-shrink: 0;
+}
+
+.info-item div {
+  flex: 1;
+}
+
+.info-item strong {
+  display: block;
+  font-size: 0.85rem;  /* ✅ Reducido */
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.info-item p {
+  margin: 0;
+  font-size: 1rem;  /* ✅ Reducido */
+  font-weight: 600;
+  color: #333;
+}
+
+.total-pagado {
+  font-size: 1.4rem !important;  /* ✅ Reducido de 1.8rem */
+  color: #00a650 !important;
+  font-weight: 700 !important;
+}
+
+.mensaje-agradecimiento {
+  text-align: center;
+  padding: 18px;  /* ✅ Reducido */
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 10px;
+  border: 2px dashed #00a650;
+}
+
+.mensaje-agradecimiento p {
+  margin: 0;
+  font-size: 0.95rem;  /* ✅ Reducido */
+  color: #333;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.mensaje-agradecimiento i {
+  color: #ff4757;
+  font-size: 1.1rem;
+  animation: heartBeat 1.5s infinite;
+}
+
+@keyframes heartBeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.2);
+  }
+  50% {
+    transform: scale(1);
+  }
+}
+
+.modal-footer-compra-exitosa {
+  padding: 15px 20px;  /* ✅ Reducido */
+  border-top: 2px solid #f0f0f0;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  background: #fafafa;
+}
+
+.btn-seguir-comprando-exitosa {
+  padding: 12px 20px;  /* ✅ Reducido */
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;  /* ✅ Reducido */
+}
+
+.btn-seguir-comprando-exitosa:hover {
+  background: #f0f3ff;
+  transform: translateY(-2px);
+}
+
+.btn-ver-compras {
+  padding: 12px 20px;  /* ✅ Reducido */
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;  /* ✅ Reducido */
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-ver-compras:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Responsive para modales */
+@media (max-width: 768px) {
+  .modal-compra-exitosa {
+    max-width: 95%;
+    width: 95%;
+  }
+
+  .modal-header-compra-exitosa {
+    padding: 25px 15px 15px;
+  }
+
+  .success-icon {
+    font-size: 2.5rem;
+  }
+
+  .modal-header-compra-exitosa h2 {
+    font-size: 1.2rem;
+  }
+
+  .modal-body-compra-exitosa {
+    padding: 20px 15px;
+  }
+
+  .info-item {
+    flex-direction: column;
+    text-align: center;
+    padding: 12px;
+  }
+
+  .modal-footer-compra-exitosa {
+    flex-direction: column;
+  }
+
+  .btn-seguir-comprando-exitosa,
+  .btn-ver-compras {
+    width: 100%;
+    justify-content: center;
+  }
+}

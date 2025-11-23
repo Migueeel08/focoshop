@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { StripeCheckoutService } from '../services/stripe-checkout.service';
+import { ReviewModalComponent } from '../components/review-modal.component';
 
 // Interfaces locales
 interface ItemCarrito {
@@ -33,7 +34,7 @@ interface CarritoResumen {
 @Component({
   selector: 'app-carrito',
   standalone: true,
-  imports: [CommonModule, RouterModule, HttpClientModule],
+  imports: [CommonModule, RouterModule, HttpClientModule, ReviewModalComponent],
   templateUrl: './carrito.component.html',
   styleUrl: './carrito.component.css'
 })
@@ -65,6 +66,18 @@ export class CarritoComponent implements OnInit, OnDestroy {
   procesandoStripe: boolean = false;
   errorStripe: string = '';
   stripeInicializado: boolean = false;
+
+  // ===== MODAL COMPRA EXITOSA =====
+  modalCompraExitosaVisible: boolean = false;
+  productosComprados: any[] = [];
+  totalProductosComprados: number = 0;
+  totalCompra: number = 0;
+
+  // ===== MODAL DE CALIFICACIÓN =====
+  mostrarModalReview: boolean = false;
+  pedidoIdParaReview: number | null = null;
+  productoParaCalificar: any = null;
+  indiceProductoActual: number = 0;
 
   constructor(
     private router: Router,
@@ -374,11 +387,14 @@ export class CarritoComponent implements OnInit, OnDestroy {
       this.cerrarModalCheckout();
       this.stripeService.destroyElements();
       
+      // Guardar productos comprados y mostrar modal de éxito
+      this.guardarProductosComprados();
+      this.pedidoIdParaReview = ventaResponse.id_pedido || null;
+      
       await this.http.delete(`${this.apiUrl}/carrito/usuario/${this.userId}`).toPromise();
       window.dispatchEvent(new CustomEvent('carritoActualizado'));
       
-      alert('¡Pago exitoso! 🎉 Tu compra ha sido procesada.');
-      this.router.navigate(['/perfil']);
+      this.modalCompraExitosaVisible = true;
 
     } catch (error: any) {
       console.error('❌ Error en el pago:', error);
@@ -494,24 +510,123 @@ export class CarritoComponent implements OnInit, OnDestroy {
     this.procesandoPago = true;
 
     setTimeout(() => {
-      const compra = {
-        items: this.carrito!.items,
-        total: this.carrito!.subtotal,
-        direccion: this.direccionSeleccionada,
-        metodo_pago: this.metodoPagoSeleccionado,
-        fecha: new Date()
-      };
-
-      console.log('✅ Compra confirmada:', compra);
+      console.log('✅ Compra confirmada con método guardado');
 
       this.procesandoPago = false;
       this.cerrarModalCheckout();
       
-      this.vaciarCarrito();
+      // Guardar productos comprados y mostrar modal
+      this.guardarProductosComprados();
+      this.pedidoIdParaReview = Math.floor(Math.random() * 10000);
       
-      alert('¡Compra realizada exitosamente! 🎉');
-      this.router.navigate(['/perfil']);
+      this.http.delete(`${this.apiUrl}/carrito/usuario/${this.userId}`).subscribe({
+        next: () => {
+          window.dispatchEvent(new CustomEvent('carritoActualizado'));
+        }
+      });
+      
+      this.modalCompraExitosaVisible = true;
     }, 2000);
+  }
+
+  // ===== GUARDAR PRODUCTOS COMPRADOS =====
+  guardarProductosComprados(): void {
+    if (!this.carrito) return;
+
+    this.productosComprados = this.carrito.items
+      .filter(item => item.producto_disponible)
+      .map(item => ({
+        id_producto: item.id_producto,
+        nombre: item.producto_nombre,
+        imagen: item.producto_imagen,
+        cantidad: item.cantidad,
+        precio: item.precio_unitario
+      }));
+
+    this.totalProductosComprados = this.productosComprados.reduce((sum, p) => sum + p.cantidad, 0);
+    this.totalCompra = this.carrito.subtotal;
+  }
+
+  // ===== CERRAR MODAL COMPRA EXITOSA =====
+  cerrarModalCompraExitosa(): void {
+    this.modalCompraExitosaVisible = false;
+    
+    // Mostrar modal de calificación si hay productos
+    if (this.productosComprados.length > 0) {
+      setTimeout(() => {
+        this.indiceProductoActual = 0;
+        this.productoParaCalificar = this.productosComprados[0];
+        this.mostrarModalReview = true;
+      }, 300);
+    }
+  }
+
+  // ===== SEGUIR COMPRANDO DESDE ÉXITO =====
+  seguirComprandoDesdeExito(): void {
+    this.modalCompraExitosaVisible = false;
+    
+    // Mostrar modal de calificación si hay productos
+    if (this.productosComprados.length > 0) {
+      setTimeout(() => {
+        this.indiceProductoActual = 0;
+        this.productoParaCalificar = this.productosComprados[0];
+        this.mostrarModalReview = true;
+      }, 300);
+    } else {
+      this.router.navigate(['/']);
+    }
+  }
+
+  // ===== IR A MIS COMPRAS =====
+  irAMisCompras(): void {
+    this.modalCompraExitosaVisible = false;
+    
+    // Mostrar modal de calificación si hay productos
+    if (this.productosComprados.length > 0) {
+      setTimeout(() => {
+        this.indiceProductoActual = 0;
+        this.productoParaCalificar = this.productosComprados[0];
+        this.mostrarModalReview = true;
+      }, 300);
+    } else {
+      this.router.navigate(['/perfil'], { queryParams: { seccion: 'compras' } });
+    }
+  }
+
+  // ===== MANEJAR REVIEW CREADA =====
+  onReviewCreada(review: any): void {
+    console.log('✅ Review creada:', review);
+    
+    // Pasar al siguiente producto
+    this.indiceProductoActual++;
+    
+    if (this.indiceProductoActual < this.productosComprados.length) {
+      // Hay más productos para calificar
+      this.productoParaCalificar = this.productosComprados[this.indiceProductoActual];
+    } else {
+      // Ya no hay más productos
+      this.mostrarModalReview = false;
+      this.productoParaCalificar = null;
+      this.productosComprados = [];
+      
+      alert('¡Gracias por tus calificaciones! Tu opinión es muy importante para nosotros.');
+      this.router.navigate(['/perfil'], { queryParams: { seccion: 'compras' } });
+    }
+  }
+
+  // ===== CERRAR MODAL DE REVIEW =====
+  onCerrarModalReview(): void {
+    // Pasar al siguiente producto o salir
+    this.indiceProductoActual++;
+    
+    if (this.indiceProductoActual < this.productosComprados.length) {
+      this.productoParaCalificar = this.productosComprados[this.indiceProductoActual];
+    } else {
+      this.mostrarModalReview = false;
+      this.productoParaCalificar = null;
+      this.productosComprados = [];
+      this.router.navigate(['/perfil'], { queryParams: { seccion: 'compras' } });
+    }
   }
 
   // ===== CONTINUAR COMPRANDO =====
