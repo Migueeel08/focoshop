@@ -107,16 +107,30 @@ export class ComparadorProductosComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Solo cargar productos que vienen por parámetros
+    console.log('🔍 Inicializando comparador...');
+    
+    // Leer parámetros de la URL
     this.route.queryParams.subscribe(params => {
-      const idsParam = params['ids'];
+      console.log('📋 Parámetros recibidos:', params);
       
-      if (idsParam) {
-        const ids = idsParam.split(',').map((id: string) => parseInt(id));
-        this.cargarProductosEspecificos(ids);
+      const idsParam = params['ids'];
+      console.log('🔢 IDs parameter:', idsParam);
+      
+      if (idsParam && idsParam.trim() !== '') {
+        const ids = idsParam.split(',')
+          .map((id: string) => parseInt(id.trim()))
+          .filter((id: number) => !isNaN(id));
+        
+        console.log('✅ IDs parseados:', ids);
+        
+        if (ids.length > 0) {
+          this.cargarProductosEspecificos(ids);
+        } else {
+          console.warn('⚠️ No se pudieron parsear los IDs');
+          this.error = 'Los IDs de productos no son válidos';
+        }
       } else {
-        // Si no hay IDs, mostrar mensaje de error
-        this.mostrarError('No se han seleccionado productos para comparar');
+        console.warn('⚠️ No se recibieron IDs en la URL');
       }
     });
   }
@@ -126,18 +140,27 @@ export class ComparadorProductosComponent implements OnInit {
    */
   cargarProductosEspecificos(ids: number[]) {
     this.cargando = true;
+    this.error = null;
     console.log('📦 Cargando productos específicos:', ids);
 
     // Cargar cada producto individualmente
     const requests = ids.map(id => 
-      this.http.get<Producto>(`${this.apiUrl}/productos/${id}`)
+      this.http.get<Producto>(`${this.apiUrl}/productos/${id}`).toPromise()
     );
 
     // Esperar a que todos se carguen
-    Promise.all(requests.map(req => req.toPromise()))
+    Promise.all(requests)
       .then(productos => {
         this.productosSeleccionados = productos.filter(p => p != null) as Producto[];
+        
+        // Construir URLs de imágenes
+        this.productosSeleccionados = this.productosSeleccionados.map(p => ({
+          ...p,
+          imagen: this.construirUrlImagen(p.imagen || p.imagen_url)
+        }));
+        
         console.log('✅ Productos cargados:', this.productosSeleccionados.length);
+        console.log('📦 Productos:', this.productosSeleccionados);
         
         // Si hay menos de 2 productos, mostrar error
         if (this.productosSeleccionados.length < 2) {
@@ -225,20 +248,37 @@ export class ComparadorProductosComponent implements OnInit {
   }
 
   /**
-   * Ajusta manualmente el peso de un criterio
+   * Ajusta manualmente el peso de un criterio con validación de límite
    */
   ajustarPeso(criterio: Criterio, event: Event) {
     const input = event.target as HTMLInputElement;
-    const nuevoPeso = Number(input.value);
+    let nuevoPeso = Number(input.value);
     
+    // Validar rango básico
     if (nuevoPeso < 0) {
-      criterio.peso = 0;
+      nuevoPeso = 0;
     } else if (nuevoPeso > 100) {
-      criterio.peso = 100;
-    } else {
-      criterio.peso = nuevoPeso;
+      nuevoPeso = 100;
     }
     
+    // Calcular el peso de los otros criterios activos
+    const otrosCriteriosActivos = this.criterios.filter(c => c.activo && c.nombre !== criterio.nombre);
+    const pesoOtros = otrosCriteriosActivos.reduce((sum, c) => sum + c.peso, 0);
+    
+    // Validar que el total no exceda 100
+    if (pesoOtros + nuevoPeso > 100) {
+      nuevoPeso = 100 - pesoOtros;
+      if (nuevoPeso < 0) nuevoPeso = 0;
+      
+      // Actualizar el valor visual del input
+      input.value = nuevoPeso.toString();
+      
+      this.mostrarError('El peso total no puede exceder 100%');
+    }
+    
+    criterio.peso = nuevoPeso;
+    
+    // Desactivar modo automático
     this.modoDistribucionAutomatica = false;
   }
 
@@ -316,14 +356,20 @@ export class ComparadorProductosComponent implements OnInit {
    * Navega al detalle de un producto
    */
   verDetalleProducto(idProducto: number) {
-    this.router.navigate(['/productos', idProducto]);
+    console.log('🔍 Navegando a detalle de producto:', idProducto);
+    
+    // ✅ Navegar a la ruta correcta
+    this.router.navigate(['/producto', idProducto]).then(() => {
+      // ✅ Scroll al inicio de la página después de navegar
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
   }
 
   /**
    * Vuelve a la página de productos
    */
   volverAProductos() {
-    this.router.navigate(['/productos']);
+    this.router.navigate(['/']);
   }
 
   /**

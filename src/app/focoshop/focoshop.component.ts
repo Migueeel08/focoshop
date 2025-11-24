@@ -642,13 +642,24 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     return this.productosParaComparar.has(idProducto);
   }
 
-  irAlComparador(): void {
-    if (this.productosParaComparar.size < 2) {
-      alert('⚠️ Selecciona al menos 2 productos para comparar');
-      return;
-    }
-    this.router.navigate(['/comparador']);
+irAlComparador(): void {
+  if (this.productosParaComparar.size < 2) {
+    alert('⚠️ Selecciona al menos 2 productos para comparar');
+    return;
   }
+  
+  // ✅ CONVERTIR Set A ARRAY Y PASAR POR URL
+  const idsArray = Array.from(this.productosParaComparar);
+  
+  console.log('🔍 Navegando al comparador con IDs:', idsArray);
+  
+  // ✅ NAVEGAR CON QUERY PARAMS
+  this.router.navigate(['/comparador'], {
+    queryParams: {
+      ids: idsArray.join(',')
+    }
+  });
+}
 
   limpiarComparacion(): void {
     this.productosParaComparar.clear();
