@@ -10,6 +10,7 @@ import { VenderComponent } from './vender/vender.component';
 import { DetalleProductoComponent } from './detalle-producto/detalle-producto.component';
 import { CarritoComponent } from './carrito/carrito.component';
 import { FavoritosComponent } from './favoritos/favoritos.component';
+import { ComparadorProductosComponent } from './components/comparador-productos/comparador-productos.component';
 import { AdminPanelComponent } from './admin/admin-panel/admin-panel.component';
 import { AdminUsuariosComponent } from './admin/admin-usuarios/admin-usuarios.component';
 import { AdminProductosComponent } from './admin/admin-productos/admin-productos.component';
@@ -23,6 +24,12 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'producto/:id', component: DetalleProductoComponent },
   
+  // ✅ NUEVA RUTA: Comparador TOPSIS (público, cualquiera puede comparar)
+  { 
+    path: 'comparador', 
+    component: ComparadorProductosComponent
+  },
+  
   // Carrito (solo usuarios autenticados)
   { 
     path: 'carrito', 
@@ -30,7 +37,7 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   
-  // ✅ Favoritos (solo usuarios autenticados) - CON GUARD MEJORADO
+  // Favoritos (solo usuarios autenticados)
   { 
     path: 'favoritos', 
     component: FavoritosComponent,

@@ -273,6 +273,20 @@
       <div class="productos-grid">
         @for (prod of productosFiltrados; track prod.id_producto) {
           <div class="producto-card-grid" (click)="verDetalleProducto(prod)">
+            
+            <!-- ✅ CHECKBOX COMPARAR -->
+            <div class="checkbox-comparar" (click)="$event.stopPropagation()">
+              <input 
+                type="checkbox" 
+                [id]="'comparar-' + prod.id_producto"
+                [checked]="estaSeleccionadoParaComparar(prod.id_producto)"
+                (change)="toggleProductoComparar(prod.id_producto, $event)"
+              />
+              <label [for]="'comparar-' + prod.id_producto" title="Comparar producto">
+                <i class="fas fa-balance-scale"></i>
+              </label>
+            </div>
+
             <div class="producto-imagen-container">
               <img [src]="prod.imagen" [alt]="prod.nombre" />
             </div>
@@ -322,4 +336,17 @@
       }
     </section>
   </div>
+
+  <!-- ✅ BOTÓN FLOTANTE COMPARADOR -->
+  @if (productosParaComparar.size >= 2) {
+    <div class="comparador-flotante">
+      <button class="btn-comparar-flotante" (click)="irAlComparador()">
+        <i class="fas fa-balance-scale"></i>
+        <span>Comparar ({{ productosParaComparar.size }})</span>
+      </button>
+      <button class="btn-limpiar-flotante" (click)="limpiarComparacion()" title="Limpiar selección">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  }
 </div>

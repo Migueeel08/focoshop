@@ -55,6 +55,9 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
   marcasDisponibles: string[] = [];
   buscarMarca: string = '';
 
+  // ===== COMPARADOR TOPSIS =====
+  productosParaComparar: Set<number> = new Set();
+
   // ===== USUARIO =====
   isLoggedIn = false;
   userId: number = 0;
@@ -86,6 +89,7 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     this.cargarUsuario();
     this.cargarCategorias();
     this.cargarProductos();
+    this.cargarProductosComparador();
     
     if (this.isLoggedIn) {
       this.cargarContadorCarrito();
@@ -205,8 +209,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
   cargarCategorias() {
     this.http.get<any[]>(`${this.apiUrl}/categorias`).subscribe({
       next: (data) => {
-        console.log('📦 Datos RAW del backend:', data);
-        
         this.categorias = data.map(cat => ({
           id_categoria: cat.id_categoria,
           nombre: cat.nombre,
@@ -214,11 +216,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
           subcategorias: cat.subcategorias || []
         }));
         this.categoriasCargadas = true;
-        
-        console.log('✅ Categorías procesadas:', this.categorias);
-        console.log('🔍 Primera categoría subcategorías:', this.categorias[0]?.subcategorias);
-        console.log('📊 Total categorías:', this.categorias.length);
-        
         this.filtrarProductos();
       },
       error: (error) => {
@@ -485,11 +482,6 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   seleccionarCategoria(index: number) {
-    console.log('🎯 Categoría seleccionada:', index);
-    console.log('📂 Categoría:', this.categorias[index]);
-    console.log('📋 Subcategorías disponibles:', this.categorias[index]?.subcategorias);
-    console.log('🔢 Cantidad subcategorías:', this.categorias[index]?.subcategorias?.length);
-    
     this.categoriaSeleccionada = index;
     this.subcategoriaSeleccionada = null;
     this.scrollCategoriaCentrada(index);
@@ -613,5 +605,53 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     if (!clickedInsideUserInfo && this.userMenuOpen) {
       this.userMenuOpen = false;
     }
+  }
+
+  // ===== MÉTODOS DEL COMPARADOR TOPSIS =====
+  
+  cargarProductosComparador(): void {
+    const idsGuardados = localStorage.getItem('productosComparar');
+    if (idsGuardados) {
+      try {
+        const ids: number[] = JSON.parse(idsGuardados);
+        this.productosParaComparar = new Set(ids);
+      } catch (error) {
+        console.error('Error al cargar productos para comparar:', error);
+        this.productosParaComparar = new Set();
+      }
+    }
+  }
+
+  toggleProductoComparar(idProducto: number, event: Event): void {
+    event.stopPropagation();
+    
+    if (this.productosParaComparar.has(idProducto)) {
+      this.productosParaComparar.delete(idProducto);
+    } else {
+      if (this.productosParaComparar.size >= 5) {
+        alert('⚠️ Solo puedes comparar hasta 5 productos a la vez');
+        return;
+      }
+      this.productosParaComparar.add(idProducto);
+    }
+    
+    localStorage.setItem('productosComparar', JSON.stringify(Array.from(this.productosParaComparar)));
+  }
+
+  estaSeleccionadoParaComparar(idProducto: number): boolean {
+    return this.productosParaComparar.has(idProducto);
+  }
+
+  irAlComparador(): void {
+    if (this.productosParaComparar.size < 2) {
+      alert('⚠️ Selecciona al menos 2 productos para comparar');
+      return;
+    }
+    this.router.navigate(['/comparador']);
+  }
+
+  limpiarComparacion(): void {
+    this.productosParaComparar.clear();
+    localStorage.removeItem('productosComparar');
   }
 }

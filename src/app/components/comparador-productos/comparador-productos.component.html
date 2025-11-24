@@ -1,0 +1,495 @@
+<div class="comparador-container">
+  
+  <!-- Header -->
+  <div class="comparador-header">
+    <button class="btn-volver" (click)="volverAProductos()">
+      <i class="fas fa-arrow-left"></i>
+      Volver
+    </button>
+    <h1>
+      <i class="fas fa-balance-scale"></i>
+      Comparador Inteligente de Productos
+    </h1>
+    <p class="subtitulo">Sistema de decisión multi-criterio TOPSIS</p>
+  </div>
+
+  <!-- Error -->
+  @if (error) {
+    <div class="alert-error">
+      <i class="fas fa-exclamation-circle"></i>
+      {{ error }}
+      <button class="btn-cerrar" (click)="error = null">×</button>
+    </div>
+  }
+
+  <!-- Loading -->
+  @if (cargando) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Analizando productos con TOPSIS...</p>
+    </div>
+  }
+
+  <!-- Mensaje cuando no hay productos seleccionados -->
+  @if (!cargando && productosSeleccionados.length === 0) {
+    <div class="mensaje-sin-productos">
+      <div class="icono-vacio">
+        <i class="fas fa-balance-scale"></i>
+      </div>
+      <h2>No hay productos para comparar</h2>
+      <p>Selecciona productos desde la tienda para poder compararlos aquí.</p>
+      <button class="btn-ir-productos" (click)="volverAProductos()">
+        <i class="fas fa-shopping-bag"></i>
+        Ir a Productos
+      </button>
+    </div>
+  }
+
+  <!-- Contenido Principal: Solo cuando hay productos -->
+  @if (!cargando && productosSeleccionados.length >= 2) {
+    <div class="contenido-principal">
+
+      <!-- Panel de Criterios -->
+      <div class="panel-criterios">
+        <div class="panel-header">
+          <h3>
+            <i class="fas fa-sliders-h"></i>
+            Criterios de Comparación
+          </h3>
+          <button 
+            class="btn-distribuir" 
+            (click)="distribuirPesosAutomaticamente()"
+            [disabled]="modoDistribucionAutomatica"
+          >
+            <i class="fas fa-magic"></i>
+            Distribuir automático
+          </button>
+        </div>
+
+        <div class="criterios-lista">
+          
+          <!-- Precio -->
+          <div class="criterio-item">
+            <div class="criterio-header">
+              <label>
+                <input 
+                  type="checkbox" 
+                  [(ngModel)]="criterios[0].activo"
+                  (change)="toggleCriterio(criterios[0])"
+                />
+                <span class="criterio-icon">{{ criterios[0].icon }}</span>
+                {{ criterios[0].label }}
+              </label>
+              <span class="criterio-tipo" [ngClass]="criterios[0].color">
+                {{ criterios[0].tipo === 'costo' ? 'COSTO' : 'BENEFICIO' }}
+              </span>
+            </div>
+            @if (criterios[0].activo) {
+              <div class="criterio-control">
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="100" 
+                  [(ngModel)]="criterios[0].peso"
+                  (input)="ajustarPeso(criterios[0], $event)"
+                  class="slider"
+                />
+                <input 
+                  type="number" 
+                  [(ngModel)]="criterios[0].peso"
+                  (input)="ajustarPeso(criterios[0], $event)"
+                  min="0" 
+                  max="100"
+                  class="input-peso"
+                />
+                <span class="label-peso">%</span>
+              </div>
+            }
+          </div>
+
+          <!-- Calificación -->
+          <div class="criterio-item">
+            <div class="criterio-header">
+              <label>
+                <input 
+                  type="checkbox" 
+                  [(ngModel)]="criterios[1].activo"
+                  (change)="toggleCriterio(criterios[1])"
+                />
+                <span class="criterio-icon">{{ criterios[1].icon }}</span>
+                {{ criterios[1].label }}
+              </label>
+              <span class="criterio-tipo" [ngClass]="criterios[1].color">
+                {{ criterios[1].tipo === 'costo' ? 'COSTO' : 'BENEFICIO' }}
+              </span>
+            </div>
+            @if (criterios[1].activo) {
+              <div class="criterio-control">
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="100" 
+                  [(ngModel)]="criterios[1].peso"
+                  (input)="ajustarPeso(criterios[1], $event)"
+                  class="slider"
+                />
+                <input 
+                  type="number" 
+                  [(ngModel)]="criterios[1].peso"
+                  (input)="ajustarPeso(criterios[1], $event)"
+                  min="0" 
+                  max="100"
+                  class="input-peso"
+                />
+                <span class="label-peso">%</span>
+              </div>
+            }
+          </div>
+
+          <!-- Reviews -->
+          <div class="criterio-item">
+            <div class="criterio-header">
+              <label>
+                <input 
+                  type="checkbox" 
+                  [(ngModel)]="criterios[2].activo"
+                  (change)="toggleCriterio(criterios[2])"
+                />
+                <span class="criterio-icon">{{ criterios[2].icon }}</span>
+                {{ criterios[2].label }}
+              </label>
+              <span class="criterio-tipo" [ngClass]="criterios[2].color">
+                {{ criterios[2].tipo === 'costo' ? 'COSTO' : 'BENEFICIO' }}
+              </span>
+            </div>
+            @if (criterios[2].activo) {
+              <div class="criterio-control">
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="100" 
+                  [(ngModel)]="criterios[2].peso"
+                  (input)="ajustarPeso(criterios[2], $event)"
+                  class="slider"
+                />
+                <input 
+                  type="number" 
+                  [(ngModel)]="criterios[2].peso"
+                  (input)="ajustarPeso(criterios[2], $event)"
+                  min="0" 
+                  max="100"
+                  class="input-peso"
+                />
+                <span class="label-peso">%</span>
+              </div>
+            }
+          </div>
+
+          <!-- Popularidad -->
+          <div class="criterio-item">
+            <div class="criterio-header">
+              <label>
+                <input 
+                  type="checkbox" 
+                  [(ngModel)]="criterios[3].activo"
+                  (change)="toggleCriterio(criterios[3])"
+                />
+                <span class="criterio-icon">{{ criterios[3].icon }}</span>
+                {{ criterios[3].label }}
+              </label>
+              <span class="criterio-tipo" [ngClass]="criterios[3].color">
+                {{ criterios[3].tipo === 'costo' ? 'COSTO' : 'BENEFICIO' }}
+              </span>
+            </div>
+            @if (criterios[3].activo) {
+              <div class="criterio-control">
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="100" 
+                  [(ngModel)]="criterios[3].peso"
+                  (input)="ajustarPeso(criterios[3], $event)"
+                  class="slider"
+                />
+                <input 
+                  type="number" 
+                  [(ngModel)]="criterios[3].peso"
+                  (input)="ajustarPeso(criterios[3], $event)"
+                  min="0" 
+                  max="100"
+                  class="input-peso"
+                />
+                <span class="label-peso">%</span>
+              </div>
+            }
+          </div>
+
+          <!-- Stock -->
+          <div class="criterio-item">
+            <div class="criterio-header">
+              <label>
+                <input 
+                  type="checkbox" 
+                  [(ngModel)]="criterios[4].activo"
+                  (change)="toggleCriterio(criterios[4])"
+                />
+                <span class="criterio-icon">{{ criterios[4].icon }}</span>
+                {{ criterios[4].label }}
+              </label>
+              <span class="criterio-tipo" [ngClass]="criterios[4].color">
+                {{ criterios[4].tipo === 'costo' ? 'COSTO' : 'BENEFICIO' }}
+              </span>
+            </div>
+            @if (criterios[4].activo) {
+              <div class="criterio-control">
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="100" 
+                  [(ngModel)]="criterios[4].peso"
+                  (input)="ajustarPeso(criterios[4], $event)"
+                  class="slider"
+                />
+                <input 
+                  type="number" 
+                  [(ngModel)]="criterios[4].peso"
+                  (input)="ajustarPeso(criterios[4], $event)"
+                  min="0" 
+                  max="100"
+                  class="input-peso"
+                />
+                <span class="label-peso">%</span>
+              </div>
+            }
+          </div>
+
+        </div>
+
+        <!-- Productos Seleccionados -->
+        <div class="productos-para-comparar">
+          <h4>
+            <i class="fas fa-list"></i>
+            Productos a comparar ({{ productosSeleccionados.length }})
+          </h4>
+          <div class="chips-container">
+            @for (producto of productosSeleccionados; track producto.id_producto) {
+              <div class="producto-chip">
+                <span>{{ producto.nombre }}</span>
+                <button (click)="quitarProducto(producto)" title="Eliminar">×</button>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Footer de Criterios -->
+        <div class="criterios-footer">
+          <div class="suma-pesos" [class.suma-invalida]="pesoTotal !== 100">
+            <span>Total:</span>
+            <strong>{{ pesoTotal }}%</strong>
+            @if (pesoTotal !== 100) {
+              <small class="texto-error">Debe sumar 100%</small>
+            }
+          </div>
+          <button 
+            class="btn-recalcular" 
+            (click)="compararProductos()"
+            [disabled]="!puedeComparar"
+          >
+            <i class="fas fa-sync-alt"></i>
+            {{ resultadoTOPSIS ? 'Recalcular' : 'Comparar' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Panel de Resultados TOPSIS -->
+      @if (resultadoTOPSIS) {
+        <div class="panel-resultados">
+          
+          <!-- Ganador Destacado -->
+          <div class="ganador-destacado">
+            <div class="ganador-badge">
+              <i class="fas fa-trophy"></i>
+              MEJOR OPCIÓN
+            </div>
+            <div class="ganador-contenido">
+              <div class="ganador-imagen">
+                @if (resultadoTOPSIS.producto_ganador.imagen) {
+                  <img 
+                    [src]="resultadoTOPSIS.producto_ganador.imagen" 
+                    [alt]="resultadoTOPSIS.producto_ganador.nombre" 
+                  />
+                } @else {
+                  <div class="imagen-placeholder">
+                    <i class="fas fa-image"></i>
+                  </div>
+                }
+              </div>
+              <div class="ganador-info">
+                <h2>{{ resultadoTOPSIS.producto_ganador.nombre }}</h2>
+                
+                <div class="ganador-stats">
+                  <div class="stat">
+                    <i class="fas fa-star"></i>
+                    {{ resultadoTOPSIS.producto_ganador.calificacion | number:'1.1-1' }}
+                  </div>
+                  <div class="stat">
+                    <i class="fas fa-comments"></i>
+                    {{ resultadoTOPSIS.producto_ganador.reviews }} reviews
+                  </div>
+                  <div class="stat precio">
+                    <i class="fas fa-tag"></i>
+                    {{ resultadoTOPSIS.producto_ganador.precio | currency }}
+                  </div>
+                </div>
+
+                <div class="score-final">
+                  <span>Score TOPSIS:</span>
+                  <div class="score-bar">
+                    <div 
+                      class="score-fill" 
+                      [style.width.%]="resultadoTOPSIS.producto_ganador.score_topsis * 100"
+                    ></div>
+                    <span class="score-valor">
+                      {{ (resultadoTOPSIS.producto_ganador.score_topsis * 100) | number:'1.0-0' }}%
+                    </span>
+                  </div>
+                </div>
+
+                <button 
+                  class="btn-ver-producto" 
+                  (click)="verDetalleProducto(resultadoTOPSIS.producto_ganador.id_producto)"
+                >
+                  <i class="fas fa-shopping-cart"></i>
+                  Ver Producto
+                </button>
+              </div>
+            </div>
+            
+            <div class="ganador-mensaje">
+              <i class="fas fa-info-circle"></i>
+              {{ resultadoTOPSIS.mensaje }}
+            </div>
+          </div>
+
+          <!-- Tabla Comparativa Detallada -->
+          <div class="tabla-comparativa">
+            <h3>
+              <i class="fas fa-chart-bar"></i>
+              Comparativa Detallada
+            </h3>
+
+            <div class="tabla-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th class="col-ranking">Ranking</th>
+                    <th class="col-producto">Producto</th>
+                    <th class="col-precio">Precio</th>
+                    <th class="col-calificacion">Calificación</th>
+                    <th class="col-reviews">Reviews</th>
+                    <th class="col-score">Score TOPSIS</th>
+                    <th class="col-acciones">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (producto of resultadoTOPSIS.productos; track producto.id_producto) {
+                    <tr [class.fila-ganador]="producto.ranking === 1">
+                      <td class="col-ranking">
+                        @if (producto.ranking === 1) {
+                          <span class="medalla oro">
+                            <i class="fas fa-trophy"></i>
+                          </span>
+                        } @else if (producto.ranking === 2) {
+                          <span class="medalla plata">
+                            <i class="fas fa-medal"></i>
+                          </span>
+                        } @else if (producto.ranking === 3) {
+                          <span class="medalla bronce">
+                            <i class="fas fa-medal"></i>
+                          </span>
+                        } @else {
+                          <span class="numero-ranking">{{ producto.ranking }}</span>
+                        }
+                      </td>
+
+                      <td class="col-producto">
+                        <div class="producto-info">
+                          <div class="producto-mini-img">
+                            @if (producto.imagen) {
+                              <img [src]="producto.imagen" [alt]="producto.nombre" />
+                            } @else {
+                              <i class="fas fa-image"></i>
+                            }
+                          </div>
+                          <div>
+                            <strong>{{ producto.nombre }}</strong>
+                            @if (producto.marca) {
+                              <small>{{ producto.marca }}</small>
+                            }
+                            @if (producto.vendedor_nombre) {
+                              <small class="vendedor">
+                                <i class="fas fa-user"></i>
+                                {{ producto.vendedor_nombre }}
+                              </small>
+                            }
+                          </div>
+                        </div>
+                      </td>
+
+                      <td class="col-precio">
+                        <strong>{{ producto.precio | currency }}</strong>
+                      </td>
+
+                      <td class="col-calificacion">
+                        <div class="rating">
+                          <i class="fas fa-star"></i>
+                          {{ producto.calificacion | number:'1.1-1' }}
+                        </div>
+                      </td>
+
+                      <td class="col-reviews">
+                        {{ producto.reviews }}
+                      </td>
+
+                      <td class="col-score">
+                        <div class="score-cell">
+                          <div class="score-mini-bar">
+                            <div 
+                              class="score-mini-fill"
+                              [style.width.%]="producto.score_topsis * 100"
+                            ></div>
+                          </div>
+                          <span>{{ (producto.score_topsis * 100) | number:'1.0-0' }}%</span>
+                        </div>
+                      </td>
+
+                      <td class="col-acciones">
+                        <button 
+                          class="btn-icono" 
+                          (click)="verDetalleProducto(producto.id_producto)"
+                          title="Ver detalles"
+                        >
+                          <i class="fas fa-eye"></i>
+                        </button>
+                        <button 
+                          class="btn-icono btn-eliminar" 
+                          (click)="quitarProducto({id_producto: producto.id_producto})"
+                          title="Eliminar de comparación"
+                        >
+                          <i class="fas fa-times"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      }
+
+    </div>
+  }
+
+</div>
