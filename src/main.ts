@@ -11,3 +11,5 @@ bootstrapApplication(AppComponent, {
     importProvidersFrom(HttpClientModule) // ✅ correcto aquí
   ]
 });
+
+// Force rebuild 11/26/2025 16:34:00
