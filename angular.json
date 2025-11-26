@@ -13,7 +13,7 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "outputPath": "dist/focoshop-v2",
+            "outputPath": "dist/focoshop",
             "polyfills": [
               "zone.js"
             ],
