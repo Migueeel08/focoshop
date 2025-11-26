@@ -4,7 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { StripeCheckoutService } from '../services/stripe-checkout.service';
 import { ReviewModalComponent } from '../components/review-modal.component';
-import { environment } from '../environments/environment';
+import { environment } from '../../environments/environment';
 
 // Interfaces locales
 interface ItemCarrito {

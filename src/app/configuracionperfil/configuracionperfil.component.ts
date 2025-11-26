@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { UsuariosService } from '../services/usuarios.service';
 import { MetodosPagoService } from '../services/metodos-pago.service';
 import { HttpClientModule } from '@angular/common/http';
-import { environment } from '../environments/environment';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-configuracion',

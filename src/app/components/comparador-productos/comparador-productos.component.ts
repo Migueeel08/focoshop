@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { TopsisService, ResultadoTOPSIS, CriterioTOPSIS, ProductoTOPSIS } from '../../services/topsis.service';
-import { environment } from '../../environments/environment';
+import { environment } from '../../../environments/environment';
 
 interface Producto {
   id_producto: number;
