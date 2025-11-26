@@ -10,7 +10,7 @@ import { Observable } from 'rxjs';
 })
 export class StripeCheckoutService {
   
-  private apiUrl = 'http://localhost:8000/api/pagos';
+  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api/pagos';
   
   // ✅ TU PUBLISHABLE KEY (ya configurada)
   private stripePublishableKey = 'pk_test_51SR1uoE0bymcokfg1AYWjIxQSmWw0w6PRtIIgdj9SyGDEfQKbfIfBT0VHdegQ3Jp6lklMVgR9bucan9NQMgD5c2a00jpIV3Cnf';

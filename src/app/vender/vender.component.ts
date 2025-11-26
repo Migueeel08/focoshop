@@ -53,7 +53,7 @@ export class VenderComponent implements OnInit {
     { nombre: 'Naranja', hex: '#FFA500' }
   ];
 
-  private apiUrl = 'http://localhost:8000/api';
+  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api';
 
   constructor(private router: Router, private http: HttpClient) {}
 

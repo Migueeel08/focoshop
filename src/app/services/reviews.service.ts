@@ -28,7 +28,7 @@ export interface ProductoCalificacion {
   providedIn: 'root'
 })
 export class ReviewsService {
-  private apiUrl = 'http://localhost:8000/api';
+  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api';
 
   constructor(private http: HttpClient) {}
 

@@ -40,7 +40,7 @@ interface CarritoResumen {
 })
 export class CarritoComponent implements OnInit, OnDestroy {
   
-  private apiUrl = 'http://localhost:8000/api';
+  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api';
   
   // ===== DATOS DEL CARRITO =====
   carrito: CarritoResumen | null = null;
@@ -640,7 +640,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
     if (imagen.startsWith('http')) return imagen;
     if (imagen.startsWith('assets/')) return imagen;
     if (imagen.startsWith('data:image')) return imagen;
-    if (imagen.startsWith('/uploads/')) return `http://localhost:8000${imagen}`;
+    if (imagen.startsWith('/uploads/')) return `https://focoshop-backend-production.up.railway.app${imagen}`;
     return 'assets/img/producto-default.jpg';
   }
 

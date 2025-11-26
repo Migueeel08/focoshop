@@ -12,8 +12,8 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
   styleUrls: ['./admin-usuarios.component.css']
 })
 export class AdminUsuariosComponent implements OnInit {
-  private apiUrl = 'http://localhost:8000/api';
-  private baseUrl = 'http://localhost:8000'; // ✅ AGREGAR
+  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api';
+  private baseUrl = 'https://focoshop-backend-production.up.railway.app'; // ✅ AGREGAR
   
   usuarios: any[] = [];
   usuariosFiltrados: any[] = [];

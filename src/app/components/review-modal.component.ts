@@ -20,7 +20,7 @@ export interface Review {
   styleUrls: ['./review-modal.component.css']
 })
 export class ReviewModalComponent {
-  private apiUrl = 'http://localhost:8000/api';
+  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api';
 
   @Input() visible: boolean = false;
   @Input() idProducto!: number;

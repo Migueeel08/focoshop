@@ -32,7 +32,7 @@ export interface CarritoResumen {
   providedIn: 'root'
 })
 export class CarritoService {
-  private apiUrl = 'http://localhost:8000/api/carrito';
+  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api/carrito';
   
   // BehaviorSubject para contador en tiempo real
   private contadorSubject = new BehaviorSubject<number>(0);

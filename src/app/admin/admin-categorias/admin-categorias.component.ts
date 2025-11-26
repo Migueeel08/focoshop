@@ -12,7 +12,7 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
   styleUrls: ['./admin-categorias.component.css']
 })
 export class AdminCategoriasComponent implements OnInit {
-  private apiUrl = 'http://localhost:8000/api';
+  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api';
   
   categorias: any[] = [];
   categoriasFiltradas: any[] = [];

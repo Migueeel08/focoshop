@@ -11,7 +11,7 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
   styleUrls: ['./admin-panel.component.css']
 })
 export class AdminPanelComponent implements OnInit {
-  private apiUrl = 'http://localhost:8000/api';
+  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api';
   
   adminNombre = '';
   adminEmail = '';

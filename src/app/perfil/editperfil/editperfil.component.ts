@@ -169,7 +169,7 @@ export class EditPerfilComponent implements OnInit {
             next: (res: any) => {
               console.log('📸 Foto subida correctamente:', res);
               if (res.foto_url) {
-                this.user.imagen = `http://localhost:8000${res.foto_url}`;
+                this.user.imagen = `https://focoshop-backend-production.up.railway.app${res.foto_url}`;
               }
               this.finalizarActualizacion();
             },
@@ -190,7 +190,7 @@ export class EditPerfilComponent implements OnInit {
   }
 
   finalizarActualizacion(): void {
-    const apiUrl = 'http://localhost:8000';
+    const apiUrl = 'https://focoshop-backend-production.up.railway.app';
     
     let imagenFinal = this.user.imagen;
     

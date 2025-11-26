@@ -60,8 +60,8 @@ export class LoginComponent implements OnInit, AfterViewInit {
   cargando = false;
 
   // ===== API =====
-  private apiUrl = 'http://localhost:8000/api';
-  private baseUrl = 'http://localhost:8000';
+  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api';
+  private baseUrl = 'https://focoshop-backend-production.up.railway.app';
 
   constructor(public router: Router, private http: HttpClient) {}
 

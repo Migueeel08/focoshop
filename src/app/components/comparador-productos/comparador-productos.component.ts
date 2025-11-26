@@ -37,7 +37,7 @@ interface Criterio {
   styleUrls: ['./comparador-productos.component.css']
 })
 export class ComparadorProductosComponent implements OnInit {
-  private apiUrl = 'http://localhost:8000/api';
+  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api';
 
   // Productos seleccionados (solo los que vienen por parámetro)
   productosSeleccionados: Producto[] = [];
@@ -187,10 +187,10 @@ export class ComparadorProductosComponent implements OnInit {
     }
     
     if (imagen.startsWith('/uploads/')) {
-      return `http://localhost:8000${imagen}`;
+      return `https://focoshop-backend-production.up.railway.app${imagen}`;
     }
     
-    return `http://localhost:8000/uploads/${imagen}`;
+    return `https://focoshop-backend-production.up.railway.app/uploads/${imagen}`;
   }
 
   /**

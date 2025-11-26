@@ -12,8 +12,8 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
   styleUrls: ['./admin-productos.component.css']
 })
 export class AdminProductosComponent implements OnInit {
-  private apiUrl = 'http://localhost:8000/api';
-  private baseUrl = 'http://localhost:8000';
+  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api';
+  private baseUrl = 'https://focoshop-backend-production.up.railway.app';
   
   productos: any[] = [];
   productosFiltrados: any[] = [];

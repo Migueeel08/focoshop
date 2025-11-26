@@ -22,8 +22,8 @@ import { ReviewModalComponent } from '../components/review-modal.component';
 export class DetalleProductoComponent implements OnInit, OnDestroy {
   
   // ===== API =====
-  private apiUrl = 'http://localhost:8000/api';
-  baseUrl = 'http://localhost:8000';
+  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api';
+  baseUrl = 'https://focoshop-backend-production.up.railway.app';
 
   // ===== PRODUCTO =====
   producto: any = null;
@@ -186,7 +186,7 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
     if (imagen.startsWith('http')) return imagen;
     if (imagen.startsWith('assets/')) return imagen;
     if (imagen.startsWith('data:image')) return imagen;
-    if (imagen.startsWith('/uploads/')) return `http://localhost:8000${imagen}`;
+    if (imagen.startsWith('/uploads/')) return `https://focoshop-backend-production.up.railway.app${imagen}`;
     return 'assets/img/producto-default.jpg';
   }
 

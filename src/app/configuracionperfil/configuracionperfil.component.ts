@@ -278,7 +278,7 @@ export class ConfiguracionComponent implements OnInit {
     }
 
     if (imagen.startsWith('/') || imagen.startsWith('uploads/')) {
-      const baseUrl = 'http://localhost:8000';
+      const baseUrl = 'https://focoshop-backend-production.up.railway.app';
       return `${baseUrl}${imagen.startsWith('/') ? imagen : '/' + imagen}`;
     }
 

@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class MetodosPagoService {
-  private apiUrl = 'http://localhost:8000/api/metodos-pago';
+  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api/metodos-pago';
 
   constructor(private http: HttpClient) {}
 

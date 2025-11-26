@@ -49,7 +49,7 @@ export interface RequestComparacion {
   providedIn: 'root'
 })
 export class TopsisService {
-  private apiUrl = 'http://localhost:8000/api';
+  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api';
 
   constructor(private http: HttpClient) {}
 

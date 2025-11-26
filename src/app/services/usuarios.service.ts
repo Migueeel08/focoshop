@@ -7,7 +7,7 @@ import { tap } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class UsuariosService {
-  private apiUrl = 'http://localhost:8000';
+  private apiUrl = 'https://focoshop-backend-production.up.railway.app';
   
   private usuarioSubject = new BehaviorSubject<any>(null);
   public usuario$ = this.usuarioSubject.asObservable();
