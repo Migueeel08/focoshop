@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UsuariosService } from '../../services/usuarios.service';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-editperfil',
@@ -190,7 +191,7 @@ export class EditPerfilComponent implements OnInit {
   }
 
   finalizarActualizacion(): void {
-    const apiUrl = 'https://focoshop-backend-production.up.railway.app';
+    const apiUrl = environment.apiUrl;
     
     let imagenFinal = this.user.imagen;
     

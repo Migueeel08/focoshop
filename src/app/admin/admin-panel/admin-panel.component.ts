@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-admin-panel',
@@ -11,7 +12,7 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
   styleUrls: ['./admin-panel.component.css']
 })
 export class AdminPanelComponent implements OnInit {
-  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api';
+  private apiUrl = environment.apiUrl + '/api';
   
   adminNombre = '';
   adminEmail = '';

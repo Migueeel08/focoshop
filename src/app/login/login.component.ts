@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { environment } from '../environments/environment';
 
 declare var google: any;
 
@@ -60,8 +61,8 @@ export class LoginComponent implements OnInit, AfterViewInit {
   cargando = false;
 
   // ===== API =====
-  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api';
-  private baseUrl = 'https://focoshop-backend-production.up.railway.app';
+  private apiUrl = environment.apiUrl + '/api';
+  private baseUrl = environment.apiUrl;
 
   constructor(public router: Router, private http: HttpClient) {}
 

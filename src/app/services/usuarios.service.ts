@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { environment } from '../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UsuariosService {
-  private apiUrl = 'https://focoshop-backend-production.up.railway.app';
+  private apiUrl = environment.apiUrl;
   
   private usuarioSubject = new BehaviorSubject<any>(null);
   public usuario$ = this.usuarioSubject.asObservable();

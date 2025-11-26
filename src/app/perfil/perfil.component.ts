@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-perfil',
@@ -12,7 +13,7 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./perfil.component.css']
 })
 export class PerfilComponent implements OnInit {
-  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api';
+  private apiUrl = environment.apiUrl + '/api';
 
   user: any = {
     id: null,
@@ -168,7 +169,7 @@ export class PerfilComponent implements OnInit {
   }
 
   obtenerUrlImagenProducto(imagenPath: string | null | undefined): string {
-    const apiUrl = 'https://focoshop-backend-production.up.railway.app';
+    const apiUrl = environment.apiUrl;
     const defaultImage = 'assets/img/producto-default.jpg';
     
     if (!imagenPath || imagenPath.trim() === '') return defaultImage;
@@ -181,7 +182,7 @@ export class PerfilComponent implements OnInit {
   }
 
   obtenerUrlImagen(imagenPath: string | null | undefined): string {
-    const apiUrl = 'https://focoshop-backend-production.up.railway.app';
+    const apiUrl = environment.apiUrl;
     const defaultImage = 'assets/img/profile.jpeg';
     
     if (!imagenPath || imagenPath.trim() === '') return defaultImage;

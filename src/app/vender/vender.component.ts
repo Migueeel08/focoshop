@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-vender',
@@ -53,7 +54,7 @@ export class VenderComponent implements OnInit {
     { nombre: 'Naranja', hex: '#FFA500' }
   ];
 
-  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api';
+  private apiUrl = environment.apiUrl + '/api';
 
   constructor(private router: Router, private http: HttpClient) {}
 

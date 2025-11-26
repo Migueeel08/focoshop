@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { environment } from '../environments/environment';
 
 interface Producto {
   id_producto: number;
@@ -41,7 +42,7 @@ interface Favorito {
 export class FavoritosComponent implements OnInit, OnDestroy {
 
   // ===== API =====
-  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api';
+  private apiUrl = environment.apiUrl + '/api';
 
   // ===== DATOS =====
   favoritos: Favorito[] = [];

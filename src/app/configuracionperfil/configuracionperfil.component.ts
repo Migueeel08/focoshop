@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { UsuariosService } from '../services/usuarios.service';
 import { MetodosPagoService } from '../services/metodos-pago.service';
 import { HttpClientModule } from '@angular/common/http';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-configuracion',
@@ -278,7 +279,7 @@ export class ConfiguracionComponent implements OnInit {
     }
 
     if (imagen.startsWith('/') || imagen.startsWith('uploads/')) {
-      const baseUrl = 'https://focoshop-backend-production.up.railway.app';
+      const baseUrl = environment.apiUrl;
       return `${baseUrl}${imagen.startsWith('/') ? imagen : '/' + imagen}`;
     }
 

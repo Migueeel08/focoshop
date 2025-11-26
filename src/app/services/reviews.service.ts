@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../environments/environment';
 
 export interface Review {
   id_review?: number;
@@ -28,7 +29,7 @@ export interface ProductoCalificacion {
   providedIn: 'root'
 })
 export class ReviewsService {
-  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api';
+  private apiUrl = environment.apiUrl + '/api';
 
   constructor(private http: HttpClient) {}
 

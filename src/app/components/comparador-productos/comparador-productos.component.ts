@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { TopsisService, ResultadoTOPSIS, CriterioTOPSIS, ProductoTOPSIS } from '../../services/topsis.service';
+import { environment } from '../../environments/environment';
 
 interface Producto {
   id_producto: number;
@@ -37,7 +38,7 @@ interface Criterio {
   styleUrls: ['./comparador-productos.component.css']
 })
 export class ComparadorProductosComponent implements OnInit {
-  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api';
+  private apiUrl = environment.apiUrl + '/api';
 
   // Productos seleccionados (solo los que vienen por parámetro)
   productosSeleccionados: Producto[] = [];

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-admin-usuarios',
@@ -12,8 +13,8 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
   styleUrls: ['./admin-usuarios.component.css']
 })
 export class AdminUsuariosComponent implements OnInit {
-  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api';
-  private baseUrl = 'https://focoshop-backend-production.up.railway.app'; // ✅ AGREGAR
+  private apiUrl = environment.apiUrl + '/api';
+  private baseUrl = environment.apiUrl; // ✅ AGREGAR
   
   usuarios: any[] = [];
   usuariosFiltrados: any[] = [];

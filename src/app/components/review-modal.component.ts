@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../environments/environment';
 
 export interface Review {
   id_review?: number;
@@ -20,7 +21,7 @@ export interface Review {
   styleUrls: ['./review-modal.component.css']
 })
 export class ReviewModalComponent {
-  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api';
+  private apiUrl = environment.apiUrl + '/api';
 
   @Input() visible: boolean = false;
   @Input() idProducto!: number;

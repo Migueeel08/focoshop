@@ -4,6 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { StripeCheckoutService } from '../services/stripe-checkout.service';
 import { ReviewModalComponent } from '../components/review-modal.component';
+import { environment } from '../environments/environment';
 
 // Interfaces locales
 interface ItemCarrito {
@@ -40,7 +41,7 @@ interface CarritoResumen {
 })
 export class CarritoComponent implements OnInit, OnDestroy {
   
-  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api';
+  private apiUrl = environment.apiUrl + '/api';
   
   // ===== DATOS DEL CARRITO =====
   carrito: CarritoResumen | null = null;

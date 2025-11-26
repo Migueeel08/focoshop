@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { StripeCheckoutService } from '../services/stripe-checkout.service';
 import { ReviewModalComponent } from '../components/review-modal.component';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-detalle-producto',
@@ -22,7 +23,7 @@ import { ReviewModalComponent } from '../components/review-modal.component';
 export class DetalleProductoComponent implements OnInit, OnDestroy {
   
   // ===== API =====
-  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api';
+  private apiUrl = environment.apiUrl + '/api';
   baseUrl = 'https://focoshop-backend-production.up.railway.app';
 
   // ===== PRODUCTO =====

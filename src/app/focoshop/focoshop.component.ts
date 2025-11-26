@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'foco-shop',
@@ -15,7 +16,7 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
 
   // ===== API =====
-  private apiUrl = 'https://focoshop-backend-production.up.railway.app/api';
+  private apiUrl = environment.apiUrl + '/api';
 
   // ===== CARRITO Y FAVORITOS =====
   contadorCarrito: number = 0;
