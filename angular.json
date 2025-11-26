@@ -13,7 +13,9 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "outputPath": "dist/focoshop",`n    "index": "src/index.html",`n    "index": "src/index.html",
+            "outputPath": "dist/focoshop",
+            "index": "src/index.html",
+            "browser": "src/main.ts",`n    "index": "src/index.html",`n    "index": "src/index.html",
             "polyfills": [
               "zone.js"
             ],
@@ -96,3 +98,4 @@
     "analytics": false
   }
 }
+
