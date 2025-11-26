@@ -1,0 +1,11 @@
+﻿[phases.setup]
+nixPkgs = ['nodejs-22_x']
+
+[phases.install]
+cmds = ['npm install --legacy-peer-deps --force']
+
+[phases.build]
+cmds = ['npm run build']
+
+[start]
+cmd = 'caddy run --config Caddyfile --adapter caddyfile'
