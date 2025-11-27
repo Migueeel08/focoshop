@@ -1,1 +1,1 @@
-﻿web: caddy run --config Caddyfile --adapter caddyfile
+﻿web: caddy run --config /Caddyfile --adapter caddyfile
