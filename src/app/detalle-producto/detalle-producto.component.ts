@@ -24,7 +24,7 @@ export class DetalleProductoComponent implements OnInit, OnDestroy {
   
   // ===== API =====
   private apiUrl = environment.apiUrl + '/api';
-  baseUrl = 'https://focoshop-backend-production.up.railway.app';
+  baseUrl = 'https://focoshop-backend-production.up.railway.app/';
 
   // ===== PRODUCTO =====
   producto: any = null;
