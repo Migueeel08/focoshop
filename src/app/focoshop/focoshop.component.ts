@@ -17,6 +17,7 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
 
   // ===== API =====
   private apiUrl = environment.apiUrl + '/api';
+  private baseUrl = environment.apiUrl;
 
   // ===== CARRITO Y FAVORITOS =====
   contadorCarrito: number = 0;
@@ -311,7 +312,7 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     if (imagen.startsWith('http')) return imagen;
     if (imagen.startsWith('assets/')) return imagen;
     if (imagen.startsWith('data:image')) return imagen;
-    if (imagen.startsWith('/uploads/')) return `https://focoshop-backend-production.up.railway.app${imagen}`;
+    if (imagen.startsWith('/uploads/')) return `${this.baseUrl}${imagen}`;
     return 'assets/img/producto-default.jpg';
   }
 
@@ -643,24 +644,22 @@ export class FocoShopComponent implements AfterViewInit, OnInit, OnDestroy {
     return this.productosParaComparar.has(idProducto);
   }
 
-irAlComparador(): void {
-  if (this.productosParaComparar.size < 2) {
-    alert('⚠️ Selecciona al menos 2 productos para comparar');
-    return;
-  }
-  
-  // ✅ CONVERTIR Set A ARRAY Y PASAR POR URL
-  const idsArray = Array.from(this.productosParaComparar);
-  
-  console.log('🔍 Navegando al comparador con IDs:', idsArray);
-  
-  // ✅ NAVEGAR CON QUERY PARAMS
-  this.router.navigate(['/comparador'], {
-    queryParams: {
-      ids: idsArray.join(',')
+  irAlComparador(): void {
+    if (this.productosParaComparar.size < 2) {
+      alert('⚠️ Selecciona al menos 2 productos para comparar');
+      return;
     }
-  });
-}
+    
+    const idsArray = Array.from(this.productosParaComparar);
+    
+    console.log('🔍 Navegando al comparador con IDs:', idsArray);
+    
+    this.router.navigate(['/comparador'], {
+      queryParams: {
+        ids: idsArray.join(',')
+      }
+    });
+  }
 
   limpiarComparacion(): void {
     this.productosParaComparar.clear();
