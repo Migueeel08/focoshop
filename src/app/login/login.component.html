@@ -280,11 +280,11 @@
         </button>
       </form>
 
-      <!-- ✅ NUEVO: Link de recuperación FUERA del formulario -->
+      <!-- ✅ NUEVO: Link de recuperación FUERA del formulario con BUTTON -->
       <div *ngIf="!isRegisterMode" class="forgot-password-link">
-        <a (click)="irARecuperarContrasena()" style="cursor: pointer;">
+        <button type="button" (click)="irARecuperarContrasena()" class="btn-forgot">
           ¿Olvidaste tu contraseña?
-        </a>
+        </button>
       </div>
 
       <!-- DIVIDER Y GOOGLE (Solo en modo Registro) -->
