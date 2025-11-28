@@ -26,6 +26,13 @@ export class LoginComponent implements OnInit, AfterViewInit {
   confirmarContrasena = '';
   recordarme = false;
   
+  // ===== MODAL DE RECUPERACIÓN DE CONTRASEÑA =====
+  mostrarModalRecuperacion = false;
+  emailRecuperacion = '';
+  enviandoRecuperacion = false;
+  mensajeRecuperacion = '';
+  tipoMensajeRecuperacion: 'exito' | 'error' = 'exito';
+  
   // ===== CONTROL DE VISIBILIDAD DE CONTRASEÑAS =====
   mostrarContrasena = false;
   mostrarConfirmarContrasena = false;
@@ -376,11 +383,62 @@ export class LoginComponent implements OnInit, AfterViewInit {
   }
 
   // ===========================
-  // NAVEGACIÓN
+  // MODAL DE RECUPERACIÓN DE CONTRASEÑA
   // ===========================
   irARecuperarContrasena() {
-    console.log('🔑 Navegando a recuperar contraseña...');
-    this.router.navigate(['/forgot-password']);
+    this.abrirModalRecuperacion();
+  }
+
+  abrirModalRecuperacion() {
+    this.mostrarModalRecuperacion = true;
+    this.emailRecuperacion = '';
+    this.mensajeRecuperacion = '';
+  }
+
+  cerrarModalRecuperacion() {
+    this.mostrarModalRecuperacion = false;
+    this.emailRecuperacion = '';
+    this.mensajeRecuperacion = '';
+  }
+
+  enviarEmailRecuperacion() {
+    if (!this.emailRecuperacion) {
+      this.mensajeRecuperacion = 'Por favor ingresa tu email';
+      this.tipoMensajeRecuperacion = 'error';
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(this.emailRecuperacion)) {
+      this.mensajeRecuperacion = 'Email inválido';
+      this.tipoMensajeRecuperacion = 'error';
+      return;
+    }
+
+    this.enviandoRecuperacion = true;
+    this.mensajeRecuperacion = '';
+
+    this.http.post(`${this.apiUrl}/usuarios/solicitar-reset-password`, { 
+      email: this.emailRecuperacion 
+    }).subscribe({
+      next: (response: any) => {
+        this.enviandoRecuperacion = false;
+        this.mensajeRecuperacion = 'Email enviado. Revisa tu bandeja de entrada.';
+        this.tipoMensajeRecuperacion = 'exito';
+        console.log('✅ Email de recuperación enviado');
+        
+        // Cerrar modal después de 3 segundos
+        setTimeout(() => {
+          this.cerrarModalRecuperacion();
+        }, 3000);
+      },
+      error: (error) => {
+        this.enviandoRecuperacion = false;
+        this.mensajeRecuperacion = error.error?.detail || 'Error al enviar email';
+        this.tipoMensajeRecuperacion = 'error';
+        console.error('❌ Error:', error);
+      }
+    });
   }
 
   // ===========================

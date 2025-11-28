@@ -12,6 +12,60 @@
     </div>
   </div>
 
+  <!-- 🔑 MODAL DE RECUPERACIÓN DE CONTRASEÑA -->
+  <div *ngIf="mostrarModalRecuperacion" class="modal-overlay" (click)="cerrarModalRecuperacion()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-icon">🔑</div>
+        <h2>¿Olvidaste tu contraseña?</h2>
+        <p>Te enviaremos un email para recuperarla</p>
+        <button class="btn-close-modal" (click)="cerrarModalRecuperacion()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="input-group">
+          <label for="emailRecuperacion">
+            <i class="fas fa-envelope"></i>
+            Correo Electrónico
+          </label>
+          <input 
+            type="email" 
+            id="emailRecuperacion"
+            [(ngModel)]="emailRecuperacion"
+            placeholder="tu@email.com"
+            [disabled]="enviandoRecuperacion"
+            (keyup.enter)="enviarEmailRecuperacion()"
+          />
+        </div>
+
+        <div *ngIf="mensajeRecuperacion" 
+             class="mensaje-recuperacion"
+             [class.exito]="tipoMensajeRecuperacion === 'exito'"
+             [class.error]="tipoMensajeRecuperacion === 'error'">
+          <i [class]="tipoMensajeRecuperacion === 'exito' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'"></i>
+          {{ mensajeRecuperacion }}
+        </div>
+
+        <button 
+          class="btn-enviar-recuperacion"
+          (click)="enviarEmailRecuperacion()"
+          [disabled]="enviandoRecuperacion"
+        >
+          <span *ngIf="!enviandoRecuperacion">
+            <i class="fas fa-paper-plane"></i>
+            Enviar enlace de recuperación
+          </span>
+          <span *ngIf="enviandoRecuperacion">
+            <i class="fas fa-spinner fa-spin"></i>
+            Enviando...
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- CONTENEDOR CON DOS COLUMNAS -->
   <div class="login-wrapper">
     
@@ -280,7 +334,7 @@
         </button>
       </form>
 
-      <!-- ✅ NUEVO: Link de recuperación FUERA del formulario con BUTTON -->
+      <!-- ✅ Link de recuperación FUERA del formulario -->
       <div *ngIf="!isRegisterMode" class="forgot-password-link">
         <button type="button" (click)="irARecuperarContrasena()" class="btn-forgot">
           ¿Olvidaste tu contraseña?
