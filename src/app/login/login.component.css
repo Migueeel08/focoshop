@@ -920,3 +920,19 @@ html, body {
     font-size: 2rem;
   }
 }
+.forgot-password-link {
+  text-align: center;
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+.forgot-password-link a {
+  color: #8b5cf6;
+  text-decoration: none;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.forgot-password-link a:hover {
+  text-decoration: underline;
+}
