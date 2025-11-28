@@ -1,7 +1,7 @@
 import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router'; // ✅ AGREGADO RouterModule
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
@@ -10,7 +10,7 @@ declare var google: any;
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, HttpClientModule],
+  imports: [CommonModule, FormsModule, HttpClientModule, RouterModule], // ✅ AGREGADO RouterModule
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
@@ -408,7 +408,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
       next: (res) => {
         console.log('Usuario registrado:', res);
         this.cargando = false;
-        this.mostrarAlerta('¡Registro exitoso! Ahora puedes iniciar sesión 🎉', 'exito');
+        this.mostrarAlerta('¡Registro exitoso! Revisa tu email para verificar tu cuenta 📧', 'exito');
         setTimeout(() => {
           this.switchToLogin();
         }, 2000);
