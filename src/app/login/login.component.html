@@ -253,14 +253,17 @@
           </span>
         </div>
 
-        <!-- Recordarme (Solo en login) -->
+        <!-- Recordarme y Olvidé contraseña (Solo en login) -->
         <div *ngIf="!isRegisterMode" class="options-row">
           <label class="checkbox-container">
             <input type="checkbox" [(ngModel)]="recordarme" name="recordarme" />
             <span class="checkmark"></span>
             Recordarme
           </label>
-          <a class="forgot-password">¿Olvidaste tu contraseña?</a>
+          <!-- ✅ CORREGIDO: Click event en lugar de routerLink -->
+          <a (click)="irARecuperarContrasena()" class="forgot-password" style="cursor: pointer;">
+            ¿Olvidaste tu contraseña?
+          </a>
         </div>
 
         <!-- BOTÓN PRINCIPAL -->

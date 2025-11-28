@@ -1,7 +1,7 @@
 import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router'; // ✅ AGREGADO RouterModule
+import { Router, RouterModule } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
@@ -10,7 +10,7 @@ declare var google: any;
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, HttpClientModule, RouterModule], // ✅ AGREGADO RouterModule
+  imports: [CommonModule, FormsModule, HttpClientModule, RouterModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
@@ -373,6 +373,14 @@ export class LoginComponent implements OnInit, AfterViewInit {
 
   cerrarAlerta() {
     this.alertaVisible = false;
+  }
+
+  // ===========================
+  // NAVEGACIÓN
+  // ===========================
+  irARecuperarContrasena() {
+    console.log('🔑 Navegando a recuperar contraseña...');
+    this.router.navigate(['/forgot-password']);
   }
 
   // ===========================
