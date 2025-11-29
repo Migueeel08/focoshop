@@ -13,7 +13,7 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "outputPath": "dist/focoshop/browser",
+            "outputPath": "dist/focoshop",
             "polyfills": [
               "zone.js"
             ],
@@ -29,9 +29,7 @@
               "node_modules/@fortawesome/fontawesome-free/css/all.min.css",
               "src/app/focoshop/focoshop.component.css"
             ],
-            "scripts": [],
-            "index": "src/index.html",
-            "browser": "src/main.ts"
+            "scripts": []
           },
           "configurations": {
             "production": {
