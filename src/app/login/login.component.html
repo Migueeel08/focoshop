@@ -12,7 +12,7 @@
     </div>
   </div>
 
-  <!-- 🔑 MODAL DE RECUPERACIÓN DE CONTRASEÑA -->
+  <!-- 🔑 MODAL 1: SOLICITAR RECUPERACIÓN DE CONTRASEÑA -->
   <div *ngIf="mostrarModalRecuperacion" class="modal-overlay" (click)="cerrarModalRecuperacion()">
     <div class="modal-card" (click)="$event.stopPropagation()">
       <div class="modal-header">
@@ -63,6 +63,138 @@
           </span>
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- 🔐 MODAL 2: RESETEAR CONTRASEÑA -->
+  <div *ngIf="mostrarModalReset" class="modal-overlay">
+    <div class="modal-card-reset" (click)="$event.stopPropagation()">
+      
+      <!-- VERIFICANDO TOKEN -->
+      <div *ngIf="verificandoToken" class="modal-loading">
+        <div class="spinner"></div>
+        <h2>Verificando enlace...</h2>
+        <p>Por favor espera un momento</p>
+      </div>
+
+      <!-- TOKEN INVÁLIDO -->
+      <div *ngIf="!verificandoToken && !tokenValido" class="modal-error">
+        <div class="error-icon">⚠️</div>
+        <h2>Enlace inválido o expirado</h2>
+        <p>{{ mensajeReset }}</p>
+        <button class="btn-primary" (click)="solicitarNuevoToken()">
+          Solicitar nuevo enlace
+        </button>
+      </div>
+
+      <!-- TOKEN VÁLIDO - FORMULARIO -->
+      <div *ngIf="!verificandoToken && tokenValido">
+        <div class="modal-header">
+          <div class="modal-icon">🔐</div>
+          <h2>Restablecer Contraseña</h2>
+          <p>Ingresa tu nueva contraseña</p>
+          <button class="btn-close-modal" (click)="cerrarModalReset()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Nueva Contraseña -->
+          <div class="input-group">
+            <label>
+              <i class="fas fa-lock"></i>
+              Nueva Contraseña
+            </label>
+            <div class="password-wrapper">
+              <input 
+                [type]="mostrarNuevaContrasena ? 'text' : 'password'"
+                [(ngModel)]="nuevaContrasena"
+                placeholder="••••••••"
+                (input)="validarNuevaContrasena()"
+              />
+              <button 
+                type="button" 
+                class="btn-toggle-password"
+                (click)="mostrarNuevaContrasena = !mostrarNuevaContrasena"
+              >
+                <i [class]="mostrarNuevaContrasena ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+              </button>
+            </div>
+
+            <!-- Requisitos -->
+            <div class="password-requirements">
+              <div class="requirement" [class.met]="requisitosReset.longitud">
+                <i [class]="requisitosReset.longitud ? 'fas fa-check-circle' : 'fas fa-circle'"></i>
+                Mínimo 8 caracteres
+              </div>
+              <div class="requirement" [class.met]="requisitosReset.mayuscula">
+                <i [class]="requisitosReset.mayuscula ? 'fas fa-check-circle' : 'fas fa-circle'"></i>
+                Una mayúscula
+              </div>
+              <div class="requirement" [class.met]="requisitosReset.minuscula">
+                <i [class]="requisitosReset.minuscula ? 'fas fa-check-circle' : 'fas fa-circle'"></i>
+                Una minúscula
+              </div>
+              <div class="requirement" [class.met]="requisitosReset.numero">
+                <i [class]="requisitosReset.numero ? 'fas fa-check-circle' : 'fas fa-circle'"></i>
+                Un número
+              </div>
+              <div class="requirement" [class.met]="requisitosReset.especial">
+                <i [class]="requisitosReset.especial ? 'fas fa-check-circle' : 'fas fa-circle'"></i>
+                Un símbolo (!@#$%^&*)
+              </div>
+            </div>
+          </div>
+
+          <!-- Confirmar Contraseña -->
+          <div class="input-group">
+            <label>
+              <i class="fas fa-lock"></i>
+              Confirmar Contraseña
+            </label>
+            <div class="password-wrapper">
+              <input 
+                [type]="mostrarConfirmarNuevaContrasena ? 'text' : 'password'"
+                [(ngModel)]="confirmarNuevaContrasena"
+                placeholder="••••••••"
+              />
+              <button 
+                type="button" 
+                class="btn-toggle-password"
+                (click)="mostrarConfirmarNuevaContrasena = !mostrarConfirmarNuevaContrasena"
+              >
+                <i [class]="mostrarConfirmarNuevaContrasena ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Mensaje -->
+          <div *ngIf="mensajeReset" 
+               class="mensaje-recuperacion"
+               [class.exito]="tipoMensajeReset === 'exito'"
+               [class.error]="tipoMensajeReset === 'error'">
+            <i [class]="tipoMensajeReset === 'exito' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'"></i>
+            {{ mensajeReset }}
+          </div>
+
+          <!-- Botón Submit -->
+          <button 
+            class="btn-enviar-recuperacion"
+            (click)="resetearContrasena()"
+            [disabled]="!contrasenaResetValida() || enviandoReset"
+          >
+            <span *ngIf="!enviandoReset">
+              <i class="fas fa-check"></i>
+              Restablecer Contraseña
+            </span>
+            <span *ngIf="enviandoReset">
+              <i class="fas fa-spinner fa-spin"></i>
+              Actualizando...
+            </span>
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
 

@@ -1,7 +1,7 @@
 import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
@@ -26,12 +26,34 @@ export class LoginComponent implements OnInit, AfterViewInit {
   confirmarContrasena = '';
   recordarme = false;
   
-  // ===== MODAL DE RECUPERACIÓN DE CONTRASEÑA =====
+  // ===== MODAL 1: SOLICITAR RECUPERACIÓN =====
   mostrarModalRecuperacion = false;
   emailRecuperacion = '';
   enviandoRecuperacion = false;
   mensajeRecuperacion = '';
   tipoMensajeRecuperacion: 'exito' | 'error' = 'exito';
+  
+  // ===== MODAL 2: RESETEAR CONTRASEÑA =====
+  mostrarModalReset = false;
+  tokenReset = '';
+  nuevaContrasena = '';
+  confirmarNuevaContrasena = '';
+  mostrarNuevaContrasena = false;
+  mostrarConfirmarNuevaContrasena = false;
+  verificandoToken = false;
+  tokenValido = false;
+  enviandoReset = false;
+  mensajeReset = '';
+  tipoMensajeReset: 'exito' | 'error' = 'exito';
+  
+  // Requisitos para nueva contraseña
+  requisitosReset = {
+    longitud: false,
+    mayuscula: false,
+    minuscula: false,
+    numero: false,
+    especial: false
+  };
   
   // ===== CONTROL DE VISIBILIDAD DE CONTRASEÑAS =====
   mostrarContrasena = false;
@@ -71,10 +93,24 @@ export class LoginComponent implements OnInit, AfterViewInit {
   private apiUrl = environment.apiUrl + '/api';
   private baseUrl = environment.apiUrl;
 
-  constructor(public router: Router, private http: HttpClient) {}
+  constructor(
+    public router: Router, 
+    private http: HttpClient,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
     this.loadGoogleScript();
+    
+    // Detectar token en URL
+    this.route.queryParams.subscribe(params => {
+      const token = params['token'];
+      if (token) {
+        console.log('🔑 Token detectado en URL:', token);
+        this.tokenReset = token;
+        this.abrirModalReset();
+      }
+    });
   }
 
   ngAfterViewInit(): void {
@@ -383,7 +419,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
   }
 
   // ===========================
-  // MODAL DE RECUPERACIÓN DE CONTRASEÑA
+  // MODAL 1: SOLICITAR RECUPERACIÓN
   // ===========================
   irARecuperarContrasena() {
     this.abrirModalRecuperacion();
@@ -439,6 +475,111 @@ export class LoginComponent implements OnInit, AfterViewInit {
         console.error('❌ Error:', error);
       }
     });
+  }
+
+  // ===========================
+  // MODAL 2: RESETEAR CONTRASEÑA
+  // ===========================
+  abrirModalReset() {
+    this.mostrarModalReset = true;
+    this.verificandoToken = true;
+    this.tokenValido = false;
+    this.nuevaContrasena = '';
+    this.confirmarNuevaContrasena = '';
+    this.mensajeReset = '';
+    
+    // Verificar token
+    this.http.get(`${this.apiUrl}/usuarios/verificar-token-reset/${this.tokenReset}`)
+      .subscribe({
+        next: (response: any) => {
+          this.verificandoToken = false;
+          this.tokenValido = response.valido;
+          if (!response.valido) {
+            this.mensajeReset = response.message || 'Token inválido o expirado';
+            this.tipoMensajeReset = 'error';
+          }
+        },
+        error: (error) => {
+          this.verificandoToken = false;
+          this.tokenValido = false;
+          this.mensajeReset = error.error?.detail || 'Error al verificar el token';
+          this.tipoMensajeReset = 'error';
+        }
+      });
+  }
+
+  cerrarModalReset() {
+    this.mostrarModalReset = false;
+    this.tokenReset = '';
+    this.nuevaContrasena = '';
+    this.confirmarNuevaContrasena = '';
+    this.requisitosReset = {
+      longitud: false,
+      mayuscula: false,
+      minuscula: false,
+      numero: false,
+      especial: false
+    };
+    
+    // Limpiar token de la URL
+    this.router.navigate(['/login']);
+  }
+
+  validarNuevaContrasena() {
+    this.requisitosReset.longitud = this.nuevaContrasena.length >= 8;
+    this.requisitosReset.mayuscula = /[A-Z]/.test(this.nuevaContrasena);
+    this.requisitosReset.minuscula = /[a-z]/.test(this.nuevaContrasena);
+    this.requisitosReset.numero = /[0-9]/.test(this.nuevaContrasena);
+    this.requisitosReset.especial = /[!@#$%^&*(),.?":{}|<>]/.test(this.nuevaContrasena);
+  }
+
+  contrasenaResetValida(): boolean {
+    return Object.values(this.requisitosReset).every(r => r);
+  }
+
+  resetearContrasena() {
+    this.mensajeReset = '';
+    
+    if (!this.contrasenaResetValida()) {
+      this.mensajeReset = 'La contraseña no cumple con los requisitos';
+      this.tipoMensajeReset = 'error';
+      return;
+    }
+    
+    if (this.nuevaContrasena !== this.confirmarNuevaContrasena) {
+      this.mensajeReset = 'Las contraseñas no coinciden';
+      this.tipoMensajeReset = 'error';
+      return;
+    }
+
+    this.enviandoReset = true;
+
+    this.http.post(`${this.apiUrl}/usuarios/reset-password`, {
+      token: this.tokenReset,
+      nueva_contrasena: this.nuevaContrasena
+    }).subscribe({
+      next: (response: any) => {
+        this.enviandoReset = false;
+        this.mensajeReset = response.message || 'Contraseña actualizada exitosamente';
+        this.tipoMensajeReset = 'exito';
+        
+        // Cerrar modal y mostrar alerta de éxito
+        setTimeout(() => {
+          this.cerrarModalReset();
+          this.mostrarAlerta('Contraseña actualizada. Ya puedes iniciar sesión', 'exito');
+        }, 2000);
+      },
+      error: (error) => {
+        this.enviandoReset = false;
+        this.mensajeReset = error.error?.detail || 'Error al actualizar la contraseña';
+        this.tipoMensajeReset = 'error';
+      }
+    });
+  }
+
+  solicitarNuevoToken() {
+    this.cerrarModalReset();
+    this.abrirModalRecuperacion();
   }
 
   // ===========================

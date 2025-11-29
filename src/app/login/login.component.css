@@ -1188,3 +1188,106 @@ html, body {
     padding: 25px 20px;
   }
 }
+/* ===================================
+   MODAL 2: RESETEAR CONTRASEÑA
+   =================================== */
+.modal-card-reset {
+  background: white;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 550px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Loading State */
+.modal-loading {
+  padding: 60px 40px;
+  text-align: center;
+}
+
+.spinner {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 20px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.modal-loading h2 {
+  margin: 0 0 10px;
+  color: #333;
+  font-size: 22px;
+}
+
+.modal-loading p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Error State */
+.modal-error {
+  padding: 60px 40px;
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 80px;
+  margin-bottom: 20px;
+}
+
+.modal-error h2 {
+  margin: 0 0 10px;
+  color: #ff4b5c;
+  font-size: 24px;
+}
+
+.modal-error p {
+  margin: 0 0 30px;
+  color: #666;
+  font-size: 14px;
+}
+
+.btn-primary {
+  padding: 14px 30px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Responsive para modales */
+@media (max-width: 600px) {
+  .modal-card-reset {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .modal-loading,
+  .modal-error {
+    padding: 40px 30px;
+  }
+  
+  .error-icon {
+    font-size: 60px;
+  }
+}
