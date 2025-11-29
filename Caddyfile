@@ -3,7 +3,7 @@
 }
 
 :{$PORT} {
-    root * /app/dist/focoshop
+    root * /app/dist/focoshop/browser
     encode gzip
     try_files {path} /index.html
     file_server
